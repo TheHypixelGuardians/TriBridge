@@ -63,6 +63,10 @@ On the first launch the bot will open a Microsoft authentication flow for the Mi
 | `/send <message>` | Management | Send a command or message to the Minecraft server and display the response (admin only) |
 | `/login` | Management | Connect the Minecraft bot to Hypixel |
 | `/adminrole add/remove <role>` | Management | Configure the global admin roles for the bot (server admin only) |
+| `/link <username>` | Linking | Bind your Minecraft account to your Discord account |
+| `/unlink [user]` | Linking | Remove a Minecraft account link — your own, or anyone's (admin only) |
+| `/links` | Linking | List every linked Minecraft account |
+| `/whois <user\|username>` | Linking | Look up an account link by Discord user or Minecraft username |
 | `/online` | Information | Show the currently online guild members |
 | `/ping` | Information | Display Discord API latency and Minecraft connection status |
 | `/help` | Information | Browse all available commands by category |
@@ -72,6 +76,11 @@ On the first launch the bot will open a Microsoft authentication flow for the Mi
 - **Discord → Minecraft** — Messages sent in the configured Discord channel are forwarded to the Hypixel guild chat (`/gc`).
 - **Minecraft → Discord** — Guild chat messages, as well as member join/leave events, are relayed back to the Discord channel as rich embeds.
 - **Auto-reconnect** — The bot automatically attempts to reconnect to Hypixel if the Minecraft connection drops.
+- **Account linking** — Users who run `/link` have their Discord messages reposted with their Minecraft head and name, and the guild chat copy is attributed to their Minecraft name. This requires the **Manage Webhooks** and **Manage Messages** permissions; without them the bot falls back to the standard relay.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the release history. [DISCORD_CHANGELOG.md](DISCORD_CHANGELOG.md) holds a shorter version of the same history, formatted to be pasted into a Discord announcement channel.
 
 ## Updating
 

@@ -2,6 +2,43 @@
 
 Guidance for Claude Code when working in this repository.
 
+## After every change: keep docs and changelog in sync
+
+Before finishing any task that changes the bot, do both of the following:
+
+1. **Update the changelog** — add an entry for the change under `## Unreleased` in [CHANGELOG.md](CHANGELOG.md),
+   in the same commit as the change itself so the changelog never lags behind.
+   - Format is SkyHanni-style: `##` release section (`Unreleased` / `Version X.Y.Z`), then a `###` category
+     (`New Features` / `Improvements` / `Fixes` / `Technical Details` / `Removed Features`), then a `####`
+     feature area (`Bridge`, `Account Linking`, `Management`, `Information`, `Core`, `Misc` — free-form,
+     `Misc` is the catch-all), then `+` bullets, one change per bullet, indented `+` sub-bullets for details.
+   - Only include categories and feature areas that actually have entries — omit empty ones.
+   - Write entries for the people running and using the bot, not for developers: "Added `/whois` to look up a
+     link", not "Refactored linkedAccounts". Refactors, dependency bumps and tooling go under
+     `### Technical Details`.
+   - Skip the changelog only for changes with no effect on the running bot or its workflow (e.g. a doc typo).
+
+2. **Check the Discord changelog** — [DISCORD_CHANGELOG.md](DISCORD_CHANGELOG.md) is the short,
+   copy-pasteable version posted in the announcement channel. It gets a line only for changes guild members
+   would actually notice — new commands, changed behaviour, user-visible fixes. Internal work, refactors and
+   anything under `### Technical Details` never appears there.
+   - Written in second person, for guild members rather than server staff, and much shorter than the main
+     entry: one line per change, no sub-bullets.
+   - Only markdown Discord renders — `#`/`##`/`###`, `**bold**`, `` `code` ``, `-` bullets, `> ` quotes. No
+     tables, no `+` bullets, no titled links. Each `##` section must stay under 2000 characters so it pastes
+     as a single message.
+   - During development add entries under the same `## Unreleased` heading as the main changelog; rename it at
+     release time in both files together.
+
+3. **Check the README** — if the change affects anything [README.md](README.md) mentions (commands,
+   installation, `.env` variables, Discord permissions/intents, Node version, dependencies, how the relay
+   behaves), update it in the same task. New or changed slash commands get a row in the command table.
+
+Releases: bump `version` in `package.json`, then in **both** [CHANGELOG.md](CHANGELOG.md) and
+[DISCORD_CHANGELOG.md](DISCORD_CHANGELOG.md) rename `## Unreleased` to `## Version X.Y.Z` and add a fresh
+empty `## Unreleased` above it. Semver — patch for fixes, minor for features, major for breaking changes (e.g. a
+config format that existing `*Config.json` files can't be read as). Never tag or push tags unless asked.
+
 ## Project
 
 TriBridge is a Node.js bot that bridges a Discord channel and a Hypixel guild chat. A
