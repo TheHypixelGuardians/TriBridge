@@ -89,7 +89,14 @@ Global command propagation can take up to an hour on Discord's side.
 - **Guild-chat parsing** is regex against Hypixel's English chat output and is inherently
   brittle. Keep the documented format comment next to any regex you add or change.
 - **Relay loops:** `relayToDiscord.js` drops messages whose author equals
-  `bridge.mcBot.username`. Any new Minecraft→Discord relay must do the same.
+  `bridge.mcBot.username`. Any new Minecraft→Discord relay must do the same. On the Discord
+  side, webhook reposts are authored by a bot, so `relayToMinecraft.js`'s existing
+  `message.author.bot` guard is what stops the repost loop — don't weaken it.
+- **Relaying to guild chat:** always build the command with `buildGuildChatCommand()` from
+  `utils/sanitizeForChat.js` rather than interpolating a string. Minecraft 1.8 caps chat at
+  100 characters, and mineflayer's `bot.chat` splits on newlines — so an un-flattened
+  multi-line Discord message would send its second line at *command* position, letting anyone
+  in the bridge channel run commands as the bot.
 - **Replies:** `deferReply()` first for anything touching the Minecraft bot, then
   `editReply()`. Guard with `if (!mcBot || !bridge.mcBotConnected)`. User-facing strings use
   ✅ / ⚠️ / ❌ prefixes and `>` blockquotes — match the existing tone.
@@ -97,6 +104,35 @@ Global command propagation can take up to an hour on Discord's side.
   truncates explicitly (see `online.js`, `send.js`); do the same for anything relaying
   server output.
 - Style: 4-space indent, single quotes, semicolons, JSDoc on non-trivial helper functions.
+
+## Account linking
+
+`/link <username>` binds a Discord user to a Minecraft account. `utils/linkedAccounts.js`
+stores the bindings in `linkedAccountsConfig.json` (gitignored, created on demand, cached in
+memory — same shape as `adminRoles.js`), keyed by Discord user ID and holding both the
+canonical name and the UUID. The UUID is what avatar URLs use, so links survive Minecraft
+name changes. One Minecraft account maps to at most one Discord user; `setLink` enforces it.
+
+`/link` verifies the name exists via `utils/mojang.js`, then checks the live `/guild list`
+roster using the standard collector idiom. It **fails open only when the result is
+inconclusive** (bot offline, timeout, output that never looked like a roster) — never when
+the roster parsed cleanly and the name was absent. Keep that distinction if you touch it;
+collapsing the two turns the membership check into decoration.
+
+`relayToMinecraft.js` branches on the link. Unlinked users relay as before. Linked users get
+their message reposted through the `TriBridge Relay` webhook (`utils/relayWebhook.js`) with
+their Minecraft head and name, the original deleted, and the guild-chat copy attributed to
+the Minecraft name. Two things there are load-bearing:
+
+- **Repost before deleting.** If the webhook send throws, the user's original message
+  survives instead of vanishing.
+- **`allowedMentions: { parse: ['users'] }`.** A webhook post is not subject to the author's
+  own permissions, so an unrestricted repost would let any linked user ping `@everyone`.
+
+The repost path needs **Manage Webhooks** and **Manage Messages**. Neither is enforceable via
+`botPermissions` (that is only checked by `handleCommands.js`, which never sees a
+`messageCreate`), so failure is handled at runtime: fall back to the old relay behaviour and
+report once to the log channel, latched so it doesn't spam.
 
 ## Reconnection
 
@@ -108,8 +144,8 @@ in a `finally`, and must not cache `bridge.mcBot` across an await — read it fr
 
 ## Files to leave alone
 
-`.env`, `.minecraft-auth/`, `adminRolesConfig.json`, `.idea/` — local/secret state. Never
-print or commit token or auth-cache contents.
+`.env`, `.minecraft-auth/`, `adminRolesConfig.json`, `linkedAccountsConfig.json`, `.idea/` —
+local/secret state. Never print or commit token or auth-cache contents.
 
 `src/events/minecraft/message/test.js` is a no-op debug scratch file with commented-out
 logging; it is intentionally inert.

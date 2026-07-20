@@ -29,7 +29,10 @@ module.exports = (existingCommand, localCommand) => {
             if (
                 localOption.description !== existingOption.description ||
                 localOption.type !== existingOption.type ||
-                (localOption.required || false) !== existingOption.required ||
+                // Normalize both sides: Discord omits `required` for optional options,
+                // so comparing `false` against `undefined` would report a phantom diff
+                // and re-edit the command on every startup.
+                (localOption.required || false) !== (existingOption.required || false) ||
                 (localOption.choices?.length || 0) !==
                 (existingOption.choices?.length || 0) ||
                 areChoicesDifferent(
