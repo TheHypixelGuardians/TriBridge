@@ -10,10 +10,38 @@
   as an embed in a dedicated channel. Anyone can use it.
 + Every request gets its own incrementing number and is stored on disk, so it can be referred to and acted on
   later.
-+ Added `/requestchannel set <channel>` and `/requestchannel show` for server administrators to choose where
-  requests are posted. The bot checks it can actually post there before accepting the channel.
++ Added `/requestchannel set <channel>` and `/requestchannel show` for admins to choose where requests are
+  posted. The bot checks it can actually post there before accepting the channel.
 + Added `/requeststatus <id> <status>` for admins to mark a request as accepted, denied, planned or
   duplicate. The original embed is updated in place with the new status and colour.
+
+### Fixes
+
+#### Core
+
++ The bot now only answers commands sent from the server it is set up for, and ignores them everywhere else.
+  + Previously, anyone who added the bot to a server of their own was an administrator there, and could use
+    `/adminrole` to make themselves a bot admin over *your* guild — including `/send`, which runs any command
+    as the bot's Minecraft account.
+  + The server is worked out from the bridge channel, so no configuration change is needed. Set the new
+    optional `DISCORD_GUILD_ID` to override it.
+
+#### Management
+
++ `/login` now requires an admin role. It was the one management command anybody could run, and each use
+  reconnects the Minecraft bot.
+
+#### Account Linking
+
++ `/whois` now requires an admin role. It showed the same Discord ↔ Minecraft links that `/links` has always
+  kept to admins.
+
+### Improvements
+
+#### Management
+
++ `/invite`, `/kick`, `/promote` and `/demote` now reject anything that is not a real Minecraft username
+  instead of passing it to the server, and `/kick` reasons are flattened to a single line.
 
 ## Version 1.0.0
 

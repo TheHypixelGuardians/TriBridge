@@ -109,6 +109,14 @@ Global command propagation can take up to an hour on Discord's side.
 
 ## Conventions
 
+- **Single-guild invariant:** commands are registered *globally*, but the bot serves one guild —
+  one bridge channel, one Minecraft account, one flat admin role list. `handleCommands.js`
+  refuses any interaction whose `guildId` is not `bridge.guildId` (resolved at startup by
+  `000resolveGuild.js` from the bridge channel, or `DISCORD_GUILD_ID`). Without that check an
+  administrator of *any* other server the bot is in can `/adminrole add` a role they control and
+  inherit bot-admin, since `isAdmin` only matches role IDs and has no guild dimension. It fails
+  closed: an unresolved `bridge.guildId` refuses everything. Don't add a command dispatch path
+  that skips this guard.
 - **Permissions:** two separate systems. `permissionsRequired` is enforced generically by
   `handleCommands.js` (used for real Discord permissions like `Administrator`). Bot-admin
   gating is done *inside* the callback with `isAdmin(interaction.member)` from
@@ -134,6 +142,12 @@ Global command propagation can take up to an hour on Discord's side.
   100 characters, and mineflayer's `bot.chat` splits on newlines — so an un-flattened
   multi-line Discord message would send its second line at *command* position, letting anyone
   in the bridge channel run commands as the bot.
+- **Interpolating into `bot.chat`:** commands that build a chat command by hand (`/invite`,
+  `/kick`, `/promote`, `/demote`) bypass `buildGuildChatCommand`, so they must validate the
+  username with `isValidMinecraftName()` from `utils/minecraftName.js` and run any free-text
+  argument through `sanitizeForChat()` first — same newline-injection hazard as above. `/send`
+  is the deliberate exception: sending an arbitrary command is the whole point of it, which is
+  why it is admin-gated.
 - **Replies:** `deferReply()` first for anything touching the Minecraft bot, then
   `editReply()`. Guard with `if (!mcBot || !bridge.mcBotConnected)`. User-facing strings use
   ✅ / ⚠️ / ❌ prefixes and `>` blockquotes — match the existing tone.

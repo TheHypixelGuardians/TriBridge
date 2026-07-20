@@ -14,6 +14,11 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 - Admins mark each request as accepted, denied, planned or duplicate, and the post updates itself so you can
   see where your idea stands.
 
+### Permissions
+
+- `/whois` and `/login` are now admin-only.
+- The bot now only responds in this server.
+
 ## Version 1.0.0
 
 **TriBridge is live** — the Discord ↔ guild chat bridge is up and running.

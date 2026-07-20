@@ -4,6 +4,7 @@ const bridge = {
     discordClient: null,
     discordChannelId: null,
     logChannelId: null,
+    guildId: null,
     mcBotConnected: false,
     reconnecting: false,
 };

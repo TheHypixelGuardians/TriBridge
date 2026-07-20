@@ -1,6 +1,8 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const bridge = require('../../bridge');
 const { isAdmin } = require('../../utils/adminRoles');
+const { isValidMinecraftName } = require('../../utils/minecraftName');
+const { sanitizeForChat } = require('../../utils/sanitizeForChat');
 
 module.exports = {
     name: 'kick',
@@ -36,7 +38,18 @@ module.exports = {
         }
 
         const username = interaction.options.getString('username');
-        const reason = interaction.options.getString('reason');
+
+        // Both go straight into mcBot.chat() below without passing through
+        // buildGuildChatCommand, so both are checked here: the name against its
+        // own shape, the free-text reason flattened to a single line.
+        if (!isValidMinecraftName(username)) {
+            return interaction.editReply(
+                '❌ That is not a valid Minecraft username.\n' +
+                '> Names are at most 16 letters, digits or underscores.',
+            );
+        }
+
+        const reason = sanitizeForChat(interaction.options.getString('reason'));
 
         const collectedMessages = [];
         let resolveCollector;

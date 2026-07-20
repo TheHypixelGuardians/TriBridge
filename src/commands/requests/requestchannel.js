@@ -3,6 +3,7 @@ const {
     PermissionFlagsBits,
     ChannelType,
 } = require('discord.js');
+const { isAdmin } = require('../../utils/adminRoles');
 const { getRequestChannelId, setRequestChannelId } = require('../../utils/featureRequests');
 
 // The bot has to be able to see the channel, post in it and embed links, or
@@ -18,7 +19,6 @@ const REQUIRED_PERMISSIONS = [
 module.exports = {
     name: 'requestchannel',
     description: 'Configure the channel feature requests are posted to.',
-    permissionsRequired: [PermissionFlagsBits.Administrator],
     // Note: areCommandsDifferent.js does not recurse into a subcommand's own
     // options, so changing the `channel` option below will not on its own
     // trigger a re-registration — edit the subcommand description too.
@@ -45,6 +45,13 @@ module.exports = {
     ],
 
     callback: async (client, interaction) => {
+        if (!isAdmin(interaction.member)) {
+            return interaction.reply({
+                content: '❌ You do not have permission to use this command.',
+                ephemeral: true,
+            });
+        }
+
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'show') {

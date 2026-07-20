@@ -1,6 +1,7 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const bridge = require('../../bridge');
 const { isAdmin } = require('../../utils/adminRoles');
+const { isValidMinecraftName } = require('../../utils/minecraftName');
 
 module.exports = {
     name: 'promote',
@@ -30,6 +31,15 @@ module.exports = {
         }
 
         const username = interaction.options.getString('username');
+
+        // Validated because it goes straight into mcBot.chat() below without
+        // passing through buildGuildChatCommand.
+        if (!isValidMinecraftName(username)) {
+            return interaction.editReply(
+                '❌ That is not a valid Minecraft username.\n' +
+                '> Names are at most 16 letters, digits or underscores.',
+            );
+        }
 
         const collectedMessages = [];
         let resolveCollector;

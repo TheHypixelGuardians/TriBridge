@@ -1,11 +1,19 @@
 const bridge = require('../../bridge');
 const createMcBot = require('../../utils/createMcBot');
+const { isAdmin } = require('../../utils/adminRoles');
 
 module.exports = {
     name: 'login',
     description: 'Connect the bot to Hypixel.',
 
     callback: async (client, interaction) => {
+        if (!isAdmin(interaction.member)) {
+            return interaction.reply({
+                content: '❌ You do not have permission to use this command.',
+                ephemeral: true,
+            });
+        }
+
         await interaction.deferReply();
 
         if (bridge.mcBotConnected) {

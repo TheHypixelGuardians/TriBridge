@@ -1,4 +1,5 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
+const { isAdmin } = require('../../utils/adminRoles');
 const { getLink, getLinkByName } = require('../../utils/linkedAccounts');
 
 module.exports = {
@@ -20,6 +21,14 @@ module.exports = {
     ],
 
     callback: async (client, interaction) => {
+        // Same data `/links` exposes in bulk, so it takes the same gate.
+        if (!isAdmin(interaction.member)) {
+            return interaction.reply({
+                content: '❌ You do not have permission to use this command.',
+                ephemeral: true,
+            });
+        }
+
         const user = interaction.options.getUser('user');
         const username = interaction.options.getString('username');
 
