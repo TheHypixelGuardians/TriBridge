@@ -1,7 +1,7 @@
 const bridge = require('../../../bridge');
-const { getLink } = require('../../../utils/linkedAccounts');
-const { getRelayWebhook, clearRelayWebhook } = require('../../../utils/relayWebhook');
-const { buildGuildChatCommand } = require('../../../utils/sanitizeForChat');
+const {getLink} = require('../../../utils/linkedAccounts');
+const {getRelayWebhook, clearRelayWebhook} = require('../../../utils/relayWebhook');
+const {buildGuildChatCommand} = require('../../../utils/sanitizeForChat');
 
 // Latched so a missing permission reports once instead of on every message.
 let warnedAboutRepost = false;
@@ -50,7 +50,7 @@ async function repostAsMinecraftUser(message, link) {
             files: [...message.attachments.values()].map((a) => a.url),
             // A webhook post is not subject to the author's own permissions, so
             // an unrestricted repost would let any linked user ping @everyone.
-            allowedMentions: { parse: ['users'] },
+            allowedMentions: {parse: ['users']},
         });
     } catch (error) {
         // The webhook may have been deleted out from under us; drop the cache

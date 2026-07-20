@@ -4,7 +4,7 @@ const {
     TextInputStyle,
     ActionRowBuilder,
 } = require('discord.js');
-const { getRequestChannelId } = require('../../utils/featureRequests');
+const {getRequestChannelId} = require('../../utils/featureRequests');
 
 module.exports = {
     name: 'request',

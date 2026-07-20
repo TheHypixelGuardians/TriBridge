@@ -19,4 +19,4 @@ function isValidMinecraftName(name) {
     return NAME_PATTERN.test(String(name ?? ''));
 }
 
-module.exports = { isValidMinecraftName, NAME_PATTERN };
+module.exports = {isValidMinecraftName, NAME_PATTERN};

@@ -1,6 +1,6 @@
-const { ApplicationCommandOptionType } = require('discord.js');
-const { isAdmin } = require('../../utils/adminRoles');
-const { setStatus, buildRequestEmbed, STATUS_LABELS } = require('../../utils/featureRequests');
+const {ApplicationCommandOptionType} = require('discord.js');
+const {isAdmin} = require('../../utils/adminRoles');
+const {setStatus, buildRequestEmbed, STATUS_LABELS} = require('../../utils/featureRequests');
 
 module.exports = {
     name: 'requeststatus',
@@ -22,10 +22,10 @@ module.exports = {
             type: ApplicationCommandOptionType.String,
             required: true,
             choices: [
-                { name: 'Accepted', value: 'accepted' },
-                { name: 'Denied', value: 'denied' },
-                { name: 'Planned', value: 'planned' },
-                { name: 'Duplicate', value: 'duplicate' },
+                {name: 'Accepted', value: 'accepted'},
+                {name: 'Denied', value: 'denied'},
+                {name: 'Planned', value: 'planned'},
+                {name: 'Duplicate', value: 'duplicate'},
             ],
         },
     ],
@@ -65,7 +65,7 @@ module.exports = {
             // one, so requests posted before a /requestchannel set still edit.
             const channel = await client.channels.fetch(record.channelId);
             const message = await channel.messages.fetch(record.messageId);
-            await message.edit({ embeds: [buildRequestEmbed(record)] });
+            await message.edit({embeds: [buildRequestEmbed(record)]});
 
             return interaction.reply(`✅ Request **#${id}** is now ${label}.`);
         } catch (error) {

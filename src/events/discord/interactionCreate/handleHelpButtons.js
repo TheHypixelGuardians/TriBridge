@@ -1,4 +1,4 @@
-const { buildHelpPages, buildEmbed, buildButtons } = require('../../../commands/information/help');
+const {buildHelpPages, buildEmbed, buildButtons} = require('../../../commands/information/help');
 
 module.exports = async (client, interaction) => {
     if (!interaction.isButton()) return;
@@ -49,5 +49,5 @@ module.exports = async (client, interaction) => {
     const embed = buildEmbed(pages, newPage);
     const row = buildButtons(newPage, pages.length, userId);
 
-    await interaction.update({ embeds: [embed], components: [row] });
+    await interaction.update({embeds: [embed], components: [row]});
 };

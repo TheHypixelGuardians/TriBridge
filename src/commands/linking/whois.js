@@ -1,6 +1,6 @@
-const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
-const { isAdmin } = require('../../utils/adminRoles');
-const { getLink, getLinkByName } = require('../../utils/linkedAccounts');
+const {ApplicationCommandOptionType, EmbedBuilder} = require('discord.js');
+const {isAdmin} = require('../../utils/adminRoles');
+const {getLink, getLinkByName} = require('../../utils/linkedAccounts');
 
 module.exports = {
     name: 'whois',
@@ -67,6 +67,6 @@ module.exports = {
             .setColor(0x5865F2)
             .setTimestamp();
 
-        return interaction.reply({ embeds: [embed] });
+        return interaction.reply({embeds: [embed]});
     },
 };

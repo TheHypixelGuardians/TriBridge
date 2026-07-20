@@ -1,6 +1,6 @@
 require('dotenv').config();
 const path = require('path');
-const { Client, GatewayIntentBits } = require('discord.js');
+const {Client, GatewayIntentBits} = require('discord.js');
 const eventHandler = require('./handlers/eventHandler');
 const bridge = require('./bridge');
 const createMcBot = require('./utils/createMcBot');
@@ -11,7 +11,7 @@ async function start() {
             GatewayIntentBits.Guilds,
             GatewayIntentBits.GuildMessages,
             GatewayIntentBits.MessageContent,
-            GatewayIntentBits.DirectMessages ]
+            GatewayIntentBits.DirectMessages]
     });
 
     const token = process.env.DISCORD_TOKEN;

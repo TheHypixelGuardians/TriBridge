@@ -1,7 +1,7 @@
-const { ApplicationCommandOptionType } = require('discord.js');
+const {ApplicationCommandOptionType} = require('discord.js');
 const bridge = require('../../bridge');
-const { lookupProfile } = require('../../utils/mojang');
-const { setLink, getLink } = require('../../utils/linkedAccounts');
+const {lookupProfile} = require('../../utils/mojang');
+const {setLink, getLink} = require('../../utils/linkedAccounts');
 
 async function sendLogMessage(message) {
     if (!bridge.logChannelId || !bridge.discordClient) return;
@@ -69,7 +69,7 @@ module.exports = {
     ],
 
     callback: async (client, interaction) => {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ephemeral: true});
 
         const requested = interaction.options.getString('username');
 

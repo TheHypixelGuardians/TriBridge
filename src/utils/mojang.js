@@ -25,7 +25,7 @@ async function lookupProfile(name) {
     const data = await response.json();
     if (!data?.id || !data?.name) return null;
 
-    return { uuid: data.id, name: data.name };
+    return {uuid: data.id, name: data.name};
 }
 
-module.exports = { lookupProfile };
+module.exports = {lookupProfile};

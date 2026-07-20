@@ -1,5 +1,5 @@
-const { ApplicationCommandOptionType, PermissionFlagsBits } = require('discord.js');
-const { addRole, removeRole, getRoles } = require('../../utils/adminRoles');
+const {ApplicationCommandOptionType, PermissionFlagsBits} = require('discord.js');
+const {addRole, removeRole, getRoles} = require('../../utils/adminRoles');
 
 module.exports = {
     name: 'adminrole',

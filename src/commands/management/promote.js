@@ -1,7 +1,7 @@
-const { ApplicationCommandOptionType } = require('discord.js');
+const {ApplicationCommandOptionType} = require('discord.js');
 const bridge = require('../../bridge');
-const { isAdmin } = require('../../utils/adminRoles');
-const { isValidMinecraftName } = require('../../utils/minecraftName');
+const {isAdmin} = require('../../utils/adminRoles');
+const {isValidMinecraftName} = require('../../utils/minecraftName');
 
 module.exports = {
     name: 'promote',

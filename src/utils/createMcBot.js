@@ -1,6 +1,6 @@
 const path = require('path');
 const mineflayer = require('mineflayer');
-const { Authflow } = require('prismarine-auth');
+const {Authflow} = require('prismarine-auth');
 const eventHandler = require('../handlers/eventHandler');
 const bridge = require('../bridge');
 
@@ -8,13 +8,16 @@ async function createMcBot() {
     // Clean up existing bot if present
     if (bridge.mcBot) {
         bridge.mcBot.removeAllListeners();
-        try { bridge.mcBot.quit(); } catch (e) { /* already disconnected */ }
+        try {
+            bridge.mcBot.quit();
+        } catch (e) { /* already disconnected */
+        }
     }
 
     const profilesFolder = path.join(__dirname, '..', '..', '.minecraft-auth');
 
     const flow = new Authflow(process.env.MINECRAFT_USERNAME, profilesFolder);
-    await flow.getMinecraftJavaToken({ fetchProfile: true });
+    await flow.getMinecraftJavaToken({fetchProfile: true});
 
     const mcBot = mineflayer.createBot({
         host: 'mc.hypixel.net',

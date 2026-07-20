@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const {EmbedBuilder} = require('discord.js');
 const bridge = require('../../bridge');
 
 module.exports = {
@@ -43,7 +43,7 @@ module.exports = {
         mcBot.removeListener('message', messageListener);
 
         // Parse the collected messages
-        const { ranks, totalOnline } = parseGuildList(collectedMessages);
+        const {ranks, totalOnline} = parseGuildList(collectedMessages);
 
         if (ranks.size === 0) {
             return interaction.editReply('❌ Could not retrieve the guild list. Please try again.');
@@ -53,7 +53,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setTitle('🟢 Online Guild Members')
             .setColor(0x2ECC71)
-            .setFooter({ text: `Total Online: ${totalOnline}` })
+            .setFooter({text: `Total Online: ${totalOnline}`})
             .setTimestamp();
 
         let description = '';
@@ -73,7 +73,7 @@ module.exports = {
 
         embed.setDescription(description.trim());
 
-        await interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({embeds: [embed]});
     },
 };
 
@@ -136,5 +136,5 @@ function parseGuildList(rawMessages) {
         }
     }
 
-    return { ranks, totalOnline };
+    return {ranks, totalOnline};
 }

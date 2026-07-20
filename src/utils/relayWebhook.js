@@ -43,4 +43,4 @@ function clearRelayWebhook(channelId) {
     cache.delete(channelId);
 }
 
-module.exports = { getRelayWebhook, clearRelayWebhook, WEBHOOK_NAME };
+module.exports = {getRelayWebhook, clearRelayWebhook, WEBHOOK_NAME};

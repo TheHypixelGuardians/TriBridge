@@ -3,17 +3,17 @@ const {
     PermissionFlagsBits,
     ChannelType,
 } = require('discord.js');
-const { isAdmin } = require('../../utils/adminRoles');
-const { getRequestChannelId, setRequestChannelId } = require('../../utils/featureRequests');
+const {isAdmin} = require('../../utils/adminRoles');
+const {getRequestChannelId, setRequestChannelId} = require('../../utils/featureRequests');
 
 // The bot has to be able to see the channel, post in it and embed links, or
 // every submission would be accepted and then silently fail to appear.
 // `botPermissions` cannot cover this: handleCommands.js checks it against the
 // bot's guild-wide permissions and has no notion of a target channel.
 const REQUIRED_PERMISSIONS = [
-    { flag: PermissionFlagsBits.ViewChannel, name: 'View Channel' },
-    { flag: PermissionFlagsBits.SendMessages, name: 'Send Messages' },
-    { flag: PermissionFlagsBits.EmbedLinks, name: 'Embed Links' },
+    {flag: PermissionFlagsBits.ViewChannel, name: 'View Channel'},
+    {flag: PermissionFlagsBits.SendMessages, name: 'Send Messages'},
+    {flag: PermissionFlagsBits.EmbedLinks, name: 'Embed Links'},
 ];
 
 module.exports = {

@@ -23,4 +23,4 @@ function isAllowedGuild(interaction) {
     return interaction.guildId === bridge.guildId;
 }
 
-module.exports = { isAllowedGuild };
+module.exports = {isAllowedGuild};

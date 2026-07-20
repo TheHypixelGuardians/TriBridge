@@ -1,8 +1,8 @@
-const { ApplicationCommandOptionType } = require('discord.js');
+const {ApplicationCommandOptionType} = require('discord.js');
 const bridge = require('../../bridge');
-const { isAdmin } = require('../../utils/adminRoles');
-const { isValidMinecraftName } = require('../../utils/minecraftName');
-const { sanitizeForChat } = require('../../utils/sanitizeForChat');
+const {isAdmin} = require('../../utils/adminRoles');
+const {isValidMinecraftName} = require('../../utils/minecraftName');
+const {sanitizeForChat} = require('../../utils/sanitizeForChat');
 
 module.exports = {
     name: 'kick',

@@ -72,7 +72,7 @@ function buildHelpPages() {
         }
 
         if (lines.length > 0) {
-            pages.push({ category: readableName, lines });
+            pages.push({category: readableName, lines});
         }
     }
 
@@ -95,7 +95,7 @@ function buildEmbed(pages, pageIndex) {
         .setTitle(`📖 Help — ${page.category}`)
         .setDescription(description)
         .setColor('#BD93F9')
-        .setFooter({ text: `Category ${pageIndex + 1} of ${pages.length}` })
+        .setFooter({text: `Category ${pageIndex + 1} of ${pages.length}`})
         .setTimestamp();
 }
 
@@ -126,7 +126,7 @@ module.exports = {
         const pages = buildHelpPages();
 
         if (pages.length === 0) {
-            return interaction.reply({ content: 'No commands found.', ephemeral: true });
+            return interaction.reply({content: 'No commands found.', ephemeral: true});
         }
 
         const pageIndex = 0;
@@ -141,7 +141,7 @@ module.exports = {
 
         const timer = setTimeout(async () => {
             try {
-                await message.edit({ components: [] });
+                await message.edit({components: []});
             } catch {
                 // Message may have been deleted; ignore.
             }

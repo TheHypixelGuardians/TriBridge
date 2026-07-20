@@ -45,4 +45,4 @@ function buildGuildChatCommand(displayName, text) {
     return `${prefix}${truncated}`;
 }
 
-module.exports = { sanitizeForChat, buildGuildChatCommand, MAX_CHAT_LENGTH };
+module.exports = {sanitizeForChat, buildGuildChatCommand, MAX_CHAT_LENGTH};

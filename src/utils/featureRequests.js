@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { EmbedBuilder } = require('discord.js');
+const {EmbedBuilder} = require('discord.js');
 
 const CONFIG_PATH = path.join(__dirname, '..', '..', 'featureRequestsConfig.json');
 
@@ -31,7 +31,7 @@ function loadConfig() {
         if (!cachedConfig.nextId) cachedConfig.nextId = 1;
         if (cachedConfig.channelId === undefined) cachedConfig.channelId = null;
     } catch {
-        cachedConfig = { channelId: null, nextId: 1, requests: {} };
+        cachedConfig = {channelId: null, nextId: 1, requests: {}};
     }
     return cachedConfig;
 }
@@ -67,7 +67,7 @@ function setRequestChannelId(channelId) {
  * @param {{userId: string, userTag: string, title: string, description: string}} submission
  * @returns {object} The stored record.
  */
-function createRequest({ userId, userTag, title, description }) {
+function createRequest({userId, userTag, title, description}) {
     const config = loadConfig();
     const id = config.nextId;
     config.nextId = id + 1;
@@ -149,11 +149,11 @@ function buildRequestEmbed(record) {
         .setTitle(`💡 Request #${record.id} — ${record.title}`)
         .setDescription(`> ${quoted}`)
         .addFields(
-            { name: 'Submitted by', value: `<@${record.userId}>`, inline: true },
-            { name: 'Status', value: STATUS_LABELS[record.status], inline: true },
+            {name: 'Submitted by', value: `<@${record.userId}>`, inline: true},
+            {name: 'Status', value: STATUS_LABELS[record.status], inline: true},
         )
         .setColor(STATUS_COLORS[record.status])
-        .setFooter({ text: `Request #${record.id}` })
+        .setFooter({text: `Request #${record.id}`})
         .setTimestamp(record.createdAt);
 }
 

@@ -9,7 +9,7 @@ module.exports = async (client, interaction) => {
     if (!interaction.isModalSubmit()) return;
     if (interaction.customId !== 'request_modal') return;
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ephemeral: true});
 
     const channelId = getRequestChannelId();
     if (!channelId) {
@@ -34,7 +34,7 @@ module.exports = async (client, interaction) => {
         // so without this an @everyone in a request body would ping.
         const message = await channel.send({
             embeds: [buildRequestEmbed(record)],
-            allowedMentions: { parse: [] },
+            allowedMentions: {parse: []},
         });
 
         attachMessage(record.id, channel.id, message.id);

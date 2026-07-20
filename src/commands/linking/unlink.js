@@ -1,6 +1,6 @@
-const { ApplicationCommandOptionType } = require('discord.js');
-const { isAdmin } = require('../../utils/adminRoles');
-const { removeLink } = require('../../utils/linkedAccounts');
+const {ApplicationCommandOptionType} = require('discord.js');
+const {isAdmin} = require('../../utils/adminRoles');
+const {removeLink} = require('../../utils/linkedAccounts');
 
 module.exports = {
     name: 'unlink',
@@ -39,7 +39,7 @@ module.exports = {
         return interaction.reply({
             content: isSelf
                 ? `✅ Unlinked you from **${removed.name}**.\n` +
-                  '> Your messages will relay under your Discord name again.'
+                '> Your messages will relay under your Discord name again.'
                 : `✅ Unlinked <@${target.id}> from **${removed.name}**.`,
             ephemeral: isSelf,
         });

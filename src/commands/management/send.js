@@ -1,6 +1,6 @@
-const { ApplicationCommandOptionType } = require('discord.js');
+const {ApplicationCommandOptionType} = require('discord.js');
 const bridge = require('../../bridge');
-const { isAdmin } = require('../../utils/adminRoles');
+const {isAdmin} = require('../../utils/adminRoles');
 
 module.exports = {
     name: 'send',

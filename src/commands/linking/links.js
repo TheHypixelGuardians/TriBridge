@@ -1,6 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
-const { isAdmin } = require('../../utils/adminRoles');
-const { getAllLinks } = require('../../utils/linkedAccounts');
+const {EmbedBuilder} = require('discord.js');
+const {isAdmin} = require('../../utils/adminRoles');
+const {getAllLinks} = require('../../utils/linkedAccounts');
 
 module.exports = {
     name: 'links',
@@ -37,9 +37,9 @@ module.exports = {
             .setTitle('🔗 Linked Accounts')
             .setDescription(description)
             .setColor(0x5865F2)
-            .setFooter({ text: `Total: ${links.length}` })
+            .setFooter({text: `Total: ${links.length}`})
             .setTimestamp();
 
-        return interaction.reply({ embeds: [embed] });
+        return interaction.reply({embeds: [embed]});
     },
 };

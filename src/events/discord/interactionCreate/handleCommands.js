@@ -1,5 +1,5 @@
 const getLocalCommands = require('../../../utils/getLocalCommands');
-const { isAllowedGuild } = require('../../../utils/guildGuard');
+const {isAllowedGuild} = require('../../../utils/guildGuard');
 
 module.exports = async (client, interaction) => {
     if (!interaction.isCommand()) return;

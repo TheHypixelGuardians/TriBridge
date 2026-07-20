@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const {EmbedBuilder} = require('discord.js');
 const bridge = require('../../../bridge');
 
 module.exports = async (client, jsonMsg) => {
@@ -27,7 +27,7 @@ module.exports = async (client, jsonMsg) => {
                 .setColor(0x2ECC71)
                 .setTimestamp();
 
-            await channel.send({ embeds: [embed] });
+            await channel.send({embeds: [embed]});
         } catch (error) {
             console.error(error);
         }
@@ -53,7 +53,7 @@ module.exports = async (client, jsonMsg) => {
                 .setColor(color)
                 .setTimestamp();
 
-            await channel.send({ embeds: [embed] });
+            await channel.send({embeds: [embed]});
         } catch (error) {
             console.error(error);
         }

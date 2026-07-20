@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const {EmbedBuilder} = require('discord.js');
 const bridge = require('../../../bridge');
 
 module.exports = async (client, jsonMsg) => {
@@ -8,7 +8,7 @@ module.exports = async (client, jsonMsg) => {
         const cleanMsg = msg.replace(/§./g, '');
 
         //console.log(cleanMsg);
-    }catch (error) {
+    } catch (error) {
         //n
     }
 

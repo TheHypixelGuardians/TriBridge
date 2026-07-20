@@ -11,7 +11,7 @@ function loadConfig() {
         const data = fs.readFileSync(CONFIG_PATH, 'utf-8');
         cachedConfig = JSON.parse(data);
     } catch {
-        cachedConfig = { roleIds: [] };
+        cachedConfig = {roleIds: []};
     }
     return cachedConfig;
 }
@@ -51,4 +51,4 @@ function isAdmin(member) {
     return member.roles.cache.some((role) => roleIds.includes(role.id));
 }
 
-module.exports = { addRole, removeRole, getRoles, isAdmin };
+module.exports = {addRole, removeRole, getRoles, isAdmin};

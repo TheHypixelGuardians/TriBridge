@@ -1,6 +1,6 @@
 const bridge = require('../../bridge');
 const createMcBot = require('../../utils/createMcBot');
-const { isAdmin } = require('../../utils/adminRoles');
+const {isAdmin} = require('../../utils/adminRoles');
 
 module.exports = {
     name: 'login',

@@ -12,7 +12,7 @@ function loadConfig() {
         cachedConfig = JSON.parse(data);
         if (!cachedConfig.links) cachedConfig.links = {};
     } catch {
-        cachedConfig = { links: {} };
+        cachedConfig = {links: {}};
     }
     return cachedConfig;
 }
@@ -42,7 +42,7 @@ function getLinkByName(mcName) {
 
     for (const [discordId, link] of Object.entries(links)) {
         if (link.name.toLowerCase() === target) {
-            return { discordId, ...link };
+            return {discordId, ...link};
         }
     }
     return null;
@@ -61,13 +61,13 @@ function getLinkByName(mcName) {
 function setLink(discordId, profile) {
     const existing = getLinkByName(profile.name);
     if (existing && existing.discordId !== discordId) {
-        return { ok: false, reason: 'taken', discordId: existing.discordId };
+        return {ok: false, reason: 'taken', discordId: existing.discordId};
     }
 
     const config = loadConfig();
-    config.links[discordId] = { uuid: profile.uuid, name: profile.name };
+    config.links[discordId] = {uuid: profile.uuid, name: profile.name};
     saveConfig(config);
-    return { ok: true };
+    return {ok: true};
 }
 
 /**
@@ -95,4 +95,4 @@ function getAllLinks() {
     }));
 }
 
-module.exports = { getLink, getLinkByName, setLink, removeLink, getAllLinks };
+module.exports = {getLink, getLinkByName, setLink, removeLink, getAllLinks};
