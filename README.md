@@ -70,6 +70,9 @@ On the first launch the bot will open a Microsoft authentication flow for the Mi
 | `/online` | Information | Show the currently online guild members |
 | `/ping` | Information | Display Discord API latency and Minecraft connection status |
 | `/help` | Information | Browse all available commands by category |
+| `/request` | Requests | Submit a feature request through a short form |
+| `/requestchannel set/show <channel>` | Requests | Choose the channel feature requests are posted to (server admin only) |
+| `/requeststatus <id> <status>` | Requests | Mark a feature request as accepted, denied, planned or duplicate (admin only) |
 
 ### How It Works
 
@@ -77,6 +80,7 @@ On the first launch the bot will open a Microsoft authentication flow for the Mi
 - **Minecraft → Discord** — Guild chat messages, as well as member join/leave events, are relayed back to the Discord channel as rich embeds.
 - **Auto-reconnect** — The bot automatically attempts to reconnect to Hypixel if the Minecraft connection drops.
 - **Account linking** — Users who run `/link` have their Discord messages reposted with their Minecraft head and name, and the guild chat copy is attributed to their Minecraft name. This requires the **Manage Webhooks** and **Manage Messages** permissions; without them the bot falls back to the standard relay.
+- **Feature requests** — `/request` opens a form; the submission is posted as an embed with an incrementing ID to the channel set by `/requestchannel set`. Admins move a request through its lifecycle with `/requeststatus`, which recolours and updates the original embed in place. The bot needs **View Channel**, **Send Messages** and **Embed Links** in that channel.
 
 ## Changelog
 

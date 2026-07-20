@@ -3,3 +3,4 @@ node_modules
 .minecraft-auth
 adminRolesConfig.json
 linkedAccountsConfig.json
+featureRequestsConfig.json

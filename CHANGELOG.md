@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### New Features
+
+#### Requests
+
++ Added `/request`, which opens a form asking for a feature name and a description and posts the submission
+  as an embed in a dedicated channel. Anyone can use it.
++ Every request gets its own incrementing number and is stored on disk, so it can be referred to and acted on
+  later.
++ Added `/requestchannel set <channel>` and `/requestchannel show` for server administrators to choose where
+  requests are posted. The bot checks it can actually post there before accepting the channel.
++ Added `/requeststatus <id> <status>` for admins to mark a request as accepted, denied, planned or
+  duplicate. The original embed is updated in place with the new status and colour.
+
 ## Version 1.0.0
 
 ### New Features

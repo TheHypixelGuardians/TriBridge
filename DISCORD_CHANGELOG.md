@@ -7,6 +7,13 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Feature requests
+
+- `/request` opens a short form — give your idea a name and a description, and it gets posted to the requests
+  channel with its own number.
+- Admins mark each request as accepted, denied, planned or duplicate, and the post updates itself so you can
+  see where your idea stands.
+
 ## Version 1.0.0
 
 **TriBridge is live** — the Discord ↔ guild chat bridge is up and running.
