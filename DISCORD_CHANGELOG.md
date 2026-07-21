@@ -7,6 +7,8 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+## Version 1.1.0
+
 ### Account linking
 
 - Linking your Minecraft account with `/link` now gives you a role, and `/unlink` takes it away again.
