@@ -2,6 +2,7 @@ const {ApplicationCommandOptionType} = require('discord.js');
 const bridge = require('../../bridge');
 const {lookupProfile} = require('../../utils/mojang');
 const {setLink, getLink} = require('../../utils/linkedAccounts');
+const {applyLinkRole, describeFailure} = require('../../utils/linkRole');
 
 async function sendLogMessage(message) {
     if (!bridge.logChannelId || !bridge.discordClient) return;
@@ -145,6 +146,18 @@ module.exports = {
             `🔗 <@${interaction.user.id}> linked to **${profile.name}**` +
             (previous ? ` (was **${previous.name}**).` : '.'),
         );
+
+        // The link stands either way — a role that cannot be granted is worth
+        // telling an admin about, but not worth undoing the link over.
+        const roleResult = await applyLinkRole(interaction.member, 'add');
+        if (!roleResult.ok) {
+            const failure = describeFailure(roleResult);
+            if (failure) {
+                await sendLogMessage(
+                    `⚠️ Could not give the link role to <@${interaction.user.id}> — ${failure}.`,
+                );
+            }
+        }
 
         const relinked = previous ? `\n> Replaced your previous link to **${previous.name}**.` : '';
 

@@ -76,6 +76,7 @@ runs.
 | `/unlink [user]`                     | Linking     | Remove a Minecraft account link — your own, or anyone's (admin only)                    |
 | `/links`                             | Linking     | List every linked Minecraft account                                                     |
 | `/whois <user\|username>`            | Linking     | Look up an account link by Discord user or Minecraft username (admin only)              |
+| `/linkrole set/show/clear <role>`    | Linking     | Choose the role given to users with a linked Minecraft account (admin only)             |
 | `/online`                            | Information | Show the currently online guild members                                                 |
 | `/ping`                              | Information | Display Discord API latency and Minecraft connection status                             |
 | `/help`                              | Information | Browse all available commands by category                                               |
@@ -93,6 +94,10 @@ runs.
 - **Account linking** — Users who run `/link` have their Discord messages reposted with their Minecraft head and name,
   and the guild chat copy is attributed to their Minecraft name. This requires the **Manage Webhooks** and **Manage
   Messages** permissions; without them the bot falls back to the standard relay.
+- **Link role** — If a role is set with `/linkrole set`, `/link` grants it and `/unlink` takes it back. Setting the role
+  backfills it onto everyone already linked, and the roles are re-checked on every startup so links made while the bot
+  was offline still get it. This needs the **Manage Roles** permission and the bot's own role ranked above the link
+  role; a role that cannot be granted is reported to the log channel and never blocks the link itself.
 - **Feature requests** — `/request` opens a form; the submission is posted as an embed with an incrementing ID to the
   channel set by `/requestchannel set`. Admins move a request through its lifecycle with `/requeststatus`, which
   recolours and updates the original embed in place. The bot needs **View Channel**, **Send Messages** and **Embed Links

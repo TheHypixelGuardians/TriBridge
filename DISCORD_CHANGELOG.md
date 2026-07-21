@@ -7,6 +7,12 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Account linking
+
+- Linking your Minecraft account with `/link` now gives you a role, and `/unlink` takes it away again.
+- Already linked? You get the role automatically — no need to re-link.
+- Admins pick the role with `/linkrole set`.
+
 ### Feature requests
 
 - `/request` opens a short form — give your idea a name and a description, and it gets posted to the requests

@@ -180,6 +180,22 @@ the Minecraft name. Two things there are load-bearing:
 - **`allowedMentions: { parse: ['users'] }`.** A webhook post is not subject to the author's
   own permissions, so an unrestricted repost would let any linked user ping `@everyone`.
 
+`utils/linkRole.js` holds the optional role given to linked users (`linkRoleConfig.json`,
+same shape as the other config modules; `/linkrole` configures it). `/link` adds it, `/unlink`
+removes it, and `003syncLinkRoles.js` backfills it from the stored links at every startup —
+the links are the source of truth, the roles are derived. Two constraints there:
+
+- **The role never gates the link.** `applyLinkRole` returns a result instead of throwing;
+  every caller carries on and reports the failure. A missing role or a lost **Manage Roles**
+  is a config problem, not a reason to refuse someone's `/link`.
+- **Members are fetched one id at a time.** `guild.members.fetch()` with no argument goes over
+  the gateway and needs the privileged `GuildMembers` intent, which `index.js` does not
+  request. Don't switch the sync to a bulk fetch without adding that intent.
+
+The sync only ever *adds* — the role may be handed out for unrelated reasons, so it is never
+stripped from someone merely because they have no link. Changing or clearing the configured
+role likewise leaves the old one in place.
+
 The repost path needs **Manage Webhooks** and **Manage Messages**. Neither is enforceable via
 `botPermissions` (that is only checked by `handleCommands.js`, which never sees a
 `messageCreate`), so failure is handled at runtime: fall back to the old relay behaviour and
@@ -195,8 +211,8 @@ in a `finally`, and must not cache `bridge.mcBot` across an await — read it fr
 
 ## Files to leave alone
 
-`.env`, `.minecraft-auth/`, `adminRolesConfig.json`, `linkedAccountsConfig.json`, `.idea/` —
-local/secret state. Never print or commit token or auth-cache contents.
+`.env`, `.minecraft-auth/`, `adminRolesConfig.json`, `linkedAccountsConfig.json`,
+`linkRoleConfig.json`, `.idea/` — local/secret state. Never print or commit token or auth-cache contents.
 
 `src/events/minecraft/message/test.js` is a no-op debug scratch file with commented-out
 logging; it is intentionally inert.

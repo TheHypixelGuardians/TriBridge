@@ -4,6 +4,21 @@
 
 ### New Features
 
+#### Account Linking
+
++ Linking a Minecraft account with `/link` now gives the member a role, and `/unlink` takes it back again.
++ Added `/linkrole set <role>`, `/linkrole show` and `/linkrole clear` for admins to choose that role.
+  + Setting a role immediately gives it to everybody who is already linked, including links made before this
+    update, and reports how many members it reached.
+  + The bot refuses a role it cannot actually hand out — one above its own highest role, one managed by
+    another integration, or any role at all while it is missing **Manage Roles**.
+  + Pointing `/linkrole` at a different role leaves the old one on members; remove it yourself if you no
+    longer want it. `/linkrole clear` likewise only stops handing the role out.
++ Link roles are re-checked every time the bot starts, so links made while it was offline and members who
+  rejoined the server and lost their roles are caught up automatically.
++ A role that cannot be granted never blocks the link itself — the link goes through and the problem is
+  reported in the log channel instead.
+
 #### Requests
 
 + Added `/request`, which opens a form asking for a feature name and a description and posts the submission
