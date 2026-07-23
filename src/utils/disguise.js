@@ -1,0 +1,354 @@
+const {EmbedBuilder, MessageFlags, PermissionFlagsBits} = require('discord.js');
+const bridge = require('../bridge');
+const {logAudit} = require('./auditChannel');
+const {formatDuration} = require('./duration');
+const {appliesTo, getTarget} = require('./globalProfile');
+const {getLink} = require('./linkedAccounts');
+const {getRelayWebhook, clearRelayWebhook, resolveWebhookTarget} = require('./relayWebhook');
+
+// Discord caps a webhook username at 80 characters and rejects any containing
+// "discord" or "clyde".
+const MAX_WEBHOOK_NAME = 80;
+const MAX_CONTENT = 2000;
+
+// U+200B. Written as an escape because an invisible character in the source is
+// a trap for the next person to edit this file.
+const ZERO_WIDTH_SPACE = '\u200b';
+
+// Latched so a missing permission reports once instead of on every message.
+let warnedAboutRepost = false;
+
+// Reposts within a channel are chained: a burst that ran concurrently would
+// arrive out of order, which is glaringly obvious in a busy channel.
+const channelQueues = new Map();
+
+function headURL(id) {
+    return `https://mc-heads.net/avatar/${encodeURIComponent(id)}`;
+}
+
+async function sendLogMessage(message) {
+    if (!bridge.logChannelId || !bridge.discordClient) return;
+    try {
+        const channel = await bridge.discordClient.channels.fetch(bridge.logChannelId);
+        await channel.send(message);
+    } catch (error) {
+        console.error('Failed to send log channel notification:', error);
+    }
+}
+
+async function warnAboutRepostOnce() {
+    if (warnedAboutRepost) return;
+    warnedAboutRepost = true;
+
+    await sendLogMessage(
+        '⚠️ Could not repost a message under another identity. Check that I have the ' +
+        '**Manage Webhooks** and **Manage Messages** permissions in that channel. ' +
+        'Falling back to normal relaying until this is fixed.',
+    );
+}
+
+/**
+ * Makes a name Discord will actually accept as a webhook username.
+ *
+ * The forbidden substrings are broken with a zero-width space rather than
+ * stripped, so a member called "Discordian" still reads as themselves instead
+ * of turning into "ian".
+ *
+ * @param {string} name
+ * @returns {string}
+ */
+function sanitizeWebhookName(name) {
+    const cleaned = String(name ?? '')
+        .replace(/(d)(iscord)/gi, `$1${ZERO_WIDTH_SPACE}$2`)
+        .replace(/(c)(lyde)/gi, `$1${ZERO_WIDTH_SPACE}$2`)
+        .trim()
+        .slice(0, MAX_WEBHOOK_NAME)
+        .trim();
+
+    return cleaned || 'Member';
+}
+
+/**
+ * Whether a message has to be left alone because a webhook repost could not
+ * reproduce it faithfully. Reposting these anyway silently drops the part that
+ * mattered, so not touching them is the honest outcome.
+ *
+ * @param {import('discord.js').Message} message
+ * @returns {boolean}
+ */
+function shouldSkip(message) {
+    // Nothing a webhook can carry: the send would 400 and the message would be
+    // left behind anyway, so don't spend the attempt.
+    if (!message.content && message.attachments.size === 0) return true;
+
+    return Boolean(
+        message.system
+        || message.stickers?.size
+        || message.poll
+        || message.messageSnapshots?.size
+        || message.flags?.has(MessageFlags.IsVoiceMessage),
+    );
+}
+
+/**
+ * Whether the bot can do the delete-and-repost dance in a channel at all.
+ *
+ * Checked up front so a channel we have no business touching costs a cached
+ * permission lookup rather than a failed API round trip on every message.
+ *
+ * @param {import('discord.js').GuildTextBasedChannel} channel
+ * @returns {boolean}
+ */
+function canRepostIn(channel) {
+    const target = resolveWebhookTarget(channel);
+    if (!target) return false;
+
+    const me = channel.guild?.members?.me;
+    if (!me) return false;
+
+    return Boolean(
+        target.channel.permissionsFor(me)?.has(PermissionFlagsBits.ManageWebhooks)
+        && channel.permissionsFor(me)?.has(PermissionFlagsBits.ManageMessages),
+    );
+}
+
+/**
+ * Works out the name and avatar a message should be shown under.
+ *
+ * Precedence: an active global profile change outranks an account link, which
+ * outranks the plain Discord author.
+ *
+ * `name`/`avatarURL` are what Discord shows; `chatName` is what guild chat is
+ * told. They differ for a disguise, where Discord should show the target's
+ * Discord identity but Hypixel is better served by a real Minecraft name.
+ *
+ * @param {import('discord.js').Message} message
+ * @returns {{name: string, avatarURL: string|null, chatName: string, repost: boolean, disguised: boolean}}
+ */
+function resolveIdentity(message) {
+    if (appliesTo(message.author.id, message.channel.id)) {
+        const target = getTarget();
+        return {
+            name: target.name,
+            avatarURL: target.avatarURL,
+            chatName: target.mcName || target.name,
+            repost: true,
+            disguised: true,
+        };
+    }
+
+    const link = getLink(message.author.id);
+    if (link) {
+        return {
+            name: link.name,
+            avatarURL: headURL(link.uuid),
+            chatName: link.name,
+            repost: true,
+            disguised: false,
+        };
+    }
+
+    return {
+        name: message.author.username,
+        avatarURL: null,
+        chatName: message.author.username,
+        repost: false,
+        disguised: false,
+    };
+}
+
+/**
+ * Builds the reposted message body.
+ *
+ * Deleting the original destroys Discord's native reply header, so a jump link
+ * is the only surviving trace of what was being replied to.
+ *
+ * @param {import('discord.js').Message} message
+ * @returns {string|undefined}
+ */
+function buildContent(message) {
+    const body = message.content || '';
+    const referenced = message.reference?.messageId;
+
+    if (!referenced) return body || undefined;
+
+    const url = `https://discord.com/channels/${message.guildId}/${message.channelId}/${referenced}`;
+    const combined = `-# ↩ [replying to a message](${url})\n${body}`.trim();
+
+    return combined.length > MAX_CONTENT
+        ? `${combined.slice(0, MAX_CONTENT - 1)}…`
+        : combined;
+}
+
+/**
+ * Serialises work per channel so reposts keep their original order.
+ *
+ * @param {string} channelId
+ * @param {() => Promise<T>} task
+ * @returns {Promise<T>}
+ * @template T
+ */
+function enqueue(channelId, task) {
+    const previous = channelQueues.get(channelId) ?? Promise.resolve();
+
+    // `.then(task, task)` so one failed repost does not stall the channel.
+    const run = previous.then(task, task);
+    const chained = run.catch(() => {});
+
+    channelQueues.set(channelId, chained);
+    chained.then(() => {
+        // Drop the entry once nothing queued behind us, so idle channels do not
+        // accumulate settled promises forever.
+        if (channelQueues.get(channelId) === chained) channelQueues.delete(channelId);
+    });
+
+    return run;
+}
+
+async function sendRepost(message, identity) {
+    const target = resolveWebhookTarget(message.channel);
+    if (!target) return {ok: false, url: null};
+
+    let sent;
+    try {
+        const webhook = await getRelayWebhook(target.channel);
+
+        // Repost before deleting: if the webhook send throws, the user's
+        // original message survives rather than vanishing.
+        sent = await webhook.send({
+            content: buildContent(message),
+            username: sanitizeWebhookName(identity.name),
+            avatarURL: identity.avatarURL ?? undefined,
+            files: [...message.attachments.values()].map((attachment) => attachment.url),
+            threadId: target.threadId,
+            // A webhook post is not subject to the author's own permissions, so
+            // an unrestricted repost would let anyone ping @everyone.
+            allowedMentions: {parse: ['users']},
+        });
+    } catch (error) {
+        // The webhook may have been deleted out from under us; drop the cache
+        // so the next message recreates it.
+        clearRelayWebhook(target.channel.id);
+        console.error('Failed to repost a message:', error);
+        await warnAboutRepostOnce();
+        return {ok: false, url: null};
+    }
+
+    try {
+        await message.delete();
+    } catch {
+        // Already deleted, or missing Manage Messages; the repost still landed.
+    }
+
+    return {
+        ok: true,
+        url: sent?.id
+            ? `https://discord.com/channels/${message.guildId}/${message.channelId}/${sent.id}`
+            : null,
+    };
+}
+
+/**
+ * Reposts a message through the relay webhook wearing the given identity, then
+ * deletes the original.
+ *
+ * @param {import('discord.js').Message} message
+ * @param {ReturnType<typeof resolveIdentity>} identity
+ * @returns {Promise<{ok: boolean, url: string|null}>} On failure the original
+ *   message is left exactly where it was.
+ */
+function repostAs(message, identity) {
+    return enqueue(message.channel.id, () => sendRepost(message, identity));
+}
+
+/**
+ * Records who really sent a disguised message. The original is gone, so this is
+ * the only way back to the actual author.
+ *
+ * @param {import('discord.js').Message} message
+ * @param {ReturnType<typeof resolveIdentity>} identity
+ * @param {string|null} url Jump link to the repost.
+ */
+async function auditDisguise(message, identity, url) {
+    const jump = url ? ` — [jump](${url})` : '';
+    await logAudit(
+        `🎭 <@${message.author.id}> (\`${message.author.username}\`) posted as ` +
+        `**${identity.name}** in <#${message.channel.id}>${jump}`,
+    );
+}
+
+/**
+ * Records which Minecraft player really said something that reached Discord
+ * under the target's name.
+ *
+ * @param {string} username The Minecraft name that spoke.
+ * @param {string} shownAs The name it was relabelled to.
+ */
+async function auditGuildChatDisguise(username, shownAs) {
+    await logAudit(
+        `🎭 Guild chat from \`${username}\` was shown as **${shownAs}** in the bridge channel`,
+    );
+}
+
+/**
+ * @param {object} state The state {@link module:utils/globalProfile.start} returned.
+ * @param {string} startedBy Discord ID of the admin who started it.
+ */
+async function announceStarted(state, startedBy) {
+    const ends = state.expiresAt === null
+        ? 'when somebody stops it'
+        : `<t:${Math.floor(state.expiresAt / 1000)}:R>`;
+
+    const embed = new EmbedBuilder()
+        .setTitle('🎭 Global profile change started')
+        .setDescription(
+            state.mode === 'test'
+                ? 'Running in **test mode** — only listed testers, in listed channels, are affected.'
+                : 'Running **live** — everybody in the server is affected.',
+        )
+        .addFields(
+            {name: 'Everyone appears as', value: `<@${state.target.userId}>`, inline: true},
+            {name: 'Started by', value: `<@${startedBy}>`, inline: true},
+            {name: 'Ends', value: ends, inline: true},
+        )
+        .setColor(0xE67E22)
+        .setTimestamp();
+
+    await logAudit({embeds: [embed]});
+}
+
+/**
+ * @param {object} previous What {@link module:utils/globalProfile.stop} returned.
+ * @param {string} reason Short phrase describing why it ended.
+ */
+async function announceEnded(previous, reason) {
+    const ran = previous.startedAt ? formatDuration(Date.now() - previous.startedAt) : 'unknown';
+
+    const embed = new EmbedBuilder()
+        .setTitle('🎭 Global profile change ended')
+        .setDescription(`Everybody is back to their own name and avatar — ${reason}.`)
+        .addFields(
+            {
+                name: 'Was appearing as',
+                value: previous.target ? `<@${previous.target.userId}>` : 'unknown',
+                inline: true,
+            },
+            {name: 'Ran for', value: ran, inline: true},
+        )
+        .setColor(0x2ECC71)
+        .setTimestamp();
+
+    await logAudit({embeds: [embed]});
+}
+
+module.exports = {
+    resolveIdentity,
+    repostAs,
+    shouldSkip,
+    canRepostIn,
+    sanitizeWebhookName,
+    auditDisguise,
+    auditGuildChatDisguise,
+    announceStarted,
+    announceEnded,
+};

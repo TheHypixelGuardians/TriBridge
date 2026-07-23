@@ -72,6 +72,8 @@ runs.
 | `/send <message>`                    | Management  | Send a command or message to the Minecraft server and display the response (admin only) |
 | `/login`                             | Management  | Connect the Minecraft bot to Hypixel (admin only)                                       |
 | `/adminrole add/remove <role>`       | Management  | Configure the global admin roles for the bot (server admin only)                        |
+| `/adminpanel`                        | Management  | Open the admin panel to run and configure admin functions (admin only)                  |
+| `/auditchannel set/show/clear`       | Management  | Choose the channel admin panel actions are recorded in (admin only)                     |
 | `/link <username>`                   | Linking     | Bind your Minecraft account to your Discord account                                     |
 | `/unlink [user]`                     | Linking     | Remove a Minecraft account link — your own, or anyone's (admin only)                    |
 | `/links`                             | Linking     | List every linked Minecraft account                                                     |
@@ -102,6 +104,25 @@ runs.
   channel set by `/requestchannel set`. Admins move a request through its lifecycle with `/requeststatus`, which
   recolours and updates the original embed in place. The bot needs **View Channel**, **Send Messages** and **Embed Links
   ** in that channel.
+- **Admin panel** — `/adminpanel` opens an ephemeral embed with a button per admin function. The first is **Global
+  Profile Change**: pick a member and a duration, and for that long everybody's messages are reposted wearing that
+  member's name and avatar — in Discord, in the guild chat copy, and on guild chat coming back the other way. It ships
+  with a test system, so listed testers in listed channels can try it before it is turned on server-wide, and it can be
+  stopped from the panel at any time.
+- **Auditing** — Reposting deletes the original, so the real author is no longer visible on the message. Every disguised
+  message is recorded in the channel set by `/auditchannel set`, along with a jump link to the repost, plus an entry
+  whenever a global profile change starts or ends. The bot needs **View Channel**, **Send Messages** and **Embed Links**
+  in that channel.
+
+### Permissions
+
+Beyond the bridge channel, the global profile change needs **Manage Webhooks** and **Manage Messages** in *every*
+channel it is meant to apply to — it works by reposting through a webhook and deleting the original. Channels where the
+bot is missing either permission are skipped and left alone, with one warning sent to the log channel.
+
+Because a repost is a new message, a disguised message cannot afterwards be edited or deleted by the person who wrote
+it, replies keep only a jump link instead of Discord's reply header, and messages carrying stickers, polls, forwards or
+voice notes are deliberately left undisguised rather than reposted without them.
 
 ## Changelog
 

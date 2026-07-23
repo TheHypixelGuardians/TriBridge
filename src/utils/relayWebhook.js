@@ -5,9 +5,32 @@ const WEBHOOK_NAME = 'TriBridge Relay';
 const cache = new Map();
 
 /**
- * Fetches (or creates) the webhook used to repost linked users' messages.
+ * Works out which channel a message's webhook actually lives on.
  *
- * @param {import('discord.js').TextChannel} channel
+ * Webhooks only exist on real channels, never on threads, so a message in a
+ * thread has to go through the parent's webhook with `threadId` set. The cache
+ * therefore keys off the parent, and every thread under it shares one webhook.
+ *
+ * @param {import('discord.js').GuildTextBasedChannel} channel
+ * @returns {{channel: import('discord.js').GuildTextBasedChannel, threadId: string|undefined}|null}
+ *   null when there is no webhook-capable home — a thread whose parent we
+ *   cannot see, for instance.
+ */
+function resolveWebhookTarget(channel) {
+    if (!channel?.isThread?.()) {
+        return channel ? {channel, threadId: undefined} : null;
+    }
+
+    if (!channel.parent) return null;
+    return {channel: channel.parent, threadId: channel.id};
+}
+
+/**
+ * Fetches (or creates) the webhook used to repost messages under another
+ * identity.
+ *
+ * @param {import('discord.js').TextChannel} channel Must be a real channel, not
+ *   a thread — pass {@link resolveWebhookTarget}'s `channel`.
  * @returns {Promise<import('discord.js').Webhook>}
  * @throws {Error} If the bot lacks Manage Webhooks.
  */
@@ -43,4 +66,4 @@ function clearRelayWebhook(channelId) {
     cache.delete(channelId);
 }
 
-module.exports = {getRelayWebhook, clearRelayWebhook, WEBHOOK_NAME};
+module.exports = {getRelayWebhook, clearRelayWebhook, resolveWebhookTarget, WEBHOOK_NAME};

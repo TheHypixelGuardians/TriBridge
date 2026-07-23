@@ -2,6 +2,59 @@
 
 ## Unreleased
 
+### New Features
+
+#### Admin Panel
+
++ Added `/adminpanel`, a single admin-only panel with a button for each admin function. It replies privately and
+  shows what is running, who started it, when it ends and how the feature is scoped.
++ Added the first function, **Global Profile Change**: pick a member and a duration, and for that long every
+  message sent in the server is reposted wearing that member's name and avatar.
+  + The effect carries across the bridge in both directions — the guild chat copy is attributed to the target
+    (their Minecraft name if they have one linked), and guild chat coming back into Discord is shown under the
+    target as well. Guild join and leave announcements are deliberately left alone.
+  + Durations can be picked from a list (5 minutes up to 24 hours), typed in freehand (`90m`, `2h30m`, `3d`), or
+    set to run until somebody stops it.
+  + The panel's **Stop effect** button ends it immediately, and everything is back to normal on the next message.
+  + An effect that is still running when the bot restarts is picked back up, and one that ran out while the bot
+    was offline is cleared and reported.
++ Added a test system so the effect can be rehearsed before it is turned loose on the server.
+  + In test mode only listed testers, posting in listed channels, are affected — everybody else is untouched. Over
+    the bridge, only guild chat from a tester's own linked Minecraft account is rewritten.
+  + In live mode everybody is affected, everywhere except a list of channels you exclude.
+  + Testers and both channel lists are set from the panel and are remembered between runs.
++ Added `/auditchannel set <channel>`, `/auditchannel show` and `/auditchannel clear` for admins to choose where
+  admin actions are recorded.
+  + Reposting deletes the original message, so the audit line is the only record of who really sent it. Every
+    disguised message gets one, with a jump link to the repost, alongside an entry each time an effect starts or
+    ends.
+  + The bot checks it can actually post there before accepting the channel. A missing or broken audit channel never
+    stops the effect itself.
+
+### Improvements
+
+#### Account Linking
+
++ Reposted messages that are replies now carry a link back to the message they were replying to. Reposting loses
+  Discord's own reply header, so previously the reply simply looked like an ordinary message.
++ Linked users' messages are now reposted correctly in threads, not just in the bridge channel itself.
+
+### Fixes
+
+#### Account Linking
+
++ Messages carrying a sticker, a poll, a forwarded message or a voice note are no longer reposted under the linked
+  Minecraft identity. A repost cannot carry any of those, so they were being silently dropped; the message is now
+  left as it was sent instead.
+
+### Technical Details
+
+#### Core
+
++ Message reposts are now queued per channel, so a burst of messages cannot arrive out of order.
++ The identity a message is shown under is resolved in one place, with a global profile change outranking an
+  account link, which outranks the plain Discord author.
+
 ## Version 1.1.0
 
 ### New Features

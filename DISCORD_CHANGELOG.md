@@ -7,6 +7,18 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Global profile change
+
+- Admins can now turn everyone in the server into the same person for a while — your messages get reposted with
+  someone else's name and avatar until the timer runs out.
+- It carries over the bridge too: guild chat sees the disguise, and guild chat coming back here does as well.
+- Heads up on what this costs: a disguised message is a repost, so you can't edit or delete it afterwards, replies
+  show a link instead of the usual reply header, and messages with stickers, polls, forwards or voice notes are
+  left alone.
+- Every disguised message is logged with the real sender, so staff can always tell who actually said what.
+- Admins: it all lives behind `/adminpanel`, there is a test mode for trying it in one channel first, and
+  `/auditchannel` picks where the log goes.
+
 ## Version 1.1.0
 
 ### Account linking

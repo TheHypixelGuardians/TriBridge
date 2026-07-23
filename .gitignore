@@ -5,3 +5,5 @@ adminRolesConfig.json
 linkedAccountsConfig.json
 featureRequestsConfig.json
 linkRoleConfig.json
+globalProfileConfig.json
+auditChannelConfig.json
