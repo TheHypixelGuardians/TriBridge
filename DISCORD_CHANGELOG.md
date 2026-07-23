@@ -7,6 +7,8 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+## Version 1.2.0
+
 ### Global profile change
 
 - Admins can now turn everyone in the server into the same person for a while — your messages get reposted with

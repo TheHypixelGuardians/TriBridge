@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.2.0
+
 ### New Features
 
 #### Admin Panel
