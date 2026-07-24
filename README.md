@@ -106,9 +106,10 @@ runs.
   ** in that channel.
 - **Admin panel** — `/adminpanel` opens an ephemeral embed with a button per admin function. The first is **Global
   Profile Change**: pick a member and a duration, and for that long everybody's messages are reposted wearing that
-  member's name and avatar — in Discord, in the guild chat copy, and on guild chat coming back the other way. It ships
-  with a test system, so listed testers in listed channels can try it before it is turned on server-wide, and it can be
-  stopped from the panel at any time.
+  member's name and avatar — in Discord, in the guild chat copy, and on guild chat coming back the other way. Each
+  bridge direction has its own switch on the panel, so the disguise can be kept out of guild chat, off the guild chat
+  coming back, or both. It ships with a test system, so listed testers in listed channels can try it before it is
+  turned on server-wide, and it can be stopped from the panel at any time.
 - **Auditing** — Reposting deletes the original, so the real author is no longer visible on the message. Every disguised
   message is recorded in the channel set by `/auditchannel set`, along with a jump link to the repost, plus an entry
   whenever a global profile change starts or ends. The bot needs **View Channel**, **Send Messages** and **Embed Links**

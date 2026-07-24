@@ -130,6 +130,18 @@ function describeEnd(expiresAt) {
     return expiresAt === null ? 'When stopped' : `<t:${Math.floor(expiresAt / 1000)}:R>`;
 }
 
+function describeToggle(enabled) {
+    return enabled ? '✅ Disguised' : '🚫 Real name';
+}
+
+/**
+ * The two bridge legs, as one embed field value.
+ */
+function describeDirections(state) {
+    return `Discord → Minecraft: ${describeToggle(state.disguiseToMinecraft)}\n`
+        + `Minecraft → Discord: ${describeToggle(state.disguiseToDiscord)}`;
+}
+
 /**
  * The panel's front page: what is running, and how the feature is scoped.
  */
@@ -160,6 +172,10 @@ function buildMainEmbed() {
         {
             name: 'Excluded channels (live mode)',
             value: formatIdList(state.excludedChannelIds, (id) => `<#${id}>`, '*none*'),
+        },
+        {
+            name: 'Bridge',
+            value: describeDirections(state),
         },
         {
             name: 'Audit channel',
@@ -222,7 +238,9 @@ function buildProfileEmbed(draft) {
             'While this runs, everybody\'s messages are reposted wearing the target\'s name ' +
             'and avatar, in Discord and across the Minecraft bridge.\n' +
             '> The original message is deleted and reposted, so it cannot be edited or ' +
-            'deleted by its author afterwards. Every repost is recorded in the audit channel.',
+            'deleted by its author afterwards. Every repost is recorded in the audit channel.\n' +
+            'Either bridge direction can be switched off below — the disguise then stops at ' +
+            'the bridge and that side keeps real names.',
         )
         .addFields(
             {
@@ -239,11 +257,17 @@ function buildProfileEmbed(draft) {
                 name: '🌍 Live mode affects',
                 value: `Everybody, everywhere except ${state.excludedChannelIds.length} excluded channel(s)`,
             },
+            {
+                name: '🌉 Across the bridge',
+                value: describeDirections(state),
+            },
         )
         .setColor(0xBD93F9);
 }
 
 function buildProfileRows(invokerId, draft) {
+    const state = getState();
+
     const targetSelect = new UserSelectMenuBuilder()
         .setCustomId(customId('profile', 'target', invokerId))
         .setPlaceholder('Who should everybody look like?')
@@ -263,9 +287,26 @@ function buildProfileRows(invokerId, draft) {
             })),
         );
 
+    // Labelled with the state they are in rather than the state they would
+    // switch to — the embed above says the same thing, and a button that
+    // contradicts it is worse than a slightly wordy one.
+    const toggleRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId(customId('profile', 'toggleMinecraft', invokerId))
+            .setLabel(`Discord → Minecraft: ${state.disguiseToMinecraft ? 'on' : 'off'}`)
+            .setEmoji(state.disguiseToMinecraft ? '🎭' : '🚫')
+            .setStyle(state.disguiseToMinecraft ? ButtonStyle.Success : ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId(customId('profile', 'toggleDiscord', invokerId))
+            .setLabel(`Minecraft → Discord: ${state.disguiseToDiscord ? 'on' : 'off'}`)
+            .setEmoji(state.disguiseToDiscord ? '🎭' : '🚫')
+            .setStyle(state.disguiseToDiscord ? ButtonStyle.Success : ButtonStyle.Secondary),
+    );
+
     return [
         new ActionRowBuilder().addComponents(targetSelect),
         new ActionRowBuilder().addComponents(durationSelect),
+        toggleRow,
         new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId(customId('profile', 'startTest', invokerId))

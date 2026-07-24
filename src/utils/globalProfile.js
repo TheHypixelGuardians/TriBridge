@@ -22,6 +22,8 @@ function defaults() {
         testerIds: [],
         testChannelIds: [],
         excludedChannelIds: [],
+        disguiseToMinecraft: true,
+        disguiseToDiscord: true,
     };
 }
 
@@ -42,6 +44,12 @@ function loadConfig() {
     // be able to turn `.includes` into a TypeError.
     for (const key of ['testerIds', 'testChannelIds', 'excludedChannelIds']) {
         if (!Array.isArray(cachedConfig[key])) cachedConfig[key] = [];
+    }
+
+    // Same for the two bridge switches: a hand-edited `"false"` is a truthy
+    // string, which would read as "on" and quietly do the opposite of the file.
+    for (const key of ['disguiseToMinecraft', 'disguiseToDiscord']) {
+        if (typeof cachedConfig[key] !== 'boolean') cachedConfig[key] = true;
     }
 
     return cachedConfig;
@@ -123,6 +131,19 @@ function appliesTo(userId, channelId) {
 }
 
 /**
+ * Whether the Discord → guild chat leg of the disguise is switched on.
+ *
+ * This governs the name guild chat is told, and nothing else. The Discord
+ * repost still wears the target's face either way, so switching it off stops
+ * the disguise at the bridge rather than turning it off outright.
+ *
+ * @returns {boolean}
+ */
+function disguisesToMinecraft() {
+    return loadConfig().disguiseToMinecraft;
+}
+
+/**
  * The gate for guild chat → Discord.
  *
  * Test mode has no Discord author to check, so it leans on the account link:
@@ -137,6 +158,8 @@ function appliesToGuildChat(mcName, channelId) {
     if (!isActive()) return false;
 
     const config = loadConfig();
+    if (!config.disguiseToDiscord) return false;
+
     const name = String(mcName ?? '').toLowerCase();
 
     if (config.target.mcName && config.target.mcName.toLowerCase() === name) return false;
@@ -272,12 +295,31 @@ const setTesters = (ids) => setList('testerIds', ids);
 const setTestChannels = (ids) => setList('testChannelIds', ids);
 const setExcludedChannels = (ids) => setList('excludedChannelIds', ids);
 
+/**
+ * Switches one leg of the bridge disguise on or off.
+ *
+ * Kept out of {@link start} and {@link stop} on purpose: like the tester and
+ * channel lists, this is settings rather than part of a run, so it survives an
+ * effect ending and applies to the next one.
+ *
+ * @param {'disguiseToMinecraft'|'disguiseToDiscord'} key
+ * @param {boolean} enabled
+ * @returns {boolean} The stored value.
+ */
+function setDirection(key, enabled) {
+    const config = loadConfig();
+    config[key] = Boolean(enabled);
+    saveConfig(config);
+    return config[key];
+}
+
 module.exports = {
     getState,
     getTarget,
     isActive,
     appliesTo,
     appliesToGuildChat,
+    disguisesToMinecraft,
     start,
     stop,
     armExpiry,
@@ -285,4 +327,5 @@ module.exports = {
     setTesters,
     setTestChannels,
     setExcludedChannels,
+    setDirection,
 };

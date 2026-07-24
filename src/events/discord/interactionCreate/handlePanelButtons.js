@@ -18,9 +18,11 @@ const {
 const {announceStarted, announceEnded} = require('../../../utils/disguise');
 const {parseDuration} = require('../../../utils/duration');
 const {
+    getState,
     start,
     stop,
     armExpiry,
+    setDirection,
     setTesters,
     setTestChannels,
     setExcludedChannels,
@@ -153,6 +155,15 @@ async function handleProfile(interaction, action, invokerId) {
         return interaction.isFromMessage()
             ? interaction.update(profileView(invokerId))
             : interaction.reply({...profileView(invokerId), ephemeral: true});
+    }
+
+    // Read back off the stored state rather than off the button that was
+    // clicked: a panel left open shows whatever was true when it was drawn, and
+    // clicking a stale one should not flip the switch to what it already is.
+    if (action === 'toggleMinecraft' || action === 'toggleDiscord') {
+        const key = action === 'toggleMinecraft' ? 'disguiseToMinecraft' : 'disguiseToDiscord';
+        setDirection(key, !getState()[key]);
+        return interaction.update(profileView(invokerId));
     }
 
     if (action === 'startTest') return startEffect(interaction, 'test', invokerId);

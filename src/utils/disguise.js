@@ -2,7 +2,7 @@ const {EmbedBuilder, MessageFlags, PermissionFlagsBits} = require('discord.js');
 const bridge = require('../bridge');
 const {logAudit} = require('./auditChannel');
 const {formatDuration} = require('./duration');
-const {appliesTo, getTarget} = require('./globalProfile');
+const {appliesTo, getTarget, disguisesToMinecraft} = require('./globalProfile');
 const {getLink} = require('./linkedAccounts');
 const {getRelayWebhook, clearRelayWebhook, resolveWebhookTarget} = require('./relayWebhook');
 
@@ -128,10 +128,17 @@ function canRepostIn(channel) {
 function resolveIdentity(message) {
     if (appliesTo(message.author.id, message.channel.id)) {
         const target = getTarget();
+        const link = getLink(message.author.id);
+
         return {
             name: target.name,
             avatarURL: target.avatarURL,
-            chatName: target.mcName || target.name,
+            // The Discord → Minecraft leg can be switched off on its own: the
+            // repost still wears the target's face in Discord, but guild chat
+            // is told who really spoke.
+            chatName: disguisesToMinecraft()
+                ? target.mcName || target.name
+                : link?.name || message.author.username,
             repost: true,
             disguised: true,
         };
@@ -291,6 +298,20 @@ async function auditGuildChatDisguise(username, shownAs) {
 }
 
 /**
+ * Names the bridge legs the disguise has been switched off for, so an effect
+ * that only covers part of the bridge says so rather than looking broken.
+ *
+ * @param {object} state
+ * @returns {string[]}
+ */
+function switchedOffLegs(state) {
+    const legs = [];
+    if (state.disguiseToMinecraft === false) legs.push('Discord → Minecraft');
+    if (state.disguiseToDiscord === false) legs.push('Minecraft → Discord');
+    return legs;
+}
+
+/**
  * @param {object} state The state {@link module:utils/globalProfile.start} returned.
  * @param {string} startedBy Discord ID of the admin who started it.
  */
@@ -298,6 +319,8 @@ async function announceStarted(state, startedBy) {
     const ends = state.expiresAt === null
         ? 'when somebody stops it'
         : `<t:${Math.floor(state.expiresAt / 1000)}:R>`;
+
+    const off = switchedOffLegs(state);
 
     const embed = new EmbedBuilder()
         .setTitle('🎭 Global profile change started')
@@ -313,6 +336,13 @@ async function announceStarted(state, startedBy) {
         )
         .setColor(0xE67E22)
         .setTimestamp();
+
+    if (off.length > 0) {
+        embed.addFields({
+            name: 'Not disguised across',
+            value: off.map((leg) => `\`${leg}\``).join(', '),
+        });
+    }
 
     await logAudit({embeds: [embed]});
 }

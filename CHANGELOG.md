@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### New Features
+
+#### Admin Panel
+
++ A global profile change can now be limited to one side of the bridge. Two switches on the panel turn the
+  disguise off for **Discord → Minecraft** and **Minecraft → Discord** independently.
+  + With Discord → Minecraft off, messages sent in Discord are still reposted under the target, but the copy that
+    reaches guild chat is attributed to whoever really sent it — their linked Minecraft name, or their Discord
+    name if they have none.
+  + With Minecraft → Discord off, guild chat arriving in the bridge channel keeps the real player's name and head.
+  + Both switches are remembered between runs and can be flipped while an effect is running, taking effect on the
+    next message. An effect started with a side switched off says so in the audit channel.
+
 ## Version 1.2.0
 
 ### New Features
