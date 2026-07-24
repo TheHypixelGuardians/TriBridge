@@ -7,6 +7,8 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+## Version 1.2.1
+
 ### Global profile change
 
 - Admins can now switch the disguise off for one side of the bridge on its own, so guild chat can keep real names
