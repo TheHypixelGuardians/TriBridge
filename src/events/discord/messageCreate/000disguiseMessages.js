@@ -14,7 +14,7 @@ module.exports = async (client, message) => {
     if (message.author.bot) return;
 
     // DMs have no guild, and the bot serves exactly one server.
-    if (!message.guildId || message.guildId !== bridge.guildId) return;
+    if (!message.guildId || message.guildId !== bridge.discordServerId) return;
 
     // The bridge channel belongs to relayToMinecraft.js, which does its own
     // repost. Two handlers deleting the same message would race, and the numeric

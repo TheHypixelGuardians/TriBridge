@@ -7,6 +7,19 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Multiple guilds
+
+- This channel can now bridge more than one Hypixel guild at the same time.
+- Start a message with a guild's tag to send it to just that guild — `!sb hey` only reaches the SkyBlock guild.
+- A message with no tag still goes to every guild, exactly like before.
+- Get a tag wrong and nothing is lost: the message still goes out to everyone and picks up a ❓ so you can see
+  the typo.
+- Need to start a message with a literal `!`? Type it twice — `!!sb hi` comes out as `!sb hi`.
+- Guild chat coming back here is colour-coded and tagged, so you can tell at a glance which guild said what.
+- `/online` and `/ping` now cover every guild at once, and `/online` takes a `guild` if you only want one.
+- `/link` works if you are in any of the bridged guilds, not just one of them.
+- Nothing changes if only one guild is set up — no tags, same colours, same everything.
+
 ## Version 1.2.1
 
 ### Global profile change

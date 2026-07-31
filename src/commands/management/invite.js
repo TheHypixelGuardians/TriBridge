@@ -1,11 +1,18 @@
 const {ApplicationCommandOptionType} = require('discord.js');
-const bridge = require('../../bridge');
 const {isAdmin} = require('../../utils/adminRoles');
 const {isValidMinecraftName} = require('../../utils/minecraftName');
+const queryGuild = require('../../utils/queryGuild');
+const {
+    GUILD_OPTION,
+    guildOptionAutocomplete,
+    resolveTarget,
+    guildPhrase,
+    describeQueryFailure,
+} = require('../../utils/commandGuild');
 
 module.exports = {
     name: 'invite',
-    description: 'Invite a player to the Hypixel guild.',
+    description: 'Invite a player to a Hypixel guild.',
     options: [
         {
             name: 'username',
@@ -13,7 +20,10 @@ module.exports = {
             type: ApplicationCommandOptionType.String,
             required: true,
         },
+        GUILD_OPTION,
     ],
+
+    autocomplete: guildOptionAutocomplete(),
 
     callback: async (client, interaction) => {
         if (!isAdmin(interaction.member)) {
@@ -25,14 +35,12 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const mcBot = bridge.mcBot;
-        if (!mcBot || !bridge.mcBotConnected) {
-            return interaction.editReply('❌ The Minecraft bot is not connected.');
-        }
+        const target = resolveTarget(interaction);
+        if (!target.ok) return interaction.editReply(target.message);
 
         const username = interaction.options.getString('username');
 
-        // Validated because it goes straight into mcBot.chat() below without
+        // Validated because it goes straight into bot.chat() below without
         // passing through buildGuildChatCommand.
         if (!isValidMinecraftName(username)) {
             return interaction.editReply(
@@ -41,42 +49,10 @@ module.exports = {
             );
         }
 
-        // Collect messages from the MC bot after sending /guild invite
-        const collectedMessages = [];
-        let resolveCollector;
-        let idleTimeout;
+        const query = await queryGuild(target.record, `/guild invite ${username}`);
+        if (!query.ok) return interaction.editReply(describeQueryFailure(query));
 
-        const collectorPromise = new Promise((resolve) => {
-            resolveCollector = resolve;
-        });
-
-        const messageListener = (jsonMsg) => {
-            const text = jsonMsg.toString();
-            collectedMessages.push(text);
-
-            // Reset idle timer: resolve once no message arrives for 1.5 seconds
-            if (idleTimeout) clearTimeout(idleTimeout);
-            idleTimeout = setTimeout(() => resolveCollector(), 1500);
-        };
-
-        // Hard timeout of 5 seconds
-        const maxTimeout = setTimeout(() => resolveCollector(), 5000);
-
-        mcBot.on('message', messageListener);
-        mcBot.chat(`/guild invite ${username}`);
-
-        try {
-            await collectorPromise;
-        } finally {
-            clearTimeout(maxTimeout);
-            if (idleTimeout) clearTimeout(idleTimeout);
-            mcBot.removeListener('message', messageListener);
-        }
-
-        // Analyze collected messages to determine the result
-        const combined = collectedMessages.join('\n');
-        const result = parseInviteResponse(combined, username);
-
+        const result = parseInviteResponse(query.lines.join('\n'), username, target.guild);
         await interaction.editReply(result);
     },
 };
@@ -87,10 +63,13 @@ module.exports = {
  *
  * @param {string} combined - All collected messages joined by newlines
  * @param {string} username - The Minecraft username that was invited
+ * @param {object} guild - The Hypixel guild registry record
  * @returns {string} A Discord-friendly result message
  */
-function parseInviteResponse(combined, username) {
+function parseInviteResponse(combined, username, guild) {
     const lower = combined.toLowerCase();
+    const where = guildPhrase(guild);
+    const Where = guildPhrase(guild, true);
 
     // Successful invite
     if (
@@ -98,12 +77,12 @@ function parseInviteResponse(combined, username) {
         lower.includes('sent a guild invite') ||
         lower.includes('has been invited')
     ) {
-        return `✅ **${username}** has been invited to the guild!`;
+        return `✅ **${username}** has been invited to ${where}!`;
     }
 
     // Already in the guild
     if (lower.includes('already a member of this guild') || lower.includes('is already in your guild')) {
-        return `⚠️ **${username}** is already a member of the guild.`;
+        return `⚠️ **${username}** is already a member of ${where}.`;
     }
 
     // Player not found
@@ -118,12 +97,12 @@ function parseInviteResponse(combined, username) {
 
     // Guild is full
     if (lower.includes('guild is full') || lower.includes('your guild is full')) {
-        return `❌ The guild is full. Cannot invite **${username}**.`;
+        return `❌ ${Where} is full. Cannot invite **${username}**.`;
     }
 
     // No permission
     if (lower.includes("you don't have permission") || lower.includes('you do not have permission') || lower.includes('you must be')) {
-        return `❌ The bot does not have permission to invite players to the guild.`;
+        return `❌ The bot does not have permission to invite players to ${where}.`;
     }
 
     // Fallback: return raw messages for debugging

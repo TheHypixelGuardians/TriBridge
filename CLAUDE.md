@@ -58,20 +58,36 @@ node src/index.js
 ```
 
 Requires a `.env` (gitignored) with `DISCORD_TOKEN`, `DISCORD_CHANNEL_ID`, `LOG_CHANNEL`,
-`MINECRAFT_USERNAME`. First run opens a Microsoft device-code auth flow in the console;
-tokens are cached in `.minecraft-auth/` (gitignored).
+`MINECRAFT_USERNAME`. `MINECRAFT_USERNAME` only seeds the first Hypixel guild on a fresh
+install; once `guildsConfig.json` exists the registry is authoritative and the env var is
+ignored. A first sign-in for an account opens a Microsoft device-code flow — surfaced in
+Discord by `/guilds add|auth`, and always echoed to the console; tokens are cached per
+account in `.minecraft-auth/` (gitignored).
 
 Running the bot connects to live Discord and Hypixel — don't start it to "verify" a change
-unless the user asks. There is no offline harness.
+unless the user asks. There is no test suite, but a good deal *is* testable offline against
+fakes: `utils/chatRouting.js`, `utils/guilds.js`, `utils/queryGuild.js` (drive it with a bare
+`EventEmitter` whose `chat()` emits stub messages), `retireBot`, `utils/chatQueue.js` and
+`utils/areCommandsDifferent.js` are all pure or injectable. Prefer that over a live run.
 
 ## Architecture
 
-`src/index.js` boots the Discord client, populates the shared `bridge` object, wires the
-Discord event handler, logs in, then creates the Minecraft bot.
+`src/index.js` seeds the guild registry, boots the Discord client, populates the shared
+`bridge` object, wires the Discord event handler and logs in. It deliberately does **not**
+create any Minecraft bot: `002autoReconnect.js` owns every connect, so there is one code
+path for it, and Discord comes up even when no guild can connect (`/guilds` is the only way
+to repair a broken registry).
 
 **`src/bridge.js`** is the single shared-state module. Both sides import it to reach each
-other: `mcBot`, `discordClient`, `discordChannelId`, `logChannelId`, `mcBotConnected`,
-`reconnecting`. There is no DI — new cross-client state belongs here.
+other: `discordClient`, `discordChannelId`, `logChannelId`, `discordServerId`, and `mcBots`
+— a `Map` of `guildKey → BotRecord`, one per Hypixel guild. There is no DI, and deliberately
+no "current bot" scalar; new cross-client state belongs here.
+
+**`src/utils/guilds.js`** is the Hypixel guild registry over `guildsConfig.json`, and
+**`src/utils/mcBots.js`** holds the accessors for `bridge.mcBots`. Between them they answer
+every "which guild?" question. Resolve a user-supplied guild with `guilds.resolveKey()` —
+autocomplete values are attacker-controlled, so never index `bridge.mcBots` with a raw
+option value.
 
 **`src/handlers/eventHandler.js`** is used for *both* clients. Given a client and an events
 root, each subdirectory name is treated as an event name and every file inside is invoked
@@ -85,7 +101,13 @@ src/events/minecraft/<eventName>/<name>.js      → mcBot.on(eventName, ...)
 Numeric prefixes (`001registerCommands.js`, `002autoReconnect.js`) exist only to force
 ordering — keep the convention when order matters. Note the first parameter is the client
 the event came from, so in `events/minecraft/**` `client` is the *mineflayer bot*, not the
-Discord client; reach Discord via `bridge.discordClient`.
+Discord client; reach Discord via `bridge.discordClient`, and the emitting bot's Hypixel
+guild via `mcBots.guildForBot(client)` (backed by `bot.tribridgeGuildKey`, set before the
+bot can emit anything). Handlers must also bail on `client.tribridgeRetired`.
+
+`eventHandler` returns a disposer that removes everything it registered. The Discord call
+site ignores it; `createMcBot` stores it on the record so one bot can be torn down without
+disturbing the others.
 
 **Commands** live in `src/commands/<category>/<name>.js`. The category folder name becomes
 a page in `/help`, so adding a folder adds a help category. Each file exports:
@@ -100,43 +122,71 @@ module.exports = {
     deleted: false,                 // optional; true unregisters the command
     callback: async (client, interaction) => { ...
     },
+    autocomplete: async (client, interaction) => { ...
+    },                              // optional; dispatched by handleAutocomplete.js
 };
 ```
 
 `001registerCommands.js` diffs local commands against the registered application commands
 via `utils/areCommandsDifferent.js` and creates/edits/deletes them globally on startup.
-Global command propagation can take up to an hour on Discord's side.
+Global command propagation can take up to an hour on Discord's side. The diff compares
+`autocomplete` and recurses into subcommand options, so nested changes do propagate — but
+`choices` and `autocomplete` are mutually exclusive in the Discord API; never set both.
 
 ## Conventions
 
-- **Single-guild invariant:** commands are registered *globally*, but the bot serves one guild —
-  one bridge channel, one Minecraft account, one flat admin role list. `handleCommands.js`
-  refuses any interaction whose `guildId` is not `bridge.guildId` (resolved at startup by
-  `000resolveGuild.js` from the bridge channel, or `DISCORD_GUILD_ID`). Without that check an
+- **"Guild" means two things — keep them apart.** A *Hypixel guild* is one of the (plural)
+  Minecraft guilds the bot bridges; it is identified by a `guildKey` and lives in
+  `guildsConfig.json`. A *Discord server* is the single Discord community the bot serves; its id
+  is `bridge.discordServerId`. discord.js confusingly calls a server a "guild", so
+  `interaction.guildId` is a Discord server id — that is the library's word, not ours. Never
+  introduce a bare `guildId` in new code.
+- **Single-server invariant:** commands are registered *globally*, but the bot serves one Discord
+  server — one bridge channel, one flat admin role list. `handleCommands.js` refuses any
+  interaction whose `guildId` is not `bridge.discordServerId` (resolved at startup by
+  `000resolveServer.js` from the bridge channel, or `DISCORD_GUILD_ID`). Without that check an
   administrator of *any* other server the bot is in can `/adminrole add` a role they control and
-  inherit bot-admin, since `isAdmin` only matches role IDs and has no guild dimension. It fails
-  closed: an unresolved `bridge.guildId` refuses everything. Don't add a command dispatch path
-  that skips this guard.
+  inherit bot-admin, since `isAdmin` only matches role IDs and has no server dimension. It fails
+  closed: an unresolved `bridge.discordServerId` refuses everything. Don't add a command dispatch
+  path that skips this guard.
 - **Permissions:** two separate systems. `permissionsRequired` is enforced generically by
   `handleCommands.js` (used for real Discord permissions like `Administrator`). Bot-admin
   gating is done *inside* the callback with `isAdmin(interaction.member)` from
   `utils/adminRoles.js`, which reads role IDs from `adminRolesConfig.json` (gitignored,
   created on demand, cached in memory). Follow the existing pattern for the command type
   you're adding.
-- **Querying Hypixel:** commands that need a server response (`/invite`, `/kick`, `/send`,
-  `/online`) use the same collector idiom — attach a temporary `message` listener, send the
-  chat command, resolve on a ~1–1.5s idle timer with a 5s hard timeout, then always remove
-  the listener and clear both timers in a `finally`. Reuse this shape rather than inventing
-  a new one; forgetting to remove the listener leaks it onto the bot.
+- **Querying Hypixel:** use `queryGuild(record, chatCommand, opts)` from `utils/queryGuild.js`.
+  Never hand-roll a `message` listener again — Hypixel gives no request/response correlation,
+  so `queryGuild` serialises every query per bot and holds a settle window afterwards, which is
+  the only thing stopping two concurrent commands from eating each other's output. It also owns
+  listener and timer cleanup. `format: 'motd'` when the colour codes matter.
+- **Sending to guild chat:** use `sendChat(record, text)` from `utils/chatQueue.js`, which
+  spaces packets per account. Calling `bot.chat` directly for relayed traffic will get accounts
+  muted by Hypixel's spam filter, and a broadcast multiplies the rate by the guild count.
+- **Picking a guild in a command:** `resolveTarget(interaction)` from `utils/commandGuild.js`,
+  with `GUILD_OPTION` in `options` and `guildOptionAutocomplete()` as the `autocomplete` export.
+  It handles every "no guild / unknown guild / disabled / offline" case in one place with the
+  right tone. Use `guildPhrase(guild)` / `inGuild(guild)` in reply text so a single-guild
+  install keeps its original wording.
 - **Minecraft text:** strip formatting with `.replace(/§./g, '')`. Use `jsonMsg.toString()`
   for plain text, `jsonMsg.toMotd()` when the color codes themselves carry meaning (e.g.
   `§a` marks online players in `/online`).
 - **Guild-chat parsing** is regex against Hypixel's English chat output and is inherently
   brittle. Keep the documented format comment next to any regex you add or change.
-- **Relay loops:** `relayToDiscord.js` drops messages whose author equals
-  `bridge.mcBot.username`. Any new Minecraft→Discord relay must do the same. On the Discord
-  side, webhook reposts are authored by a bot, so `relayToMinecraft.js`'s existing
-  `message.author.bot` guard is what stops the repost loop — don't weaken it.
+- **Relay loops:** `relayToDiscord.js` drops messages whose author matches *any* registered
+  bot account, via `mcBots.isOwnAccountName()` — not just the emitting bot's own name, because
+  two accounts that ended up in the same Hypixel guild would otherwise relay each other
+  forever. Any new Minecraft→Discord relay must do the same. On the Discord side, webhook
+  reposts are authored by a bot, so `relayToMinecraft.js`'s existing `message.author.bot` guard
+  is what stops the repost loop — don't weaken it.
+- **Routing Discord→Minecraft:** `routeMessage()` from `utils/chatRouting.js` decides which
+  guilds a bridge message reaches (`!tag` for one, otherwise all). It is pure — test it there
+  rather than through the handler. Build the `/gc` command **once** and reuse it for every
+  target: identical name plus identical body means identical truncation, so the 100-character
+  budget stays deterministic. Hypixel's duplicate-message filter is per account, so identical
+  text from several accounts is fine — don't "fix" it by varying the text per guild. The guild
+  tag is a Discord-side label and never goes into the `/gc` copy. The disguise repost happens
+  once, outside the fan-out, because there is only ever one Discord message.
 - **Relaying to guild chat:** always build the command with `buildGuildChatCommand()` from
   `utils/sanitizeForChat.js` rather than interpolating a string. Minecraft 1.8 caps chat at
   100 characters, and mineflayer's `bot.chat` splits on newlines — so an un-flattened
@@ -148,9 +198,9 @@ Global command propagation can take up to an hour on Discord's side.
   argument through `sanitizeForChat()` first — same newline-injection hazard as above. `/send`
   is the deliberate exception: sending an arbitrary command is the whole point of it, which is
   why it is admin-gated.
-- **Replies:** `deferReply()` first for anything touching the Minecraft bot, then
-  `editReply()`. Guard with `if (!mcBot || !bridge.mcBotConnected)`. User-facing strings use
-  ✅ / ⚠️ / ❌ prefixes and `>` blockquotes — match the existing tone.
+- **Replies:** `deferReply()` first for anything touching a Minecraft bot, then `editReply()`.
+  Guard with `resolveTarget(interaction)`. User-facing strings use ✅ / ⚠️ / ❌ prefixes and
+  `>` blockquotes — match the existing tone.
 - **Discord embed limits:** description 4096 chars, message content 2000. Existing code
   truncates explicitly (see `online.js`, `send.js`); do the same for anything relaying
   server output.
@@ -164,11 +214,17 @@ memory — same shape as `adminRoles.js`), keyed by Discord user ID and holding 
 canonical name and the UUID. The UUID is what avatar URLs use, so links survive Minecraft
 name changes. One Minecraft account maps to at most one Discord user; `setLink` enforces it.
 
+Links are deliberately **not** scoped to a Hypixel guild — one link per Discord user, whatever
+guild they are in.
+
 `/link` verifies the name exists via `utils/mojang.js`, then checks the live `/guild list`
-roster using the standard collector idiom. It **fails open only when the result is
-inconclusive** (bot offline, timeout, output that never looked like a roster) — never when
-the roster parsed cleanly and the name was absent. Keep that distinction if you touch it;
-collapsing the two turns the membership check into decoration.
+roster of *every connected guild* via `queryGuild`, and accepts membership of any one of them.
+It **fails open only when the result is inconclusive** (no bot connected, timeout, output that
+never looked like a roster) — never when a roster parsed cleanly and the name was absent.
+Across guilds that means: `found` if any roster has them, `absent` only if every roster parsed
+cleanly and none did, `inconclusive` otherwise. Keep that distinction if you touch it;
+collapsing the two turns the membership check into decoration. Note it necessarily weakens as
+guilds are added, since one flaky roster now makes the whole check inconclusive.
 
 `relayToMinecraft.js` branches on the link. Unlinked users relay as before. Linked users get
 their message reposted through the `TriBridge Relay` webhook (`utils/relayWebhook.js`) with
@@ -201,18 +257,41 @@ The repost path needs **Manage Webhooks** and **Manage Messages**. Neither is en
 `messageCreate`), so failure is handled at runtime: fall back to the old relay behaviour and
 report once to the log channel, latched so it doesn't spam.
 
-## Reconnection
+## Hypixel guilds and reconnection
 
-`002autoReconnect.js` polls every 10s; if `mcBotConnected` is false and `reconnecting` is
-false it calls `createMcBot()`, which tears down the old bot (`removeAllListeners()` +
-`quit()`), re-authenticates, and re-registers the Minecraft event handlers. `/login` shares
-the same `reconnecting` flag. Anything that recreates the bot must set and clear that flag
-in a `finally`, and must not cache `bridge.mcBot` across an await — read it fresh.
+`guildsConfig.json` holds the registered guilds; `utils/guilds.js` reads and writes it with
+the same lazy-cache-and-`writeFileSync` shape as the other config modules, and `/guilds`
+is the only supported way to change it. `key` and `account` are immutable — `account` is the
+key prismarine-auth hashes for its token cache, so normalising or editing it later silently
+starts a fresh device-code flow against a different cache file.
+
+`002autoReconnect.js` polls every 10s and starts **at most one** connect per tick, iterating
+`guilds.getEnabled()`. That stagger is deliberate: a Hypixel restart would otherwise bring
+every account back at once and get them all throttled. `createMcBot(guildKey)` retires the old
+bot, re-authenticates and re-registers the Minecraft handlers. Four things must hold:
+
+- **`connecting` is cleared by the `spawn`/`end`/`error`/watchdog handlers, never in a
+  `finally` after `createMcBot()` returns.** The bot is still mid-handshake at that point, and
+  clearing it early lets the next tick tear down a bot that was about to connect.
+- **`awaitingDeviceCode` suppresses the poller.** Without it a guild needing a Microsoft
+  sign-in starts a second flow ten seconds later, then a third.
+- **Never `removeAllListeners()` with no argument.** It strips mineflayer's own internal
+  listeners *and* the `error` listener, and an EventEmitter with no `error` listener turns a
+  late socket error on a dead bot into an uncaught exception that kills the process. Use
+  `retireBot()`, which removes named events and re-attaches an error sink.
+- **Never cache a bot across an await** — read `record.bot` fresh and re-check
+  `record.connected` and `bot.tribridgeRetired`.
+
+Device codes go to the requesting admin's ephemeral reply, else a DM to `addedBy`, else the
+console (`utils/deviceCode.js`). They must never reach the log channel or any shared channel:
+whoever holds the code can complete the sign-in with *their own* Microsoft account.
 
 ## Files to leave alone
 
 `.env`, `.minecraft-auth/`, `adminRolesConfig.json`, `linkedAccountsConfig.json`,
-`linkRoleConfig.json`, `.idea/` — local/secret state. Never print or commit token or auth-cache contents.
+`linkRoleConfig.json`, `globalProfileConfig.json`, `auditChannelConfig.json`,
+`featureRequestsConfig.json`, `guildsConfig.json`, `.idea/` — local/secret state. Never print
+or commit token, auth-cache or account-address contents.
 
 `src/events/minecraft/message/test.js` is a no-op debug scratch file with commented-out
 logging; it is intentionally inert.

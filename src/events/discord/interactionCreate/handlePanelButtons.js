@@ -27,7 +27,7 @@ const {
     setTestChannels,
     setExcludedChannels,
 } = require('../../../utils/globalProfile');
-const {isAllowedGuild} = require('../../../utils/guildGuard');
+const {isAllowedServer} = require('../../../utils/serverGuard');
 const {getLink} = require('../../../utils/linkedAccounts');
 const {resolveMember} = require('../../../utils/linkRole');
 
@@ -194,9 +194,9 @@ module.exports = async (client, interaction) => {
 
     // Same guard handleCommands.js applies: commands are registered globally,
     // and the panel reaches the bot's admin state.
-    if (!isAllowedGuild(interaction)) {
+    if (!isAllowedServer(interaction)) {
         return interaction.reply({
-            content: '❌ This bot only serves its configured guild.',
+            content: '❌ This bot only serves its configured server.',
             ephemeral: true,
         });
     }

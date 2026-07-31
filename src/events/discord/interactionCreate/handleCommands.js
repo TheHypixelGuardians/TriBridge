@@ -1,7 +1,10 @@
 const getLocalCommands = require('../../../utils/getLocalCommands');
-const {isAllowedGuild} = require('../../../utils/guildGuard');
+const {isAllowedServer} = require('../../../utils/serverGuard');
 
 module.exports = async (client, interaction) => {
+    // `isCommand()` is a strict type check for ApplicationCommand, so autocomplete
+    // interactions (a different type) already fall through to
+    // handleAutocomplete.js. Don't "fix" this into isChatInputCommand-or-broader.
     if (!interaction.isCommand()) return;
 
     const localCommands = getLocalCommands();
@@ -16,9 +19,9 @@ module.exports = async (client, interaction) => {
         // Checked before anything else: commands are registered globally, so
         // this is what keeps a foreign server's administrators from reaching
         // the bot's admin config and the Minecraft account behind it.
-        if (!isAllowedGuild(interaction)) {
+        if (!isAllowedServer(interaction)) {
             await interaction.reply({
-                content: '❌ This bot only serves its configured guild.',
+                content: '❌ This bot only serves its configured server.',
                 ephemeral: true,
             });
             return;

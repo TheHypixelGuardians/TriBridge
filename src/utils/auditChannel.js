@@ -23,10 +23,23 @@ function saveConfig(config) {
 }
 
 /**
- * @returns {string|null} The channel admin actions are recorded in, or null
- *   when none is configured.
+ * The channel admin actions are recorded in.
+ *
+ * A Hypixel guild may override the destination for its own entries. Those
+ * overrides live in `guildsConfig.json` rather than here, so removing a guild
+ * cannot leave an orphaned channel setting behind.
+ *
+ * @param {string} [guildKey] Scope the lookup to one Hypixel guild.
+ * @returns {string|null} Null when nothing is configured at either level.
  */
-function getAuditChannelId() {
+function getAuditChannelId(guildKey) {
+    if (guildKey) {
+        // Required lazily: guilds.js is loaded by modules that this one is
+        // loaded by, and a top-level require would close the cycle.
+        const guilds = require('./guilds');
+        const scoped = guilds.get(guildKey)?.auditChannelId;
+        if (scoped) return scoped;
+    }
     return loadConfig().channelId ?? null;
 }
 
@@ -45,10 +58,12 @@ function setAuditChannelId(channelId) {
  * channel must not take that work down with it.
  *
  * @param {string|import('discord.js').MessageCreateOptions} payload
+ * @param {{guildKey?: string}} [options] Route to one Hypixel guild's audit
+ *   channel when it has its own; otherwise the global one, as before.
  * @returns {Promise<boolean>} Whether the line landed.
  */
-async function logAudit(payload) {
-    const channelId = getAuditChannelId();
+async function logAudit(payload, {guildKey} = {}) {
+    const channelId = getAuditChannelId(guildKey);
     if (!channelId || !bridge.discordClient) return false;
 
     const options = typeof payload === 'string' ? {content: payload} : payload;

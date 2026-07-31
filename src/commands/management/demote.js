@@ -1,11 +1,18 @@
 const {ApplicationCommandOptionType} = require('discord.js');
-const bridge = require('../../bridge');
 const {isAdmin} = require('../../utils/adminRoles');
 const {isValidMinecraftName} = require('../../utils/minecraftName');
+const queryGuild = require('../../utils/queryGuild');
+const {
+    GUILD_OPTION,
+    guildOptionAutocomplete,
+    resolveTarget,
+    guildPhrase,
+    describeQueryFailure,
+} = require('../../utils/commandGuild');
 
 module.exports = {
     name: 'demote',
-    description: 'Demote a member in the Hypixel guild.',
+    description: 'Demote a member in a Hypixel guild.',
     options: [
         {
             name: 'username',
@@ -13,7 +20,10 @@ module.exports = {
             type: ApplicationCommandOptionType.String,
             required: true,
         },
+        GUILD_OPTION,
     ],
+
+    autocomplete: guildOptionAutocomplete(),
 
     callback: async (client, interaction) => {
         if (!isAdmin(interaction.member)) {
@@ -25,14 +35,12 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const mcBot = bridge.mcBot;
-        if (!mcBot || !bridge.mcBotConnected) {
-            return interaction.editReply('❌ The Minecraft bot is not connected.');
-        }
+        const target = resolveTarget(interaction);
+        if (!target.ok) return interaction.editReply(target.message);
 
         const username = interaction.options.getString('username');
 
-        // Validated because it goes straight into mcBot.chat() below without
+        // Validated because it goes straight into bot.chat() below without
         // passing through buildGuildChatCommand.
         if (!isValidMinecraftName(username)) {
             return interaction.editReply(
@@ -41,38 +49,10 @@ module.exports = {
             );
         }
 
-        const collectedMessages = [];
-        let resolveCollector;
-        let idleTimeout;
+        const query = await queryGuild(target.record, `/guild demote ${username}`);
+        if (!query.ok) return interaction.editReply(describeQueryFailure(query));
 
-        const collectorPromise = new Promise((resolve) => {
-            resolveCollector = resolve;
-        });
-
-        const messageListener = (jsonMsg) => {
-            const text = jsonMsg.toString();
-            collectedMessages.push(text);
-
-            if (idleTimeout) clearTimeout(idleTimeout);
-            idleTimeout = setTimeout(() => resolveCollector(), 1500);
-        };
-
-        const maxTimeout = setTimeout(() => resolveCollector(), 5000);
-
-        mcBot.on('message', messageListener);
-        mcBot.chat(`/guild demote ${username}`);
-
-        try {
-            await collectorPromise;
-        } finally {
-            clearTimeout(maxTimeout);
-            if (idleTimeout) clearTimeout(idleTimeout);
-            mcBot.removeListener('message', messageListener);
-        }
-
-        const combined = collectedMessages.join('\n');
-        const result = parseDemoteResponse(combined, username);
-
+        const result = parseDemoteResponse(query.lines.join('\n'), username, target.guild);
         await interaction.editReply(result);
     },
 };
@@ -83,10 +63,12 @@ module.exports = {
  *
  * @param {string} combined - All collected messages joined by newlines
  * @param {string} username - The Minecraft username that was demoted
+ * @param {object} guild - The Hypixel guild registry record
  * @returns {string} A Discord-friendly result message
  */
-function parseDemoteResponse(combined, username) {
+function parseDemoteResponse(combined, username, guild) {
     const lower = combined.toLowerCase();
+    const where = guildPhrase(guild);
 
     // Successful demotion
     if (lower.includes('was demoted')) {
@@ -100,7 +82,7 @@ function parseDemoteResponse(combined, username) {
 
     // Player not in guild
     if (lower.includes('is not in your guild') || lower.includes('not a member of your guild')) {
-        return `❌ **${username}** is not a member of the guild.`;
+        return `❌ **${username}** is not a member of ${where}.`;
     }
 
     // Player not found
@@ -110,7 +92,7 @@ function parseDemoteResponse(combined, username) {
 
     // No permission
     if (lower.includes("you don't have permission") || lower.includes('you do not have permission') || lower.includes('you must be')) {
-        return `❌ The bot does not have permission to demote players in the guild.`;
+        return `❌ The bot does not have permission to demote players in ${where}.`;
     }
 
     // Fallback

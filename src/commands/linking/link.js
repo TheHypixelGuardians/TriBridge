@@ -1,18 +1,10 @@
 const {ApplicationCommandOptionType} = require('discord.js');
-const bridge = require('../../bridge');
 const {lookupProfile} = require('../../utils/mojang');
 const {setLink, getLink} = require('../../utils/linkedAccounts');
 const {applyLinkRole, describeFailure} = require('../../utils/linkRole');
-
-async function sendLogMessage(message) {
-    if (!bridge.logChannelId || !bridge.discordClient) return;
-    try {
-        const channel = await bridge.discordClient.channels.fetch(bridge.logChannelId);
-        await channel.send(message);
-    } catch (error) {
-        console.error('Failed to send log channel notification:', error);
-    }
-}
+const {logGlobal} = require('../../utils/guildLog');
+const mcBots = require('../../utils/mcBots');
+const queryGuild = require('../../utils/queryGuild');
 
 /**
  * Searches collected `/guild list` output for a member.
@@ -57,6 +49,34 @@ function findInRoster(rawMessages, targetName) {
     return sawRosterStructure ? 'absent' : 'inconclusive';
 }
 
+/**
+ * Checks every connected guild's roster for a player.
+ *
+ * A member of *any* registered guild may link. The fail-open rule from the
+ * single-guild version is preserved exactly: 'absent' only when every roster
+ * that was queried parsed cleanly and none of them held the name. One flaky
+ * roster makes the whole check inconclusive rather than rejecting someone who
+ * is in fact a member — the check gets weaker as guilds are added, and that is
+ * the deliberate trade.
+ *
+ * @param {string} name Canonical Minecraft name.
+ * @returns {Promise<'found'|'absent'|'inconclusive'>}
+ */
+async function checkRosters(name) {
+    const records = mcBots.getConnectedRecords();
+    if (records.length === 0) return 'inconclusive';
+
+    const verdicts = await Promise.all(records.map(async (record) => {
+        const query = await queryGuild(record, '/guild list', {format: 'motd'});
+        if (!query.ok) return 'inconclusive';
+        return findInRoster(query.lines, name);
+    }));
+
+    if (verdicts.includes('found')) return 'found';
+    if (verdicts.every((verdict) => verdict === 'absent')) return 'absent';
+    return 'inconclusive';
+}
+
 module.exports = {
     name: 'link',
     description: 'Bind your Minecraft account to your Discord account.',
@@ -92,43 +112,13 @@ module.exports = {
             );
         }
 
-        // Check guild membership against the live roster.
-        let verdict = 'inconclusive';
-        const mcBot = bridge.mcBot;
-
-        if (mcBot && bridge.mcBotConnected) {
-            const collectedMessages = [];
-            let resolveCollector;
-            let idleTimeout;
-
-            const collectorPromise = new Promise((resolve) => {
-                resolveCollector = resolve;
-            });
-
-            const messageListener = (jsonMsg) => {
-                collectedMessages.push(jsonMsg.toMotd());
-                if (idleTimeout) clearTimeout(idleTimeout);
-                idleTimeout = setTimeout(() => resolveCollector(), 1500);
-            };
-
-            const maxTimeout = setTimeout(() => resolveCollector(), 5000);
-
-            try {
-                mcBot.on('message', messageListener);
-                mcBot.chat('/guild list');
-                await collectorPromise;
-                verdict = findInRoster(collectedMessages, profile.name);
-            } finally {
-                clearTimeout(maxTimeout);
-                if (idleTimeout) clearTimeout(idleTimeout);
-                mcBot.removeListener('message', messageListener);
-            }
-        }
+        // Check membership against every connected guild's live roster.
+        const verdict = await checkRosters(profile.name);
 
         if (verdict === 'absent') {
             return interaction.editReply(
-                `❌ **${profile.name}** is not a member of the guild.\n` +
-                '> Join the guild first, then run this command again.',
+                `❌ **${profile.name}** is not a member of any guild this bot bridges.\n` +
+                '> Join one first, then run this command again.',
             );
         }
 
@@ -142,7 +132,7 @@ module.exports = {
             );
         }
 
-        await sendLogMessage(
+        await logGlobal(
             `🔗 <@${interaction.user.id}> linked to **${profile.name}**` +
             (previous ? ` (was **${previous.name}**).` : '.'),
         );
@@ -153,7 +143,7 @@ module.exports = {
         if (!roleResult.ok) {
             const failure = describeFailure(roleResult);
             if (failure) {
-                await sendLogMessage(
+                await logGlobal(
                     `⚠️ Could not give the link role to <@${interaction.user.id}> — ${failure}.`,
                 );
             }

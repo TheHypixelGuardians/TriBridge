@@ -33,11 +33,24 @@ module.exports = (existingCommand, localCommand) => {
                 // so comparing `false` against `undefined` would report a phantom diff
                 // and re-edit the command on every startup.
                 (localOption.required || false) !== (existingOption.required || false) ||
+                // Same normalization: Discord omits `autocomplete` when it is off.
+                // Without this, turning autocomplete on or off on an existing
+                // option would never propagate to the registered command.
+                (localOption.autocomplete || false) !== (existingOption.autocomplete || false) ||
                 (localOption.choices?.length || 0) !==
                 (existingOption.choices?.length || 0) ||
                 areChoicesDifferent(
                     localOption.choices || [],
                     existingOption.choices || []
+                ) ||
+                // Recurse into subcommand and subcommand-group options. Without
+                // this, adding or changing an option *nested under* an existing
+                // subcommand looks identical to Discord and never re-registers.
+                (localOption.options?.length || 0) !==
+                (existingOption.options?.length || 0) ||
+                areOptionsDifferent(
+                    existingOption.options || [],
+                    localOption.options || []
                 )
             ) {
                 return true;

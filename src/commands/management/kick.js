@@ -1,12 +1,19 @@
 const {ApplicationCommandOptionType} = require('discord.js');
-const bridge = require('../../bridge');
 const {isAdmin} = require('../../utils/adminRoles');
 const {isValidMinecraftName} = require('../../utils/minecraftName');
 const {sanitizeForChat} = require('../../utils/sanitizeForChat');
+const queryGuild = require('../../utils/queryGuild');
+const {
+    GUILD_OPTION,
+    guildOptionAutocomplete,
+    resolveTarget,
+    guildPhrase,
+    describeQueryFailure,
+} = require('../../utils/commandGuild');
 
 module.exports = {
     name: 'kick',
-    description: 'Kick a member from the Hypixel guild.',
+    description: 'Kick a member from a Hypixel guild.',
     options: [
         {
             name: 'username',
@@ -20,7 +27,10 @@ module.exports = {
             type: ApplicationCommandOptionType.String,
             required: false,
         },
+        GUILD_OPTION,
     ],
+
+    autocomplete: guildOptionAutocomplete(),
 
     callback: async (client, interaction) => {
         if (!isAdmin(interaction.member)) {
@@ -32,14 +42,12 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const mcBot = bridge.mcBot;
-        if (!mcBot || !bridge.mcBotConnected) {
-            return interaction.editReply('❌ The Minecraft bot is not connected.');
-        }
+        const target = resolveTarget(interaction);
+        if (!target.ok) return interaction.editReply(target.message);
 
         const username = interaction.options.getString('username');
 
-        // Both go straight into mcBot.chat() below without passing through
+        // Both go straight into bot.chat() below without passing through
         // buildGuildChatCommand, so both are checked here: the name against its
         // own shape, the free-text reason flattened to a single line.
         if (!isValidMinecraftName(username)) {
@@ -50,44 +58,12 @@ module.exports = {
         }
 
         const reason = sanitizeForChat(interaction.options.getString('reason'));
+        const command = reason ? `/guild kick ${username} ${reason}` : `/guild kick ${username}`;
 
-        const collectedMessages = [];
-        let resolveCollector;
-        let idleTimeout;
+        const query = await queryGuild(target.record, command);
+        if (!query.ok) return interaction.editReply(describeQueryFailure(query));
 
-        const collectorPromise = new Promise((resolve) => {
-            resolveCollector = resolve;
-        });
-
-        const messageListener = (jsonMsg) => {
-            const text = jsonMsg.toString();
-            collectedMessages.push(text);
-
-            if (idleTimeout) clearTimeout(idleTimeout);
-            idleTimeout = setTimeout(() => resolveCollector(), 1500);
-        };
-
-        const maxTimeout = setTimeout(() => resolveCollector(), 5000);
-
-        mcBot.on('message', messageListener);
-
-        if (reason) {
-            mcBot.chat(`/guild kick ${username} ${reason}`);
-        } else {
-            mcBot.chat(`/guild kick ${username}`);
-        }
-
-        try {
-            await collectorPromise;
-        } finally {
-            clearTimeout(maxTimeout);
-            if (idleTimeout) clearTimeout(idleTimeout);
-            mcBot.removeListener('message', messageListener);
-        }
-
-        const combined = collectedMessages.join('\n');
-        const result = parseKickResponse(combined, username);
-
+        const result = parseKickResponse(query.lines.join('\n'), username, target.guild);
         await interaction.editReply(result);
     },
 };
@@ -98,19 +74,21 @@ module.exports = {
  *
  * @param {string} combined - All collected messages joined by newlines
  * @param {string} username - The Minecraft username that was kicked
+ * @param {object} guild - The Hypixel guild registry record
  * @returns {string} A Discord-friendly result message
  */
-function parseKickResponse(combined, username) {
+function parseKickResponse(combined, username, guild) {
     const lower = combined.toLowerCase();
+    const where = guildPhrase(guild);
 
     // Successful kick
     if (lower.includes('was kicked') || lower.includes('has been kicked')) {
-        return `✅ **${username}** has been kicked from the guild.`;
+        return `✅ **${username}** has been kicked from ${where}.`;
     }
 
     // Player not in guild
     if (lower.includes('is not in your guild') || lower.includes('not a member of your guild')) {
-        return `❌ **${username}** is not a member of the guild.`;
+        return `❌ **${username}** is not a member of ${where}.`;
     }
 
     // Player not found
@@ -120,12 +98,12 @@ function parseKickResponse(combined, username) {
 
     // Cannot kick yourself
     if (lower.includes('cannot kick yourself') || lower.includes("can't kick yourself")) {
-        return `❌ The bot cannot kick itself from the guild.`;
+        return `❌ The bot cannot kick itself from ${where}.`;
     }
 
     // No permission
     if (lower.includes("you don't have permission") || lower.includes('you do not have permission') || lower.includes('you must be')) {
-        return `❌ The bot does not have permission to kick players from the guild.`;
+        return `❌ The bot does not have permission to kick players from ${where}.`;
     }
 
     // Cannot kick higher rank

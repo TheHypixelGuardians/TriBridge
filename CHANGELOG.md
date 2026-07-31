@@ -2,6 +2,98 @@
 
 ## Unreleased
 
+### New Features
+
+#### Bridge
+
++ The bot can now bridge **several Hypixel guilds at once**, each with its own Minecraft account, through
+  the same Discord channel.
+  + Start a message with `!tag` to send it to one guild only — `!sb hey` reaches just the guild tagged
+    `SB`. A message with no tag goes to every guild, as it always did.
+  + A tag nobody recognises is never swallowed: the message is still delivered everywhere, exactly as
+    typed, and gets a ❓ reaction so a typo is visible. This needs the **Add Reactions** permission in
+    the bridge channel.
+  + `!!` sends a literal `!` — `!!sb hi` reaches guild chat as `!sb hi`.
+  + Guild chat coming back into Discord is colour-coded per guild and carries the guild's tag next to the
+    player's name, so it is obvious which guild said what.
++ With only one guild configured, nothing changes: no tags on incoming messages, the original green, and
+  every message goes to the one guild whatever you type.
+
+#### Management
+
++ Added `/guilds` to manage the bridged Hypixel guilds, admin-only and private.
+  + `/guilds add` registers a guild and signs its Minecraft account in **from Discord** — the Microsoft
+    code arrives in your own private reply, so nobody needs console access to add an account. `/guilds auth`
+    repeats the sign-in when a token expires.
+  + `/guilds list`, `edit`, `remove` and `default` cover the rest. Account addresses are masked in every
+    reply.
+  + Each guild can have its own name, chat tag, colour, log channel and audit channel, and can be
+    switched off without being removed.
++ `/invite`, `/kick`, `/promote`, `/demote`, `/send` and `/login` take an optional `guild` to choose which
+  guild they act on, with autocomplete. Leave it out and they use the default guild.
+  + `/send` never fans out — it always targets exactly one guild, because it runs arbitrary commands as
+    the Minecraft account.
+  + `/login` on its own reconnects **every** disconnected guild, since after an outage that is almost
+    always what was meant.
++ `/auditchannel set` and `/auditchannel clear` take an optional `guild`, so one guild's admin actions can
+  be recorded somewhere different. `/auditchannel show` lists the default and every override.
+
+#### Information
+
++ `/online` now covers every guild at once, one section per guild in its own colour. Name a `guild` to see
+  just that one.
++ `/ping` reports each guild's Minecraft connection on its own line, including whether it is connecting or
+  waiting for a sign-in.
+
+### Improvements
+
+#### Bridge
+
++ Connection notices now say which guild they are about, and can be routed to a per-guild log channel.
++ A guild whose bot is offline is skipped quietly instead of holding anything up; the other guilds still
+  get the message.
++ Reconnections are staggered — one guild at a time — so a Hypixel restart cannot bring every account back
+  at once and get them all throttled.
+
+#### Account Linking
+
++ `/link` now accepts a member of **any** bridged guild. It still refuses only when every roster was read
+  successfully and the name was in none of them.
+
+### Fixes
+
+#### Bridge
+
++ Two guild commands running at the same time no longer swallow each other's answers. Each account handles
+  one query at a time now, so `/online` and `/invite` fired together both report correctly.
++ `/online` no longer leaves a stray listener behind when the server does not answer in time.
++ A late error arriving from an already-disconnected Minecraft bot no longer crashes the whole bot.
++ Reconnection no longer tears down a bot that is still in the middle of connecting.
++ An account that cannot connect at all no longer retries every ten seconds forever, or fills the log
+  channel with the same failure. It backs off, and reports the first failure and then one more.
+
+#### Management
+
++ Changing an option nested inside a subcommand — like the channel on `/auditchannel set` — now updates the
+  command with Discord instead of being silently ignored.
+
+### Technical Details
+
+#### Core
+
++ `bridge.mcBot` and its connection flags are replaced by a registry of one bot record per Hypixel guild.
+  Minecraft event handlers identify their guild from the bot they were called with.
++ The collector idiom that was copied into seven commands is now `utils/queryGuild.js`, serialised per bot
+  with a settle window between queries.
++ Outbound guild chat goes through a per-account rate limiter, since a broadcast now multiplies the packet
+  rate by the number of guilds.
++ `bridge.guildId` and `utils/guildGuard.js` are renamed to `discordServerId` and `utils/serverGuard.js`,
+  so "guild" unambiguously means a Hypixel guild everywhere else.
++ `areCommandsDifferent.js` compares the `autocomplete` flag and recurses into subcommand options.
++ The four copies of the log-channel helper are collapsed into `utils/guildLog.js`.
++ Existing installations are migrated automatically: on first run without `guildsConfig.json`, the account
+  in `MINECRAFT_USERNAME` is registered as the first guild.
+
 ## Version 1.2.1
 
 ### New Features

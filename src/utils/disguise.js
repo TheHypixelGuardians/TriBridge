@@ -1,6 +1,6 @@
 const {EmbedBuilder, MessageFlags, PermissionFlagsBits} = require('discord.js');
-const bridge = require('../bridge');
 const {logAudit} = require('./auditChannel');
+const {logGlobal} = require('./guildLog');
 const {formatDuration} = require('./duration');
 const {appliesTo, getTarget, disguisesToMinecraft} = require('./globalProfile');
 const {getLink} = require('./linkedAccounts');
@@ -26,21 +26,11 @@ function headURL(id) {
     return `https://mc-heads.net/avatar/${encodeURIComponent(id)}`;
 }
 
-async function sendLogMessage(message) {
-    if (!bridge.logChannelId || !bridge.discordClient) return;
-    try {
-        const channel = await bridge.discordClient.channels.fetch(bridge.logChannelId);
-        await channel.send(message);
-    } catch (error) {
-        console.error('Failed to send log channel notification:', error);
-    }
-}
-
 async function warnAboutRepostOnce() {
     if (warnedAboutRepost) return;
     warnedAboutRepost = true;
 
-    await sendLogMessage(
+    await logGlobal(
         '⚠️ Could not repost a message under another identity. Check that I have the ' +
         '**Manage Webhooks** and **Manage Messages** permissions in that channel. ' +
         'Falling back to normal relaying until this is fixed.',
@@ -290,10 +280,13 @@ async function auditDisguise(message, identity, url) {
  *
  * @param {string} username The Minecraft name that spoke.
  * @param {string} shownAs The name it was relabelled to.
+ * @param {string} [guildKey] Which Hypixel guild it came from, so the entry
+ *   lands in that guild's own audit channel when it has one.
  */
-async function auditGuildChatDisguise(username, shownAs) {
+async function auditGuildChatDisguise(username, shownAs, guildKey) {
     await logAudit(
         `🎭 Guild chat from \`${username}\` was shown as **${shownAs}** in the bridge channel`,
+        {guildKey},
     );
 }
 

@@ -1,6 +1,13 @@
 const {ApplicationCommandOptionType} = require('discord.js');
-const bridge = require('../../bridge');
 const {isAdmin} = require('../../utils/adminRoles');
+const guilds = require('../../utils/guilds');
+const queryGuild = require('../../utils/queryGuild');
+const {
+    GUILD_OPTION,
+    guildOptionAutocomplete,
+    resolveTarget,
+    describeQueryFailure,
+} = require('../../utils/commandGuild');
 
 module.exports = {
     name: 'send',
@@ -12,7 +19,16 @@ module.exports = {
             type: ApplicationCommandOptionType.String,
             required: true,
         },
+        {
+            // Deliberately never broadcasts, unlike bridge chat: this runs an
+            // arbitrary command as a Minecraft account, and fanning that out
+            // across every guild at once is an incident waiting to happen.
+            ...GUILD_OPTION,
+            description: 'Which Hypixel guild\'s bot to send from. Defaults to the default guild; never all.',
+        },
     ],
+
+    autocomplete: guildOptionAutocomplete(),
 
     callback: async (client, interaction) => {
         if (!isAdmin(interaction.member)) {
@@ -24,63 +40,30 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const mcBot = bridge.mcBot;
-        if (!mcBot || !bridge.mcBotConnected) {
-            return interaction.editReply('❌ The Minecraft bot is not connected.');
-        }
+        const target = resolveTarget(interaction);
+        if (!target.ok) return interaction.editReply(target.message);
 
         const message = interaction.options.getString('message');
 
-        const collectedMessages = [];
-        let resolveCollector;
-        let idleTimeout;
+        const query = await queryGuild(target.record, message);
+        if (!query.ok) return interaction.editReply(describeQueryFailure(query));
 
-        const collectorPromise = new Promise((resolve) => {
-            resolveCollector = resolve;
-        });
-
-        const messageListener = (jsonMsg) => {
-            const text = jsonMsg.toString();
-            collectedMessages.push(text);
-
-            if (idleTimeout) clearTimeout(idleTimeout);
-            idleTimeout = setTimeout(() => resolveCollector(), 1500);
-        };
-
-        const maxTimeout = setTimeout(() => resolveCollector(), 5000);
-
-        mcBot.on('message', messageListener);
-
-        try {
-            mcBot.chat(message);
-        } catch (error) {
-            clearTimeout(maxTimeout);
-            if (idleTimeout) clearTimeout(idleTimeout);
-            mcBot.removeListener('message', messageListener);
-            return interaction.editReply('❌ Failed to send the message to the server.');
-        }
-
-        try {
-            await collectorPromise;
-        } finally {
-            clearTimeout(maxTimeout);
-            if (idleTimeout) clearTimeout(idleTimeout);
-            mcBot.removeListener('message', messageListener);
-        }
-
-        const combined = collectedMessages.join('\n').trim();
+        const combined = query.lines.join('\n').trim();
         const safeMessage = message.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
+        const from = guilds.shouldShowTags() ? ` from **${target.guild.name}**` : '';
 
         if (combined) {
             const truncated = combined.length > 1900
                 ? combined.substring(0, 1900) + '…'
                 : combined;
             await interaction.editReply(
-                `✅ Sent \`${safeMessage}\` to the server.\n` +
+                `✅ Sent \`${safeMessage}\` to the server${from}.\n` +
                 `**Server response:**\n\`\`\`\n${truncated}\n\`\`\``
             );
         } else {
-            await interaction.editReply(`✅ Sent \`${safeMessage}\` to the server. No response was received.`);
+            await interaction.editReply(
+                `✅ Sent \`${safeMessage}\` to the server${from}. No response was received.`,
+            );
         }
     },
 };

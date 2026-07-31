@@ -1,8 +1,11 @@
 # TriBridge — Discord ↔ Hypixel Guild Chat Bridge
 
-A Node.js bot that relays messages between a Discord channel and a Hypixel guild chat in real time. Guild chat messages
+A Node.js bot that relays messages between a Discord channel and Hypixel guild chat in real time. Guild chat messages
 appear as embeds in Discord, and Discord messages are forwarded to the in-game guild chat. Join/leave notifications are
 relayed as well.
+
+One bot can bridge **several Hypixel guilds at once** — one Minecraft account per guild — through the same Discord
+channel. Each guild gets its own colour and chat tag, and a `!tag` prefix targets a single guild.
 
 ## Prerequisites
 
@@ -11,7 +14,7 @@ relayed as well.
 | **Node.js**           | v22 or newer                                                                                                                                                    |
 | **npm**               | Included with Node.js                                                                                                                                           |
 | **Discord Bot**       | A bot application created at the [Discord Developer Portal](https://discord.com/developers/applications) with the **Message Content** privileged intent enabled |
-| **Minecraft Account** | A Microsoft account that owns Minecraft: Java Edition and can join `mc.hypixel.net`                                                                             |
+| **Minecraft Account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net`                                              |
 
 ## Installation
 
@@ -41,13 +44,14 @@ relayed as well.
       |---|---|
    | `DISCORD_TOKEN` | Bot token from the Discord Developer Portal |
    | `DISCORD_CHANNEL_ID` | ID of the Discord channel where messages will be relayed |
-   | `LOG_CHANNEL` | ID of the Discord channel where admin log notifications (e.g. disconnections, reconnections) will be sent |
-   | `MINECRAFT_USERNAME` | The email address of the Microsoft account used for Minecraft |
-   | `DISCORD_GUILD_ID` | *Optional.* The only server the bot accepts commands from. Defaults to the server `DISCORD_CHANNEL_ID` belongs to, so most setups can leave it out. |
+   | `LOG_CHANNEL` | ID of the Discord channel where admin log notifications (e.g. disconnections, reconnections) will be sent. A Hypixel guild can override this with its own channel. |
+   | `MINECRAFT_USERNAME` | The email address of the Microsoft account used for Minecraft. Only used on a fresh install, to register the first Hypixel guild; once `guildsConfig.json` exists it is ignored and accounts are managed with `/guilds`. |
+   | `DISCORD_GUILD_ID` | *Optional.* The only Discord server the bot accepts commands from. Defaults to the server `DISCORD_CHANNEL_ID` belongs to, so most setups can leave it out. |
 
-   > **Note:** TriBridge serves a single Discord server. Commands are registered globally, so it
-   > refuses any command sent from a server other than the one above — otherwise an administrator
-   > of any other server the bot was added to could add themselves to the bot's admin roles.
+   > **Note:** TriBridge serves a single **Discord server**, however many Hypixel guilds it bridges.
+   > Commands are registered globally, so it refuses any command sent from a server other than the
+   > one above — otherwise an administrator of any other server the bot was added to could add
+   > themselves to the bot's admin roles.
 
 ## Usage
 
@@ -57,30 +61,61 @@ relayed as well.
 node src/index.js
 ```
 
-On the first launch the bot will open a Microsoft authentication flow for the Minecraft account. Follow the instructions
-in the console to complete sign-in. Authentication tokens are cached in the `.minecraft-auth/` directory for subsequent
-runs.
+On a fresh install the account in `MINECRAFT_USERNAME` is registered as the first Hypixel guild and the bot opens a
+Microsoft authentication flow for it in the console. Authentication tokens are cached in the `.minecraft-auth/`
+directory for subsequent runs, one entry per account.
+
+### Hypixel guilds
+
+The bridged guilds live in `guildsConfig.json` in the project root (gitignored, created on demand) and are managed
+entirely from Discord with `/guilds` — you should not need to edit the file by hand.
+
+| Field | Meaning |
+|---|---|
+| `key` | Short internal id, e.g. `sb`. Lowercase letters, digits, `-` and `_`. **Cannot be changed** — rename means remove and re-add. |
+| `name` | Display name used in replies and logs |
+| `tag` | 2–8 characters. Typed as `!tag message` to target this guild, and shown next to names on incoming chat |
+| `account` | Microsoft account email for this guild's Minecraft bot. **Cannot be changed**, and no two guilds may share one |
+| `color` | Hex colour for this guild's relayed messages, e.g. `#2ECC71` |
+| `logChannelId` | Optional per-guild log channel. Falls back to `LOG_CHANNEL` |
+| `auditChannelId` | Optional per-guild audit channel. Falls back to `/auditchannel` |
+| `enabled` | Set to `false` to disconnect a guild without removing it |
+
+**Adding a guild:**
+
+```bash
+/guilds add key:sb name:SkyBlock Guild tag:SB account:you@example.com
+```
+
+The bot registers the guild, then starts a Microsoft sign-in and sends you the device code in a private reply — no
+console access needed. Open the link, enter the code, and sign in as that account. If a token later expires, `/guilds
+auth` repeats the flow. The code is only ever sent to you privately or by DM, never to a public channel: anyone holding
+it could complete the sign-in with a different account.
+
+> **The account address is the key to its cached token.** Changing it after the fact silently starts a fresh sign-in
+> against a new cache, so `/guilds` does not allow it — remove the guild and add it again instead.
 
 ### Discord Commands
 
 | Command                              | Category    | Description                                                                             |
 |--------------------------------------|-------------|-----------------------------------------------------------------------------------------|
-| `/invite <username>`                 | Management  | Invite a player to the Hypixel guild (admin only)                                       |
-| `/kick <username> [reason]`          | Management  | Kick a member from the Hypixel guild (admin only)                                       |
-| `/promote <username>`                | Management  | Promote a member in the Hypixel guild (admin only)                                      |
-| `/demote <username>`                 | Management  | Demote a member in the Hypixel guild (admin only)                                       |
-| `/send <message>`                    | Management  | Send a command or message to the Minecraft server and display the response (admin only) |
-| `/login`                             | Management  | Connect the Minecraft bot to Hypixel (admin only)                                       |
+| `/invite <username> [guild]`         | Management  | Invite a player to a Hypixel guild (admin only)                                         |
+| `/kick <username> [reason] [guild]`  | Management  | Kick a member from a Hypixel guild (admin only)                                         |
+| `/promote <username> [guild]`        | Management  | Promote a member in a Hypixel guild (admin only)                                        |
+| `/demote <username> [guild]`         | Management  | Demote a member in a Hypixel guild (admin only)                                         |
+| `/send <message> [guild]`            | Management  | Send a command or message to the Minecraft server and display the response (admin only) |
+| `/login [guild]`                     | Management  | Connect Minecraft bots to Hypixel; all disconnected guilds by default (admin only)      |
+| `/guilds add/remove/list/edit/default/auth` | Management | Manage the bridged Hypixel guilds and sign their accounts in (admin only)          |
 | `/adminrole add/remove <role>`       | Management  | Configure the global admin roles for the bot (server admin only)                        |
 | `/adminpanel`                        | Management  | Open the admin panel to run and configure admin functions (admin only)                  |
-| `/auditchannel set/show/clear`       | Management  | Choose the channel admin panel actions are recorded in (admin only)                     |
+| `/auditchannel set/show/clear [guild]` | Management | Choose the channel admin panel actions are recorded in (admin only)                     |
 | `/link <username>`                   | Linking     | Bind your Minecraft account to your Discord account                                     |
 | `/unlink [user]`                     | Linking     | Remove a Minecraft account link — your own, or anyone's (admin only)                    |
 | `/links`                             | Linking     | List every linked Minecraft account                                                     |
 | `/whois <user\|username>`            | Linking     | Look up an account link by Discord user or Minecraft username (admin only)              |
 | `/linkrole set/show/clear <role>`    | Linking     | Choose the role given to users with a linked Minecraft account (admin only)             |
-| `/online`                            | Information | Show the currently online guild members                                                 |
-| `/ping`                              | Information | Display Discord API latency and Minecraft connection status                             |
+| `/online [guild]`                    | Information | Show the currently online members of every guild, or just one                           |
+| `/ping`                              | Information | Display Discord API latency and each guild's Minecraft connection status                |
 | `/help`                              | Information | Browse all available commands by category                                               |
 | `/request`                           | Requests    | Submit a feature request through a short form                                           |
 | `/requestchannel set/show <channel>` | Requests    | Choose the channel feature requests are posted to (admin only)                          |
@@ -88,14 +123,21 @@ runs.
 
 ### How It Works
 
-- **Discord → Minecraft** — Messages sent in the configured Discord channel are forwarded to the Hypixel guild chat (
-  `/gc`).
+- **Discord → Minecraft** — Messages sent in the configured Discord channel are forwarded to Hypixel guild chat (`/gc`).
+  A message beginning `!tag ` goes only to the guild with that tag; anything else goes to every guild. An unrecognised
+  tag is *not* dropped — the message is delivered everywhere exactly as typed and picks up a ❓ reaction so the mistake
+  is visible. To start a message with a literal `!`, double it: `!!sb hi` arrives as `!sb hi`. Guilds whose bot is
+  offline are skipped silently.
 - **Minecraft → Discord** — Guild chat messages, as well as member join/leave events, are relayed back to the Discord
-  channel as rich embeds.
-- **Auto-reconnect** — The bot automatically attempts to reconnect to Hypixel if the Minecraft connection drops.
+  channel as rich embeds, coloured per guild with the guild's tag beside the player's name. With only one guild
+  configured the tag is omitted entirely.
+- **Auto-reconnect** — The bot automatically reconnects to Hypixel when a connection drops, one guild per ten-second
+  tick so a Hypixel restart cannot bring every account back at once, and backing off after repeated failures. Connection
+  notices go to the guild's own log channel if it has one, otherwise `LOG_CHANNEL`.
 - **Account linking** — Users who run `/link` have their Discord messages reposted with their Minecraft head and name,
-  and the guild chat copy is attributed to their Minecraft name. This requires the **Manage Webhooks** and **Manage
-  Messages** permissions; without them the bot falls back to the standard relay.
+  and the guild chat copy is attributed to their Minecraft name. Membership is checked against every connected guild's
+  live roster, and being in any one of them is enough. This requires the **Manage Webhooks** and **Manage Messages**
+  permissions; without them the bot falls back to the standard relay.
 - **Link role** — If a role is set with `/linkrole set`, `/link` grants it and `/unlink` takes it back. Setting the role
   backfills it onto everyone already linked, and the roles are re-checked on every startup so links made while the bot
   was offline still get it. This needs the **Manage Roles** permission and the bot's own role ranked above the link
@@ -112,10 +154,14 @@ runs.
   turned on server-wide, and it can be stopped from the panel at any time.
 - **Auditing** — Reposting deletes the original, so the real author is no longer visible on the message. Every disguised
   message is recorded in the channel set by `/auditchannel set`, along with a jump link to the repost, plus an entry
-  whenever a global profile change starts or ends. The bot needs **View Channel**, **Send Messages** and **Embed Links**
-  in that channel.
+  whenever a global profile change starts or ends. A guild can be given its own audit channel with
+  `/auditchannel set channel:#x guild:sb`. The bot needs **View Channel**, **Send Messages** and **Embed Links** in
+  every channel used.
 
 ### Permissions
+
+In the bridge channel the bot needs **Add Reactions**, so a message with an unrecognised guild tag can be flagged with
+a ❓. Without it the message is still delivered; only the marker is lost.
 
 Beyond the bridge channel, the global profile change needs **Manage Webhooks** and **Manage Messages** in *every*
 channel it is meant to apply to — it works by reposting through a webhook and deleting the original. Channels where the
