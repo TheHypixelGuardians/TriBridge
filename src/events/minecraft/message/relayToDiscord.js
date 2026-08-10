@@ -4,47 +4,14 @@ const guilds = require('../../../utils/guilds');
 const mcBots = require('../../../utils/mcBots');
 const {appliesToGuildChat, getTarget} = require('../../../utils/globalProfile');
 const {auditGuildChatDisguise} = require('../../../utils/disguise');
+const {parseGuildChat, parseGuildPresence} = require('../../../utils/guildChat');
+const {createRelayDedupe} = require('../../../utils/relayDedupe');
 
 // Two accounts sitting in the same Hypixel guild — a misconfiguration — would
-// each relay the other's chat, doubling every line. This module is require-cached
-// and therefore shared across every bot, which is what lets one bot see what
-// another just relayed.
-const RECENT_TTL_MS = 2000;
-const RECENT_LIMIT = 200;
-const recentlyRelayed = new Map();
-
-/**
- * Whether this exact line was already relayed by a *different* guild's bot.
- *
- * A genuine false positive needs the same player name saying the same thing in
- * two guilds within two seconds, which already implies either the
- * misconfiguration above or a dual member — and in both cases the second copy
- * is noise.
- *
- * @param {string} guildKey
- * @param {string} username
- * @param {string} content
- * @returns {boolean}
- */
-function isDuplicate(guildKey, username, content) {
-    const now = Date.now();
-
-    if (recentlyRelayed.size > RECENT_LIMIT) {
-        for (const [key, entry] of recentlyRelayed) {
-            if (now - entry.at > RECENT_TTL_MS) recentlyRelayed.delete(key);
-        }
-    }
-
-    const signature = `${username.toLowerCase()}|${content}`;
-    const previous = recentlyRelayed.get(signature);
-
-    if (previous && previous.key !== guildKey && now - previous.at < RECENT_TTL_MS) {
-        return true;
-    }
-
-    recentlyRelayed.set(signature, {key: guildKey, at: now});
-    return false;
-}
+// each relay the other's chat, doubling every line. This module is
+// require-cached and therefore shared across every bot, which is what lets one
+// bot see what another just relayed.
+const isDuplicate = createRelayDedupe();
 
 /**
  * The author line for a relayed message.
@@ -89,12 +56,11 @@ module.exports = async (client, jsonMsg) => {
     // Clean up Minecraft formatting codes (§c, §6, etc.)
     const cleanMsg = msg.replace(/§./g, '');
 
-    // Match guild chat: Guild > [Rank] Username [GuildRank]: message
-    // Ranks (e.g. [VIP+], [MVP++]) and guild ranks (e.g. [Member], [Officer]) are optional
-    const chatMatch = cleanMsg.match(/Guild > (?:\[.+?\] )?(\w{1,16})(?: \[.+?\])?: (.+)/);
+    // The guild-chat formats themselves live in utils/guildChat.js, shared with
+    // the guild-to-guild relay.
+    const chatMatch = parseGuildChat(cleanMsg);
     if (chatMatch) {
-        const username = chatMatch[1];
-        const content = chatMatch[2];
+        const {username, content} = chatMatch;
 
         // Ignore messages sent by any of the bot's own accounts, not just this
         // one: with a bot per guild, checking only the emitting account would
@@ -124,13 +90,12 @@ module.exports = async (client, jsonMsg) => {
         return;
     }
 
-    // Match guild join/leave messages: Guild > Username joined. / Guild > Username left.
-    // Deliberately never disguised: these announce a real player arriving or
-    // leaving, and relabelling them would just be a lie about who is online.
-    const joinLeaveMatch = cleanMsg.match(/Guild > (\w{1,16}) (joined|left)\./);
+    // Join/leave. Deliberately never disguised: these announce a real player
+    // arriving or leaving, and relabelling them would just be a lie about who is
+    // online.
+    const joinLeaveMatch = parseGuildPresence(cleanMsg);
     if (joinLeaveMatch) {
-        const username = joinLeaveMatch[1];
-        const action = joinLeaveMatch[2];
+        const {username, action} = joinLeaveMatch;
 
         if (isDuplicate(guild.key, username, action)) return;
 

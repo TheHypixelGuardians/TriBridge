@@ -161,10 +161,14 @@ function resolveIdentity(message) {
  * is the only surviving trace of what was being replied to.
  *
  * @param {import('discord.js').Message} message
+ * @param {string} [contentOverride] Text to show instead of what was typed. The
+ *   bridge channel passes the *routed* body here: a message beginning `!sb ` is
+ *   sent to guild chat with the tag stripped, so a repost showing the tag would
+ *   put different words in Discord than the ones the guild was given.
  * @returns {string|undefined}
  */
-function buildContent(message) {
-    const body = message.content || '';
+function buildContent(message, contentOverride) {
+    const body = (contentOverride ?? message.content) || '';
     const referenced = message.reference?.messageId;
 
     if (!referenced) return body || undefined;
@@ -202,9 +206,9 @@ function enqueue(channelId, task) {
     return run;
 }
 
-async function sendRepost(message, identity) {
+async function sendRepost(message, identity, options) {
     const target = resolveWebhookTarget(message.channel);
-    if (!target) return {ok: false, url: null};
+    if (!target) return {ok: false, url: null, message: null};
 
     let sent;
     try {
@@ -213,7 +217,7 @@ async function sendRepost(message, identity) {
         // Repost before deleting: if the webhook send throws, the user's
         // original message survives rather than vanishing.
         sent = await webhook.send({
-            content: buildContent(message),
+            content: buildContent(message, options?.content),
             username: sanitizeWebhookName(identity.name),
             avatarURL: identity.avatarURL ?? undefined,
             files: [...message.attachments.values()].map((attachment) => attachment.url),
@@ -228,7 +232,7 @@ async function sendRepost(message, identity) {
         clearRelayWebhook(target.channel.id);
         console.error('Failed to repost a message:', error);
         await warnAboutRepostOnce();
-        return {ok: false, url: null};
+        return {ok: false, url: null, message: null};
     }
 
     try {
@@ -242,6 +246,7 @@ async function sendRepost(message, identity) {
         url: sent?.id
             ? `https://discord.com/channels/${message.guildId}/${message.channelId}/${sent.id}`
             : null,
+        message: sent ?? null,
     };
 }
 
@@ -251,11 +256,15 @@ async function sendRepost(message, identity) {
  *
  * @param {import('discord.js').Message} message
  * @param {ReturnType<typeof resolveIdentity>} identity
- * @returns {Promise<{ok: boolean, url: string|null}>} On failure the original
- *   message is left exactly where it was.
+ * @param {{content?: string}} [options] `content` replaces the body shown, for
+ *   callers that rewrite the text before relaying it — see {@link buildContent}.
+ * @returns {Promise<{ok: boolean, url: string|null, message: object|null}>} On
+ *   failure the original message is left exactly where it was. `message` is the
+ *   repost, so callers can mark up the copy that survived rather than the one
+ *   that was just deleted.
  */
-function repostAs(message, identity) {
-    return enqueue(message.channel.id, () => sendRepost(message, identity));
+function repostAs(message, identity, options) {
+    return enqueue(message.channel.id, () => sendRepost(message, identity, options));
 }
 
 /**

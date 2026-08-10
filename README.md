@@ -5,7 +5,8 @@ appear as embeds in Discord, and Discord messages are forwarded to the in-game g
 relayed as well.
 
 One bot can bridge **several Hypixel guilds at once** — one Minecraft account per guild — through the same Discord
-channel. Each guild gets its own colour and chat tag, and a `!tag` prefix targets a single guild.
+channel. Each guild gets its own colour and chat tag, and a `!tag` prefix targets a single guild. Guilds can also be
+bridged **to each other**, so their members can talk in-game without going through Discord at all.
 
 ## Prerequisites
 
@@ -80,6 +81,7 @@ entirely from Discord with `/guilds` — you should not need to edit the file by
 | `logChannelId` | Optional per-guild log channel. Falls back to `LOG_CHANNEL` |
 | `auditChannelId` | Optional per-guild audit channel. Falls back to `/auditchannel` |
 | `enabled` | Set to `false` to disconnect a guild without removing it |
+| `crossBridge` | Set to `true` to share guild chat with the other cross-bridged guilds. Off by default; see [Guild-to-guild bridging](#guild-to-guild-bridging) |
 
 **Adding a guild:**
 
@@ -94,6 +96,30 @@ it could complete the sign-in with a different account.
 
 > **The account address is the key to its cached token.** Changing it after the fact silently starts a fresh sign-in
 > against a new cache, so `/guilds` does not allow it — remove the guild and add it again instead.
+
+### Guild-to-guild bridging
+
+Registered guilds share a Discord channel but not their guild chat, unless you switch it on:
+
+```bash
+/guilds edit guild:sb crossbridge:True
+/guilds edit guild:main crossbridge:True
+```
+
+From then on a message in either guild is repeated into the other as `[SB] Notch: hello` — the guild's tag in front of
+the speaker's name, where Hypixel already puts rank brackets. `/guilds list` marks the participating guilds with 🔁.
+
+- **Off by default**, including for guilds registered before this existed, so upgrading never starts forwarding chat
+  between guilds that were only meant to share a Discord channel.
+- **It takes two.** One guild with the flag on shares with nobody; `/guilds edit` says so when that is the case.
+- **The flag is both directions at once.** A guild that does not send its chat elsewhere does not receive anyone else's
+  either, so a guild can always be taken out of the arrangement from its own row.
+- **Player chat only.** Join and leave announcements stay in the guild they happened in — they are noise elsewhere, and
+  they would spend the per-account chat budget that real messages need.
+- **Real names.** A running global profile change does not rename forwarded chat; its two switches cover the Discord
+  legs of the bridge only.
+- **Late messages are dropped, not queued.** A forwarded line still waiting after ten seconds is discarded, so one guild
+  being spammed cannot push every other guild's chat minutes behind.
 
 ### Discord Commands
 
@@ -126,11 +152,16 @@ it could complete the sign-in with a different account.
 - **Discord → Minecraft** — Messages sent in the configured Discord channel are forwarded to Hypixel guild chat (`/gc`).
   A message beginning `!tag ` goes only to the guild with that tag; anything else goes to every guild. An unrecognised
   tag is *not* dropped — the message is delivered everywhere exactly as typed and picks up a ❓ reaction so the mistake
-  is visible. To start a message with a literal `!`, double it: `!!sb hi` arrives as `!sb hi`. Guilds whose bot is
-  offline are skipped silently.
+  is visible. To start a message with a literal `!`, double it: `!!sb hi` arrives as `!sb hi`. The prefix is stripped
+  from what Discord shows as well as from what the guild is sent, so both sides read the same words. A guild whose bot
+  is offline is skipped silently on a broadcast, but a message aimed at *one* guild with `!tag` that reaches nothing is
+  marked 📡 — nobody else got that one either.
 - **Minecraft → Discord** — Guild chat messages, as well as member join/leave events, are relayed back to the Discord
   channel as rich embeds, coloured per guild with the guild's tag beside the player's name. With only one guild
   configured the tag is omitted entirely.
+- **Minecraft → Minecraft** — When two or more guilds have `crossBridge` on, chat in one is forwarded into the others
+  tagged with the guild it came from (`[SB] Notch: hello`). Off by default and configured with `/guilds edit`; see
+  [Guild-to-guild bridging](#guild-to-guild-bridging).
 - **Auto-reconnect** — The bot automatically reconnects to Hypixel when a connection drops, one guild per ten-second
   tick so a Hypixel restart cannot bring every account back at once, and backing off after repeated failures. Connection
   notices go to the guild's own log channel if it has one, otherwise `LOG_CHANNEL`.
@@ -161,7 +192,7 @@ it could complete the sign-in with a different account.
 ### Permissions
 
 In the bridge channel the bot needs **Add Reactions**, so a message with an unrecognised guild tag can be flagged with
-a ❓. Without it the message is still delivered; only the marker is lost.
+a ❓ and one aimed at an offline guild with a 📡. Without it the message is still delivered; only the marker is lost.
 
 Beyond the bridge channel, the global profile change needs **Manage Webhooks** and **Manage Messages** in *every*
 channel it is meant to apply to — it works by reposting through a webhook and deleting the original. Channels where the

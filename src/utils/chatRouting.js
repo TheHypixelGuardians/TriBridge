@@ -18,8 +18,16 @@ const TAG_PREFIX = /^!([A-Za-z0-9]{2,8})\s+([\s\S]+)$/;
  *  - anything else — broadcast (or the default guild, when an admin has turned
  *    `broadcastByDefault` off in guildsConfig.json).
  *
+ * `body` is what should be sent *and* what should be shown: a reposted message
+ * has to display the same text guild chat was given, or Discord and the guild
+ * disagree about what was said.
+ *
+ * `targeted` says a recognised tag picked the guilds out, which is the
+ * difference between "one guild was busy" and "the sender aimed at one guild
+ * and hit nothing" — only the latter is worth telling them about.
+ *
  * @param {string} content Raw Discord message content.
- * @returns {{targets: object[], body: string, unknownTag: string|null}}
+ * @returns {{targets: object[], body: string, unknownTag: string|null, targeted: boolean}}
  */
 function routeMessage(content) {
     const text = String(content ?? '');
@@ -31,19 +39,19 @@ function routeMessage(content) {
     };
 
     if (text.startsWith('!!')) {
-        return {targets: fallback(), body: text.slice(1), unknownTag: null};
+        return {targets: fallback(), body: text.slice(1), unknownTag: null, targeted: false};
     }
 
     const match = text.match(TAG_PREFIX);
     if (match) {
         const guild = guilds.getByTag(match[1]);
         if (guild && guild.enabled !== false) {
-            return {targets: [guild], body: match[2], unknownTag: null};
+            return {targets: [guild], body: match[2], unknownTag: null, targeted: true};
         }
-        return {targets: fallback(), body: text, unknownTag: match[1]};
+        return {targets: fallback(), body: text, unknownTag: match[1], targeted: false};
     }
 
-    return {targets: fallback(), body: text, unknownTag: null};
+    return {targets: fallback(), body: text, unknownTag: null, targeted: false};
 }
 
 module.exports = {routeMessage, TAG_PREFIX};

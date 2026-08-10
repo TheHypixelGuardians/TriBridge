@@ -14,14 +14,24 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  *
  * @param {import('./mcBots').BotRecord} record
  * @param {string} text Already built and sanitised — this does not touch it.
+ * @param {{maxAgeMs?: number}} [options] `maxAgeMs` drops the line instead of
+ *   sending it if it is still queued that long after being handed over. For
+ *   relayed chat, arriving a minute late is worse than not arriving: the
+ *   conversation has moved on and the backlog only grows. Omit it for anything a
+ *   person is waiting on the result of.
  * @returns {Promise<boolean>} Whether the line was handed to mineflayer.
  */
-function sendChat(record, text) {
+function sendChat(record, text, options = {}) {
     if (!record || !text) return Promise.resolve(false);
+
+    const maxAgeMs = Number(options.maxAgeMs) > 0 ? Number(options.maxAgeMs) : 0;
+    const queuedAt = Date.now();
 
     const task = async () => {
         const wait = record.chatQueue.last + MIN_INTERVAL_MS - Date.now();
         if (wait > 0) await sleep(wait);
+
+        if (maxAgeMs && Date.now() - queuedAt > maxAgeMs) return false;
 
         // Re-read after the wait: the bot may have gone away while queued, and
         // caching it across an await is exactly how a retired bot gets used.

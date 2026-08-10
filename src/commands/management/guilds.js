@@ -190,6 +190,12 @@ module.exports = {
                     required: false,
                 },
                 {
+                    name: 'crossbridge',
+                    description: 'Share guild chat with the other cross-bridged guilds, both ways.',
+                    type: ApplicationCommandOptionType.Boolean,
+                    required: false,
+                },
+                {
                     name: 'clear',
                     description: 'Clear a per-guild channel override so it falls back to the global one.',
                     type: ApplicationCommandOptionType.String,
@@ -275,21 +281,27 @@ async function handleList(interaction) {
 
     const lines = all.map((guild) => {
         const marker = guild.key === defaultKey ? ' ⭐' : '';
+        const cross = guild.crossBridge === true ? ' 🔁' : '';
         const ign = guild.mcName ? ` as \`${guild.mcName}\`` : '';
-        return `**${guild.name}** \`${guild.key}\` [${guild.tag}]${marker}\n` +
+        return `**${guild.name}** \`${guild.key}\` [${guild.tag}]${marker}${cross}\n` +
             `> ${mcBots.describeStatusLabel(guild.key)}${ign} · ${maskAccount(guild.account)} · ${guild.color}\n` +
             `> Log: ${guild.logChannelId ? `<#${guild.logChannelId}>` : 'global'} · ` +
             `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : 'global'}`;
     });
+
+    // Only worth explaining once at least one guild carries the marker.
+    const crossFooter = guilds.getCrossBridged().length > 0
+        ? ' · 🔁 shares guild chat with the other 🔁 guilds'
+        : '';
 
     const embed = new EmbedBuilder()
         .setTitle('🌐 Hypixel guilds')
         .setColor(0xBD93F9)
         .setDescription(lines.join('\n\n').slice(0, 4096))
         .setFooter({
-            text: guilds.broadcastByDefault()
+            text: (guilds.broadcastByDefault()
                 ? '⭐ default · untagged messages go to every guild'
-                : '⭐ default · untagged messages go to the default guild',
+                : '⭐ default · untagged messages go to the default guild') + crossFooter,
         });
 
     return interaction.reply({embeds: [embed], ephemeral: true});
@@ -370,6 +382,9 @@ async function handleEdit(interaction) {
     const enabled = interaction.options.getBoolean('enabled');
     if (enabled !== null) patch.enabled = enabled;
 
+    const crossBridge = interaction.options.getBoolean('crossbridge');
+    if (crossBridge !== null) patch.crossBridge = crossBridge;
+
     const clear = interaction.options.getString('clear');
     if (clear === 'log' || clear === 'both') patch.logChannelId = null;
     if (clear === 'audit' || clear === 'both') patch.auditChannelId = null;
@@ -398,11 +413,24 @@ async function handleEdit(interaction) {
     }
 
     const guild = result.guild;
+
+    // Turning it on for one guild does nothing on its own, and the admin has no
+    // way to see that from this reply — say so rather than let them think it is
+    // broken.
+    const partners = guilds.getCrossBridged().filter((g) => g.key !== guild.key);
+    const crossNote = patch.crossBridge === true && partners.length === 0
+        ? '\n> ⚠️ No other guild has cross-bridging on yet, so nothing is shared until a second one does.'
+        : patch.crossBridge === true
+            ? `\n> 🔁 Now sharing guild chat with **${partners.map((g) => g.name).join('**, **')}**.`
+            : '';
+
     return interaction.reply({
         content: `✅ Updated **${guild.name}** \`${guild.key}\` [${guild.tag}].\n` +
             `> ${guild.enabled === false ? 'Disabled' : 'Enabled'} · ${guild.color} · ` +
+            `Cross-bridge: ${guild.crossBridge === true ? 'on' : 'off'} · ` +
             `Log: ${guild.logChannelId ? `<#${guild.logChannelId}>` : 'global'} · ` +
-            `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : 'global'}`,
+            `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : 'global'}` +
+            crossNote,
         ephemeral: true,
     });
 }

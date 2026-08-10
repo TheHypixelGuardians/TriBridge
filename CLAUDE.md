@@ -172,19 +172,41 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   for plain text, `jsonMsg.toMotd()` when the color codes themselves carry meaning (e.g.
   `§a` marks online players in `/online`).
 - **Guild-chat parsing** is regex against Hypixel's English chat output and is inherently
-  brittle. Keep the documented format comment next to any regex you add or change.
+  brittle. It lives in `utils/guildChat.js` — `parseGuildChat()` and `parseGuildPresence()` —
+  because two relays read the same lines; don't re-inline the pattern in a handler. Keep the
+  documented format comment next to any regex you add or change.
 - **Relay loops:** `relayToDiscord.js` drops messages whose author matches *any* registered
   bot account, via `mcBots.isOwnAccountName()` — not just the emitting bot's own name, because
   two accounts that ended up in the same Hypixel guild would otherwise relay each other
   forever. Any new Minecraft→Discord relay must do the same. On the Discord side, webhook
   reposts are authored by a bot, so `relayToMinecraft.js`'s existing `message.author.bot` guard
-  is what stops the repost loop — don't weaken it.
+  is what stops the repost loop — don't weaken it. The same `isOwnAccountName()` check is what
+  makes guild→guild bridging terminate at all: the forwarded copy is spoken in the target guild
+  by *that guild's own bot*, so without it two guilds would echo one line at each other until
+  Hypixel muted both accounts. It is the single most load-bearing line in
+  `events/minecraft/message/relayToGuilds.js`.
+- **Guild→guild bridging:** `utils/crossBridge.js` decides the targets (`crossBridgeTargets()`,
+  registry-driven and testable offline) and does the fan-out. Opt-in per guild via the
+  `crossBridge` flag in `guildsConfig.json`, set with `/guilds edit`. The flag is deliberately
+  symmetric — a guild that doesn't send doesn't receive — and the source must have it on too,
+  otherwise switching it off wouldn't stop that guild's chat being pushed everywhere. The
+  `[TAG]` goes in the *name* position (`/gc [SB] Notch: hi`), unlike the Discord relay where
+  the tag is a Discord-side label that never enters the `/gc` copy. Forwarded chat passes
+  `maxAgeMs` to `sendChat`, so a spam burst in one guild is dropped rather than delivered
+  minutes late into another; don't remove that without another backpressure story. Presence
+  lines are not forwarded, and the global profile disguise deliberately does not apply — its
+  two switches govern the two Discord legs only.
 - **Routing Discord→Minecraft:** `routeMessage()` from `utils/chatRouting.js` decides which
   guilds a bridge message reaches (`!tag` for one, otherwise all). It is pure — test it there
   rather than through the handler. Build the `/gc` command **once** and reuse it for every
   target: identical name plus identical body means identical truncation, so the 100-character
   budget stays deterministic. Hypixel's duplicate-message filter is per account, so identical
-  text from several accounts is fine — don't "fix" it by varying the text per guild. The guild
+  text from several accounts is fine — don't "fix" it by varying the text per guild. `body` is
+  also what the **repost** must show: `repostAs(message, identity, {content: body})`, because
+  the repost is the only surviving copy and a raw `message.content` would leave `!sb` visible
+  in Discord while guild chat got the stripped text. Anything that reacts to a bridge message
+  must react to `result.message` when a repost happened — the original is deleted, so a marker
+  on it is either a race or a decoration on a tombstone. The guild
   tag is a Discord-side label and never goes into the `/gc` copy. The disguise repost happens
   once, outside the fan-out, because there is only ever one Discord message.
 - **Relaying to guild chat:** always build the command with `buildGuildChatCommand()` from

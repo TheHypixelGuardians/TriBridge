@@ -6,6 +6,16 @@
 
 #### Bridge
 
++ Added **guild-to-guild bridging**: chat in one Hypixel guild can now be shared straight into the other
+  bridged guilds, so members of different guilds can talk to each other in-game without anyone having to
+  watch Discord.
+  + Off by default and turned on per guild with `/guilds edit guild:sb crossbridge:True`. It takes at
+    least two guilds with it on before anything is shared.
+  + The switch covers both directions: a guild that is not sharing its own chat does not receive anyone
+    else's either.
+  + Forwarded messages arrive tagged with the guild they came from — `[SB] Notch: hello` — so it is
+    always clear who is talking and where from.
+  + Only player chat is shared. Join and leave announcements stay in their own guild.
 + The bot can now bridge **several Hypixel guilds at once**, each with its own Minecraft account, through
   the same Discord channel.
   + Start a message with `!tag` to send it to one guild only — `!sb hey` reaches just the guild tagged
@@ -37,6 +47,8 @@
     always what was meant.
 + `/auditchannel set` and `/auditchannel clear` take an optional `guild`, so one guild's admin actions can
   be recorded somewhere different. `/auditchannel show` lists the default and every override.
++ `/guilds edit` takes a `crossbridge` option to switch guild-to-guild bridging on or off for one guild,
+  and warns when it is the only guild sharing so far. `/guilds list` marks the sharing guilds with 🔁.
 
 #### Information
 
@@ -64,6 +76,14 @@
 
 #### Bridge
 
++ A guild tag is no longer left in the message Discord shows. Sending `!sb hello` as a linked user reposted
+  it as "!sb hello" while guild chat correctly received "hello", so the two sides disagreed about what was
+  said and the tag looked like it had been ignored. `!!sb hi` now shows as `!sb hi` in Discord too.
++ The ❓ marking an unrecognised guild tag no longer disappears for linked users. It was added to the
+  original message a moment before the repost deleted it, so the one hint that a tag was mistyped was lost
+  for exactly the people most likely to see it.
++ A tagged message aimed at a guild whose bot is offline is now marked 📡 instead of vanishing without a
+  word. Untagged messages stay quiet, as before — the other guilds still got those.
 + Two guild commands running at the same time no longer swallow each other's answers. Each account handles
   one query at a time now, so `/online` and `/invite` fired together both report correctly.
 + `/online` no longer leaves a stray listener behind when the server does not answer in time.
@@ -86,7 +106,10 @@
 + The collector idiom that was copied into seven commands is now `utils/queryGuild.js`, serialised per bot
   with a settle window between queries.
 + Outbound guild chat goes through a per-account rate limiter, since a broadcast now multiplies the packet
-  rate by the number of guilds.
+  rate by the number of guilds. Relayed chat may also be given a maximum queue age, so a burst in one guild
+  is dropped rather than delivered minutes late into another.
++ The guild-chat formats are parsed in one place, `utils/guildChat.js`, shared by the Discord relay and the
+  guild-to-guild relay, and the cross-guild duplicate guard is `utils/relayDedupe.js`.
 + `bridge.guildId` and `utils/guildGuard.js` are renamed to `discordServerId` and `utils/serverGuard.js`,
   so "guild" unambiguously means a Hypixel guild everywhere else.
 + `areCommandsDifferent.js` compares the `autocomplete` flag and recurses into subcommand options.

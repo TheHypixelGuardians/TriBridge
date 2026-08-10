@@ -28,12 +28,15 @@ const {sendChat} = require('../../../utils/chatQueue');
  * @param {string} displayName Name to attribute the message to in guild chat.
  * @param {string} content Message body, with any routing prefix removed.
  * @param {boolean} hasAttachments
+ * @returns {number} How many guilds it actually reached.
  */
 function relayToGuildChat(targets, displayName, content, hasAttachments) {
     // Attachment-only messages have empty content; don't send a dangling colon.
     const body = content || (hasAttachments ? '[attachment]' : '');
     const command = buildGuildChatCommand(displayName, body);
-    if (!command) return;
+    if (!command) return 0;
+
+    let delivered = 0;
 
     for (const guild of targets) {
         const record = mcBots.getRecord(guild.key);
@@ -43,6 +46,29 @@ function relayToGuildChat(targets, displayName, content, hasAttachments) {
         if (!record?.connected || !record.bot) continue;
 
         void sendChat(record, command);
+        delivered += 1;
+    }
+
+    return delivered;
+}
+
+/**
+ * Adds the routing markers to whichever copy of the message still exists.
+ *
+ * Load-bearing detail: a reposted message has had the original *deleted*, so
+ * reacting to `message` would either race the delete or decorate a tombstone.
+ * The whole point of these markers is that the sender sees them.
+ *
+ * @param {import('discord.js').Message} surviving
+ * @param {string[]} markers
+ */
+async function markUp(surviving, markers) {
+    if (!surviving || typeof surviving.react !== 'function') return;
+
+    for (const marker of markers) {
+        // Needs Add Reactions; a missing permission is not worth reporting per
+        // message, and the message itself was still delivered.
+        await surviving.react(marker).catch(() => {});
     }
 }
 
@@ -51,11 +77,7 @@ module.exports = async (client, message) => {
     // bot, so this guard is also what stops the repost loop.
     if (message.author.bot || message.channel.id !== bridge.discordChannelId) return;
 
-    const {targets, body, unknownTag} = routeMessage(message.content);
-
-    // A mistyped tag still gets delivered — this just makes the mistake visible.
-    // Needs Add Reactions; failure is not worth reporting.
-    if (unknownTag) void message.react('❓').catch(() => {});
+    const {targets, body, unknownTag, targeted} = routeMessage(message.content);
 
     // A global profile change outranks an account link, which outranks the
     // plain author — see utils/disguise.js.
@@ -64,9 +86,16 @@ module.exports = async (client, message) => {
     // There is one Discord message however many guilds it reaches, so the
     // repost and its audit entry happen exactly once, outside the fan-out.
     let reposted = false;
+    let surviving = message;
+
     if (identity.repost && !shouldSkip(message) && canRepostIn(message.channel)) {
-        const result = await repostAs(message, identity);
+        // `body`, not the raw content: the repost is the only copy left in
+        // Discord, so it has to show the text guild chat was actually given.
+        // Otherwise `!sb hi` reaches the guild as "hi" while Discord still reads
+        // "!sb hi", and the routing prefix looks broken to everyone watching.
+        const result = await repostAs(message, identity, {content: body});
         reposted = result.ok;
+        if (reposted) surviving = result.message;
 
         if (reposted && identity.disguised) {
             await auditDisguise(message, identity, result.url);
@@ -77,5 +106,19 @@ module.exports = async (client, message) => {
     // own name, so guild chat has to be told the same story.
     const displayName = reposted ? identity.chatName : message.author.username;
 
-    relayToGuildChat(targets, displayName, body, message.attachments.size > 0);
+    const delivered = relayToGuildChat(targets, displayName, body, message.attachments.size > 0);
+
+    const markers = [];
+
+    // A mistyped tag still gets delivered everywhere — this just makes the
+    // mistake visible.
+    if (unknownTag) markers.push('❓');
+
+    // An explicitly tagged message that reached nothing is the one case worth
+    // interrupting for: the sender picked a guild on purpose and it is offline,
+    // so unlike a broadcast there is no other guild that got it. Staying silent
+    // here is what makes `!tag` look like it is being ignored.
+    if (targeted && delivered === 0) markers.push('📡');
+
+    await markUp(surviving, markers);
 };

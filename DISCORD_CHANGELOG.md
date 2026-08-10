@@ -7,6 +7,23 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Guild-to-guild chat
+
+- Guild chat can now be shared between the bridged Hypixel guilds, so you can talk to the other guilds from
+  in-game without watching Discord.
+- Messages from another guild arrive with its tag on the name, like `[SB] Notch: hello`, so you always know
+  who you are talking to.
+- Joins and leaves are not shared — you only see the other guilds' actual conversation.
+- Admins turn this on per guild with `/guilds edit`, and it stays off until they do.
+
+### Tag fixes
+
+- Guild tags no longer stay stuck on your message here. `!sb hello` now shows as `hello`, matching what the
+  guild actually received.
+- Get a tag wrong and the ❓ sticks around now instead of vanishing if you are linked.
+- Aim a `!tag` message at a guild whose bot is offline and you get a 📡 back, so you know it did not land
+  rather than wondering.
+
 ### Multiple guilds
 
 - This channel can now bridge more than one Hypixel guild at the same time.

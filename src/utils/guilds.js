@@ -100,6 +100,22 @@ function getEnabled() {
 }
 
 /**
+ * Guilds taking part in the guild-to-guild bridge.
+ *
+ * Opt-in, and absent from an existing config, so upgrading never starts
+ * forwarding chat between guilds that were only ever meant to share a Discord
+ * channel. The flag covers both directions at once: a guild that does not send
+ * its chat elsewhere does not receive anyone else's either.
+ *
+ * @returns {object[]}
+ */
+function getCrossBridged() {
+    return loadConfig().guilds
+        .filter((g) => g.enabled !== false && g.crossBridge === true)
+        .map(copy);
+}
+
+/**
  * @param {string} key
  * @returns {object|null}
  */
@@ -241,6 +257,7 @@ function add(input) {
         auditChannelId: null,
         bridgeChannelId: null,
         enabled: true,
+        crossBridge: false,
         mcName: null,
         mcUuid: null,
         addedBy: input.addedBy ?? null,
@@ -255,8 +272,11 @@ function add(input) {
 }
 
 const PATCHABLE = new Set([
-    'name', 'tag', 'color', 'logChannelId', 'auditChannelId', 'enabled', 'mcName', 'mcUuid',
+    'name', 'tag', 'color', 'logChannelId', 'auditChannelId', 'enabled', 'crossBridge',
+    'mcName', 'mcUuid',
 ]);
+
+const BOOLEAN_FIELDS = new Set(['enabled', 'crossBridge']);
 
 /**
  * Updates a guild in place. `key` and `account` are immutable — changing either
@@ -292,8 +312,8 @@ function update(key, patch) {
             const color = normalizeColor(raw);
             if (!color) return {ok: false, reason: 'invalid-color'};
             changes.color = color;
-        } else if (field === 'enabled') {
-            changes.enabled = Boolean(raw);
+        } else if (BOOLEAN_FIELDS.has(field)) {
+            changes[field] = Boolean(raw);
         } else {
             changes[field] = raw === null ? null : String(raw);
         }
@@ -384,6 +404,7 @@ function ensureSeeded() {
 module.exports = {
     getAll,
     getEnabled,
+    getCrossBridged,
     get,
     getDefault,
     getByTag,
