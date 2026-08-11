@@ -12,6 +12,7 @@ const FAILURE_MESSAGES = {
     'invalid-key': 'The key must be 1–16 characters of lowercase letters, digits, `-` or `_`, starting with a letter or digit.',
     'invalid-name': 'The name must be 1–64 characters.',
     'invalid-tag': 'The tag must be 2–8 letters or digits. One character is too short — `!a` would swallow ordinary chat.',
+    'reserved-tag': 'That tag is reserved for a chat command — `!nw` already means "look up a networth". Pick another one.',
     'invalid-account': 'The account must be a single word with no spaces, such as a Microsoft email address.',
     'invalid-color': 'The colour must be a hex value like `#2ECC71`.',
     'duplicate-key': 'A guild with that key already exists.',

@@ -52,6 +52,19 @@
 
 #### Information
 
++ Added **SkyBlock networth lookups**. Type `!nw <username>` in guild chat or in the bridge channel and the
+  bot answers with that player's networth.
+  + The answer goes back into the guild chat that asked *and* to Discord as an embed with the breakdown by
+    inventory, purse and bank.
+  + It reports the player's richest profile, and the total counts everything — cosmetics and soulbound
+    items included. The unsoulbound total is shown next to it.
+  + Someone with their inventory API turned off is flagged with `(API off)`, because their number is an
+    undercount rather than a low score.
+  + Also available as `/networth [username]`, which uses your own linked account when you leave the name
+    out.
+  + Answers are remembered for ten minutes, so asking about the same player repeatedly costs nothing.
++ Networth figures come from SkyCrypt, which means a player SkyCrypt has never loaded cannot be looked up
+  yet. That case says so, and links their page so it can be loaded once.
 + `/online` now covers every guild at once, one section per guild in its own colour. Name a `guild` to see
   just that one.
 + `/ping` reports each guild's Minecraft connection on its own line, including whether it is connecting or
@@ -96,6 +109,9 @@
 
 + Changing an option nested inside a subcommand — like the channel on `/auditchannel set` — now updates the
   command with Discord instead of being silently ignored.
++ `nw` and `networth` are refused as guild tags, since `!nw hi` would otherwise mean both "look up hi's
+  networth" and "send hi to the guild tagged NW". A guild that already uses one of them keeps it, and keeps
+  its routing.
 
 ### Technical Details
 
@@ -116,6 +132,15 @@
 + The four copies of the log-channel helper are collapsed into `utils/guildLog.js`.
 + Existing installations are migrated automatically: on first run without `guildsConfig.json`, the account
   in `MINECRAFT_USERNAME` is registered as the first guild.
++ Networth is read through a provider interface, so the SkyCrypt client in `utils/skycryptProvider.js` can
+  be replaced by the Hypixel API and `skyhelper-networth` by changing one require. Nothing above it knows
+  where the figures come from.
++ Bot chat commands are recognised in one place, `utils/chatCommands.js`, which both Minecraft relays
+  consult. A line is suppressed if and only if it is going to be answered, so a command is never also
+  relayed as chat — and an ordinary message starting with `!` is never swallowed.
++ Lookups are cached for ten minutes, coalesced so concurrent asks about one player make a single request,
+  capped at one upstream request at a time, and rate limited per requester. Only the figures are kept: the
+  multi-megabyte upstream response is discarded as soon as it is read.
 
 ## Version 1.2.1
 

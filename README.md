@@ -75,7 +75,7 @@ entirely from Discord with `/guilds` — you should not need to edit the file by
 |---|---|
 | `key` | Short internal id, e.g. `sb`. Lowercase letters, digits, `-` and `_`. **Cannot be changed** — rename means remove and re-add. |
 | `name` | Display name used in replies and logs |
-| `tag` | 2–8 characters. Typed as `!tag message` to target this guild, and shown next to names on incoming chat |
+| `tag` | 2–8 characters. Typed as `!tag message` to target this guild, and shown next to names on incoming chat. `nw` and `networth` are reserved for the [networth chat command](#chat-commands) |
 | `account` | Microsoft account email for this guild's Minecraft bot. **Cannot be changed**, and no two guilds may share one |
 | `color` | Hex colour for this guild's relayed messages, e.g. `#2ECC71` |
 | `logChannelId` | Optional per-guild log channel. Falls back to `LOG_CHANNEL` |
@@ -121,6 +121,33 @@ the speaker's name, where Hypixel already puts rank brackets. `/guilds list` mar
 - **Late messages are dropped, not queued.** A forwarded line still waiting after ten seconds is discarded, so one guild
   being spammed cannot push every other guild's chat minutes behind.
 
+### Chat commands
+
+Some things are asked for from either side of the bridge rather than through a slash command. Type them in guild chat
+or in the bridge channel:
+
+```bash
+!nw Notch
+```
+
+- **`!nw <username>`** — that player's SkyBlock networth, on whichever of their profiles is worth the most. The total
+  counts everything, cosmetics and soulbound items included; the unsoulbound figure is shown next to it. `!networth`
+  is the same command.
+- **A command is answered, not relayed.** Asking in guild chat does not put the question into Discord or into the
+  cross-bridged guilds — the answer carries the question with it, and forwarding it would spend every other guild's
+  per-account chat budget on a line none of them asked for. Asked in guild chat, the answer goes back into that guild
+  *and* appears here as an embed; asked here, it stays here.
+- **Double the `!` to send it literally.** `!!nw x` reaches guild chat as the text `!nw x` and runs nothing, the same
+  escape guild tags use.
+- **`nw` and `networth` are reserved guild tags.** `/guilds add` and `/guilds edit` refuse them, because `!nw hi` would
+  otherwise be ambiguous. A guild registered with one of them before this existed keeps it, and keeps its routing.
+- **Answers are cached for ten minutes** and rate limited to one lookup per person every twenty seconds, so a busy
+  guild costs a handful of requests an hour.
+
+Networth figures come from [SkyCrypt](https://sky.shiiyu.moe)'s public API, which serves from its own cache. A player
+SkyCrypt has never loaded cannot be looked up until their page there has been opened once — the bot says so and links
+it rather than reporting a wrong number. The bot needs outbound access to `sky.shiiyu.moe` and `api.mojang.com`.
+
 ### Discord Commands
 
 | Command                              | Category    | Description                                                                             |
@@ -140,6 +167,7 @@ the speaker's name, where Hypixel already puts rank brackets. `/guilds list` mar
 | `/links`                             | Linking     | List every linked Minecraft account                                                     |
 | `/whois <user\|username>`            | Linking     | Look up an account link by Discord user or Minecraft username (admin only)              |
 | `/linkrole set/show/clear <role>`    | Linking     | Choose the role given to users with a linked Minecraft account (admin only)             |
+| `/networth [username]`               | Information | Show a player's SkyBlock networth on their richest profile                               |
 | `/online [guild]`                    | Information | Show the currently online members of every guild, or just one                           |
 | `/ping`                              | Information | Display Discord API latency and each guild's Minecraft connection status                |
 | `/help`                              | Information | Browse all available commands by category                                               |
@@ -162,6 +190,11 @@ the speaker's name, where Hypixel already puts rank brackets. `/guilds list` mar
 - **Minecraft → Minecraft** — When two or more guilds have `crossBridge` on, chat in one is forwarded into the others
   tagged with the guild it came from (`[SB] Notch: hello`). Off by default and configured with `/guilds edit`; see
   [Guild-to-guild bridging](#guild-to-guild-bridging).
+- **SkyBlock networth** — `!nw <username>`, typed in guild chat or the bridge channel, answers with that player's
+  networth on their highest-value profile; `/networth [username]` does the same here and defaults to your linked
+  account. The total includes cosmetics and soulbound items, with the unsoulbound figure alongside, and a player whose
+  inventory API is off is flagged `(API off)` because their number is an undercount rather than a low score. See
+  [Chat commands](#chat-commands) for how the trigger behaves and where the data comes from.
 - **Auto-reconnect** — The bot automatically reconnects to Hypixel when a connection drops, one guild per ten-second
   tick so a Hypixel restart cannot bring every account back at once, and backing off after repeated failures. Connection
   notices go to the guild's own log channel if it has one, otherwise `LOG_CHANNEL`.

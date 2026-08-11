@@ -13,29 +13,33 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
   in-game without watching Discord.
 - Messages from another guild arrive with its tag on the name, like `[SB] Notch: hello`, so you always know
   who you are talking to.
-- Joins and leaves are not shared — you only see the other guilds' actual conversation.
+- Joins and leaves are not shared — just the other guilds' actual conversation.
 - Admins turn this on per guild with `/guilds edit`, and it stays off until they do.
 
 ### Tag fixes
 
 - Guild tags no longer stay stuck on your message here. `!sb hello` now shows as `hello`, matching what the
   guild actually received.
-- Get a tag wrong and the ❓ sticks around now instead of vanishing if you are linked.
-- Aim a `!tag` message at a guild whose bot is offline and you get a 📡 back, so you know it did not land
-  rather than wondering.
+- The ❓ and 📡 markers stick around properly now, so a mistyped tag or an offline guild is always visible —
+  including for linked users, who used to lose them.
 
 ### Multiple guilds
 
 - This channel can now bridge more than one Hypixel guild at the same time.
-- Start a message with a guild's tag to send it to just that guild — `!sb hey` only reaches the SkyBlock guild.
-- A message with no tag still goes to every guild, exactly like before.
-- Get a tag wrong and nothing is lost: the message still goes out to everyone and picks up a ❓ so you can see
-  the typo.
+- Start a message with a guild's tag to reach just that guild — `!sb hey` only goes to the SkyBlock guild.
+  No tag still goes to every guild, exactly like before.
 - Need to start a message with a literal `!`? Type it twice — `!!sb hi` comes out as `!sb hi`.
 - Guild chat coming back here is colour-coded and tagged, so you can tell at a glance which guild said what.
 - `/online` and `/ping` now cover every guild at once, and `/online` takes a `guild` if you only want one.
 - `/link` works if you are in any of the bridged guilds, not just one of them.
 - Nothing changes if only one guild is set up — no tags, same colours, same everything.
+
+### SkyBlock networth
+
+- Type `!nw <username>` in guild chat or here and the bot tells you that player's networth.
+- It picks their richest profile and counts everything — cosmetics and soulbound included.
+- Someone with their inventory API off gets an `(API off)` note, because the number will be too low.
+- `/networth` does the same here, and with no username it uses your linked account.
 
 ## Version 1.2.1
 

@@ -2,6 +2,7 @@ const mcBots = require('../../../utils/mcBots');
 const {parseGuildChat} = require('../../../utils/guildChat');
 const {createRelayDedupe} = require('../../../utils/relayDedupe');
 const {relayAcrossGuilds} = require('../../../utils/crossBridge');
+const {isChatCommand} = require('../../../utils/chatCommands');
 
 // Module-cached, so it is shared across every bot — see utils/relayDedupe.js.
 // Separate from the Discord relay's instance on purpose: neither should be able
@@ -27,6 +28,12 @@ module.exports = async (client, jsonMsg) => {
     // registered account rather than just the emitting one also covers two bots
     // that ended up in the same Hypixel guild.
     if (mcBots.isOwnAccountName(parsed.username)) return;
+
+    // A bot command belongs to the guild it was typed in. Forwarding it is noise
+    // to everyone else, and it would spend every cross-bridged guild's shared
+    // chat budget on a line none of them asked for — the same budget that keeps
+    // the accounts out of Hypixel's spam filter.
+    if (isChatCommand(parsed.content)) return;
 
     if (isDuplicate(guild.key, parsed.username, parsed.content)) return;
 
