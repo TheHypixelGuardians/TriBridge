@@ -1,5 +1,5 @@
-const bridge = require('../bridge');
-const guilds = require('./guilds');
+const bridge = require("../bridge");
+const guilds = require("./guilds");
 
 /**
  * @typedef {object} BotRecord
@@ -32,29 +32,29 @@ const guilds = require('./guilds');
  * @returns {BotRecord}
  */
 function ensureRecord(key) {
-    let record = bridge.mcBots.get(key);
-    if (record) return record;
+  let record = bridge.mcBots.get(key);
+  if (record) return record;
 
-    record = {
-        key,
-        config: null,
-        bot: null,
-        connected: false,
-        connecting: false,
-        awaitingDeviceCode: false,
-        attempts: 0,
-        nextAttemptAt: 0,
-        lastSpawnAt: null,
-        lastEndAt: null,
-        lastError: null,
-        hypixelGuildName: null,
-        queue: Promise.resolve(),
-        chatQueue: {last: 0, chain: Promise.resolve()},
-        dispose: null,
-    };
+  record = {
+    key,
+    config: null,
+    bot: null,
+    connected: false,
+    connecting: false,
+    awaitingDeviceCode: false,
+    attempts: 0,
+    nextAttemptAt: 0,
+    lastSpawnAt: null,
+    lastEndAt: null,
+    lastError: null,
+    hypixelGuildName: null,
+    queue: Promise.resolve(),
+    chatQueue: { last: 0, chain: Promise.resolve() },
+    dispose: null,
+  };
 
-    bridge.mcBots.set(key, record);
-    return record;
+  bridge.mcBots.set(key, record);
+  return record;
 }
 
 /**
@@ -62,17 +62,17 @@ function ensureRecord(key) {
  * @returns {BotRecord|null}
  */
 function getRecord(key) {
-    return key ? bridge.mcBots.get(key) ?? null : null;
+  return key ? (bridge.mcBots.get(key) ?? null) : null;
 }
 
 /** @returns {BotRecord[]} */
 function getAllRecords() {
-    return [...bridge.mcBots.values()];
+  return [...bridge.mcBots.values()];
 }
 
 /** @returns {BotRecord[]} Records with a live, spawned bot. */
 function getConnectedRecords() {
-    return getAllRecords().filter((record) => record.connected && record.bot);
+  return getAllRecords().filter((record) => record.connected && record.bot);
 }
 
 /**
@@ -80,8 +80,8 @@ function getConnectedRecords() {
  * @returns {boolean}
  */
 function isConnected(key) {
-    const record = getRecord(key);
-    return Boolean(record?.connected && record.bot);
+  const record = getRecord(key);
+  return Boolean(record?.connected && record.bot);
 }
 
 /**
@@ -96,8 +96,8 @@ function isConnected(key) {
  * @returns {object|null} The registry record, or null if the bot is unknown.
  */
 function guildForBot(bot) {
-    const key = bot?.tribridgeGuildKey;
-    return key ? guilds.get(key) : null;
+  const key = bot?.tribridgeGuildKey;
+  return key ? guilds.get(key) : null;
 }
 
 /**
@@ -111,13 +111,13 @@ function guildForBot(bot) {
  * @returns {boolean}
  */
 function isOwnAccountName(name) {
-    if (!name) return false;
-    const wanted = String(name).toLowerCase();
+  if (!name) return false;
+  const wanted = String(name).toLowerCase();
 
-    return getAllRecords().some((record) => {
-        const username = record.bot?.username;
-        return Boolean(username) && username.toLowerCase() === wanted;
-    });
+  return getAllRecords().some((record) => {
+    const username = record.bot?.username;
+    return Boolean(username) && username.toLowerCase() === wanted;
+  });
 }
 
 /**
@@ -125,25 +125,25 @@ function isOwnAccountName(name) {
  * @returns {'online'|'connecting'|'awaiting-signin'|'offline'|'disabled'|'unregistered'}
  */
 function describeStatus(key) {
-    const guild = guilds.get(key);
-    if (!guild) return 'unregistered';
-    if (guild.enabled === false) return 'disabled';
+  const guild = guilds.get(key);
+  if (!guild) return "unregistered";
+  if (guild.enabled === false) return "disabled";
 
-    const record = getRecord(key);
-    if (!record) return 'offline';
-    if (record.connected && record.bot) return 'online';
-    if (record.awaitingDeviceCode) return 'awaiting-signin';
-    if (record.connecting) return 'connecting';
-    return 'offline';
+  const record = getRecord(key);
+  if (!record) return "offline";
+  if (record.connected && record.bot) return "online";
+  if (record.awaitingDeviceCode) return "awaiting-signin";
+  if (record.connecting) return "connecting";
+  return "offline";
 }
 
 const STATUS_LABELS = {
-    online: '🟢 Online',
-    connecting: '🔄 Connecting…',
-    'awaiting-signin': '🔐 Awaiting sign-in',
-    offline: '🔴 Offline',
-    disabled: '⏸️ Disabled',
-    unregistered: '❔ Unknown',
+  online: "🟢 Online",
+  connecting: "🔄 Connecting…",
+  "awaiting-signin": "🔐 Awaiting sign-in",
+  offline: "🔴 Offline",
+  disabled: "⏸️ Disabled",
+  unregistered: "❔ Unknown",
 };
 
 /**
@@ -151,18 +151,18 @@ const STATUS_LABELS = {
  * @returns {string} A human-readable status for embeds and replies.
  */
 function describeStatusLabel(key) {
-    return STATUS_LABELS[describeStatus(key)] ?? STATUS_LABELS.unregistered;
+  return STATUS_LABELS[describeStatus(key)] ?? STATUS_LABELS.unregistered;
 }
 
 module.exports = {
-    ensureRecord,
-    getRecord,
-    getAllRecords,
-    getConnectedRecords,
-    isConnected,
-    guildForBot,
-    isOwnAccountName,
-    describeStatus,
-    describeStatusLabel,
-    STATUS_LABELS,
+  ensureRecord,
+  getRecord,
+  getAllRecords,
+  getConnectedRecords,
+  isConnected,
+  guildForBot,
+  isOwnAccountName,
+  describeStatus,
+  describeStatusLabel,
+  STATUS_LABELS,
 };

@@ -1,5 +1,5 @@
-const getLocalCommands = require('../../../utils/getLocalCommands');
-const {isAllowedServer} = require('../../../utils/serverGuard');
+const getLocalCommands = require("../../../utils/getLocalCommands");
+const { isAllowedServer } = require("../../../utils/serverGuard");
 
 /**
  * Dispatches autocomplete interactions to a command's optional `autocomplete`
@@ -11,29 +11,26 @@ const {isAllowedServer} = require('../../../utils/serverGuard');
  * user has already dismissed the box and the interaction is gone.
  */
 module.exports = async (client, interaction) => {
-    if (!interaction.isAutocomplete()) return;
+  if (!interaction.isAutocomplete()) return;
 
-    // Same guard as handleCommands.js: commands are registered globally, and the
-    // suggestions name the Hypixel guilds this deployment manages.
-    if (!isAllowedServer(interaction)) {
-        return interaction.respond([]).catch(() => {
-        });
-    }
+  // Same guard as handleCommands.js: commands are registered globally, and the
+  // suggestions name the Hypixel guilds this deployment manages.
+  if (!isAllowedServer(interaction)) {
+    return interaction.respond([]).catch(() => {});
+  }
 
-    const commandObject = getLocalCommands().find(
-        (cmd) => cmd.name === interaction.commandName,
-    );
+  const commandObject = getLocalCommands().find(
+    (cmd) => cmd.name === interaction.commandName,
+  );
 
-    if (typeof commandObject?.autocomplete !== 'function') {
-        return interaction.respond([]).catch(() => {
-        });
-    }
+  if (typeof commandObject?.autocomplete !== "function") {
+    return interaction.respond([]).catch(() => {});
+  }
 
-    try {
-        await commandObject.autocomplete(client, interaction);
-    } catch (error) {
-        console.error('Autocomplete handler failed:', error);
-        await interaction.respond([]).catch(() => {
-        });
-    }
+  try {
+    await commandObject.autocomplete(client, interaction);
+  } catch (error) {
+    console.error("Autocomplete handler failed:", error);
+    await interaction.respond([]).catch(() => {});
+  }
 };

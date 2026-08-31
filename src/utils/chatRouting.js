@@ -1,4 +1,4 @@
-const guilds = require('./guilds');
+const guilds = require("./guilds");
 
 // `!<tag> <body>`. The tag bounds match the registry's own TAG_PATTERN, and the
 // separator is required whitespace so `!hello` (no space) is never read as a tag.
@@ -30,28 +30,43 @@ const TAG_PREFIX = /^!([A-Za-z0-9]{2,8})\s+([\s\S]+)$/;
  * @returns {{targets: object[], body: string, unknownTag: string|null, targeted: boolean}}
  */
 function routeMessage(content) {
-    const text = String(content ?? '');
+  const text = String(content ?? "");
 
-    const fallback = () => {
-        if (guilds.broadcastByDefault()) return guilds.getEnabled();
-        const preferred = guilds.getDefault();
-        return preferred ? [preferred] : [];
+  const fallback = () => {
+    if (guilds.broadcastByDefault()) return guilds.getEnabled();
+    const preferred = guilds.getDefault();
+    return preferred ? [preferred] : [];
+  };
+
+  if (text.startsWith("!!")) {
+    return {
+      targets: fallback(),
+      body: text.slice(1),
+      unknownTag: null,
+      targeted: false,
     };
+  }
 
-    if (text.startsWith('!!')) {
-        return {targets: fallback(), body: text.slice(1), unknownTag: null, targeted: false};
+  const match = text.match(TAG_PREFIX);
+  if (match) {
+    const guild = guilds.getByTag(match[1]);
+    if (guild && guild.enabled !== false) {
+      return {
+        targets: [guild],
+        body: match[2],
+        unknownTag: null,
+        targeted: true,
+      };
     }
+    return {
+      targets: fallback(),
+      body: text,
+      unknownTag: match[1],
+      targeted: false,
+    };
+  }
 
-    const match = text.match(TAG_PREFIX);
-    if (match) {
-        const guild = guilds.getByTag(match[1]);
-        if (guild && guild.enabled !== false) {
-            return {targets: [guild], body: match[2], unknownTag: null, targeted: true};
-        }
-        return {targets: fallback(), body: text, unknownTag: match[1], targeted: false};
-    }
-
-    return {targets: fallback(), body: text, unknownTag: null, targeted: false};
+  return { targets: fallback(), body: text, unknownTag: null, targeted: false };
 }
 
-module.exports = {routeMessage, TAG_PREFIX};
+module.exports = { routeMessage, TAG_PREFIX };

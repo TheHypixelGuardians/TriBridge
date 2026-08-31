@@ -6,6 +6,10 @@ so a `git pull` never touches it and nothing secret can be committed by accident
 Each file is created on demand the first time it is needed. A missing file is not an error — it means the
 feature has not been configured yet.
 
+`.env` is the exception: it is the one file you write yourself, and the bot will not start without it. Copy
+the `.env.example` template in the repository and fill it in — that copy is tracked in git, the `.env` it
+produces is not.
+
 | File                         | Holds                                               | Managed with                                     |
 |------------------------------|-----------------------------------------------------|--------------------------------------------------|
 | `.env`                       | Token, bridge channel, log channel, first account   | Editing it — see [Configuration](Configuration)  |

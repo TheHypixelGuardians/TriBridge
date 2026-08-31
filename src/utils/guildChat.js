@@ -22,9 +22,9 @@ const PRESENCE_PATTERN = /Guild > (\w{1,16}) (joined|left)\./;
  * @returns {{username: string, content: string}|null}
  */
 function parseGuildChat(cleanMsg) {
-    const match = String(cleanMsg ?? '').match(CHAT_PATTERN);
-    if (!match) return null;
-    return {username: match[1], content: match[2]};
+  const match = String(cleanMsg ?? "").match(CHAT_PATTERN);
+  if (!match) return null;
+  return { username: match[1], content: match[2] };
 }
 
 /**
@@ -34,9 +34,14 @@ function parseGuildChat(cleanMsg) {
  * @returns {{username: string, action: 'joined'|'left'}|null}
  */
 function parseGuildPresence(cleanMsg) {
-    const match = String(cleanMsg ?? '').match(PRESENCE_PATTERN);
-    if (!match) return null;
-    return {username: match[1], action: match[2]};
+  const match = String(cleanMsg ?? "").match(PRESENCE_PATTERN);
+  if (!match) return null;
+  return { username: match[1], action: match[2] };
 }
 
-module.exports = {parseGuildChat, parseGuildPresence, CHAT_PATTERN, PRESENCE_PATTERN};
+module.exports = {
+  parseGuildChat,
+  parseGuildPresence,
+  CHAT_PATTERN,
+  PRESENCE_PATTERN,
+};

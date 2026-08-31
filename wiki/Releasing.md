@@ -29,7 +29,7 @@ indented `+` sub-bullets.
 
 Categories: `New Features`, `Improvements`, `Fixes`, `Technical Details`, `Removed Features` — only the ones
 with entries. Feature areas: `Bridge`, `Account Linking`, `Management`, `Information`, `Requests`,
-`Admin Panel`, `Core`, `Misc`.
+`Admin Panel`, `Documentation`, `Core`, `Misc`.
 
 Write for the people running and using the bot. Refactors and dependency bumps go under `Technical Details`.
 Always say what the default is, and what an existing install sees if it does nothing.
@@ -40,10 +40,20 @@ A change earns a line only if a guild member would notice it. One line, second p
 markdown Discord renders — no tables, no `+` bullets, no titled links. **Each `##` section must stay under 2000
 characters** so it pastes as one message.
 
+## Versioning
+
+The bot is on a pre-release beta line: versions look like `0.1.0-beta.1`, and each beta release bumps the
+trailing number. Lowercase `beta`, a dot before the number, no leading `v` — anything else is not valid
+semver, and npm copies it verbatim into `package-lock.json` rather than correcting it.
+
+Ordinary semver resumes at the first stable release, `1.0.0`: patch for fixes, minor for features, major for a
+config format existing `*Config.json` files can't be read as. The `Version 1.0.0` to `Version 1.2.1` sections
+in the changelog predate the beta line and are left alone.
+
 ## Cutting a release
 
-1. Bump `version` in `package.json` — patch for fixes, minor for features, major for a config format existing
-   `*Config.json` files can't be read as.
+1. Bump `version` in `package.json` — the beta number, or the semver component above. This is the step that
+   gets skipped; nothing else catches it.
 2. Rename `## Unreleased` to `## Version X.Y.Z` in **both** changelogs, and add a fresh empty `## Unreleased`
    above it in each.
 3. Check [Installation](Installation) and the README if the Node version or the dependencies changed.

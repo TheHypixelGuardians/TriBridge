@@ -1,4 +1,4 @@
-const WEBHOOK_NAME = 'TriBridge Relay';
+const WEBHOOK_NAME = "TriBridge Relay";
 
 // Keyed by channel id. Cleared via clearRelayWebhook so a webhook deleted out
 // from under us gets recreated instead of serving a dead entry forever.
@@ -17,12 +17,12 @@ const cache = new Map();
  *   cannot see, for instance.
  */
 function resolveWebhookTarget(channel) {
-    if (!channel?.isThread?.()) {
-        return channel ? {channel, threadId: undefined} : null;
-    }
+  if (!channel?.isThread?.()) {
+    return channel ? { channel, threadId: undefined } : null;
+  }
 
-    if (!channel.parent) return null;
-    return {channel: channel.parent, threadId: channel.id};
+  if (!channel.parent) return null;
+  return { channel: channel.parent, threadId: channel.id };
 }
 
 /**
@@ -35,26 +35,27 @@ function resolveWebhookTarget(channel) {
  * @throws {Error} If the bot lacks Manage Webhooks.
  */
 async function getRelayWebhook(channel) {
-    const cached = cache.get(channel.id);
-    if (cached) return cached;
+  const cached = cache.get(channel.id);
+  if (cached) return cached;
 
-    const webhooks = await channel.fetchWebhooks();
-    const botId = channel.client.user.id;
+  const webhooks = await channel.fetchWebhooks();
+  const botId = channel.client.user.id;
 
-    // Only webhooks we own carry a token, and without a token we can't send.
-    let webhook = webhooks.find(
-        (wh) => wh.name === WEBHOOK_NAME && wh.owner?.id === botId && wh.token,
-    );
+  // Only webhooks we own carry a token, and without a token we can't send.
+  let webhook = webhooks.find(
+    (wh) => wh.name === WEBHOOK_NAME && wh.owner?.id === botId && wh.token,
+  );
 
-    if (!webhook) {
-        webhook = await channel.createWebhook({
-            name: WEBHOOK_NAME,
-            reason: 'Used to repost linked users\' messages under their Minecraft identity.',
-        });
-    }
+  if (!webhook) {
+    webhook = await channel.createWebhook({
+      name: WEBHOOK_NAME,
+      reason:
+        "Used to repost linked users' messages under their Minecraft identity.",
+    });
+  }
 
-    cache.set(channel.id, webhook);
-    return webhook;
+  cache.set(channel.id, webhook);
+  return webhook;
 }
 
 /**
@@ -63,7 +64,12 @@ async function getRelayWebhook(channel) {
  * @param {string} channelId
  */
 function clearRelayWebhook(channelId) {
-    cache.delete(channelId);
+  cache.delete(channelId);
 }
 
-module.exports = {getRelayWebhook, clearRelayWebhook, resolveWebhookTarget, WEBHOOK_NAME};
+module.exports = {
+  getRelayWebhook,
+  clearRelayWebhook,
+  resolveWebhookTarget,
+  WEBHOOK_NAME,
+};

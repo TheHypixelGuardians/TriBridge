@@ -7,42 +7,41 @@
  * eat half the other's output).
  */
 class SerialQueue {
-    constructor() {
-        /** @type {Map<string, Promise>} */
-        this.tails = new Map();
-    }
+  constructor() {
+    /** @type {Map<string, Promise>} */
+    this.tails = new Map();
+  }
 
-    /**
-     * @param {string} key
-     * @param {() => Promise<T>} task
-     * @returns {Promise<T>} Resolves or rejects with the task's own result.
-     * @template T
-     */
-    run(key, task) {
-        const previous = this.tails.get(key) ?? Promise.resolve();
+  /**
+   * @param {string} key
+   * @param {() => Promise<T>} task
+   * @returns {Promise<T>} Resolves or rejects with the task's own result.
+   * @template T
+   */
+  run(key, task) {
+    const previous = this.tails.get(key) ?? Promise.resolve();
 
-        // `.then(task, task)` so one failed task does not stall the key forever.
-        const result = previous.then(task, task);
-        const settled = result.catch(() => {
-        });
+    // `.then(task, task)` so one failed task does not stall the key forever.
+    const result = previous.then(task, task);
+    const settled = result.catch(() => {});
 
-        this.tails.set(key, settled);
-        settled.then(() => {
-            // Drop the entry once nothing is queued behind us, so idle keys do
-            // not accumulate settled promises forever.
-            if (this.tails.get(key) === settled) this.tails.delete(key);
-        });
+    this.tails.set(key, settled);
+    settled.then(() => {
+      // Drop the entry once nothing is queued behind us, so idle keys do
+      // not accumulate settled promises forever.
+      if (this.tails.get(key) === settled) this.tails.delete(key);
+    });
 
-        return result;
-    }
+    return result;
+  }
 
-    /**
-     * @param {string} key
-     * @returns {boolean} Whether anything is currently queued for this key.
-     */
-    isBusy(key) {
-        return this.tails.has(key);
-    }
+  /**
+   * @param {string} key
+   * @returns {boolean} Whether anything is currently queued for this key.
+   */
+  isBusy(key) {
+    return this.tails.has(key);
+  }
 }
 
 /**
@@ -57,10 +56,9 @@ class SerialQueue {
  * @template T
  */
 function chain(holder, task) {
-    const result = holder.queue.then(task, task);
-    holder.queue = result.catch(() => {
-    });
-    return result;
+  const result = holder.queue.then(task, task);
+  holder.queue = result.catch(() => {});
+  return result;
 }
 
-module.exports = {SerialQueue, chain};
+module.exports = { SerialQueue, chain };

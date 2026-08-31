@@ -1,5 +1,5 @@
-const bridge = require('../bridge');
-const guilds = require('./guilds');
+const bridge = require("../bridge");
+const guilds = require("./guilds");
 
 /**
  * Posts to a log channel, swallowing every failure.
@@ -12,18 +12,18 @@ const guilds = require('./guilds');
  * @returns {Promise<boolean>} Whether the line landed.
  */
 async function send(channelId, payload) {
-    if (!channelId || !bridge.discordClient) return false;
+  if (!channelId || !bridge.discordClient) return false;
 
-    const options = typeof payload === 'string' ? {content: payload} : payload;
+  const options = typeof payload === "string" ? { content: payload } : payload;
 
-    try {
-        const channel = await bridge.discordClient.channels.fetch(channelId);
-        await channel.send(options);
-        return true;
-    } catch (error) {
-        console.error('Failed to send log channel notification:', error);
-        return false;
-    }
+  try {
+    const channel = await bridge.discordClient.channels.fetch(channelId);
+    await channel.send(options);
+    return true;
+  } catch (error) {
+    console.error("Failed to send log channel notification:", error);
+    return false;
+  }
 }
 
 /**
@@ -36,7 +36,7 @@ async function send(channelId, payload) {
  * @returns {Promise<boolean>}
  */
 async function logGlobal(payload) {
-    return send(bridge.logChannelId, payload);
+  return send(bridge.logChannelId, payload);
 }
 
 /**
@@ -50,14 +50,14 @@ async function logGlobal(payload) {
  * @returns {Promise<boolean>}
  */
 async function logForGuild(guildKey, payload) {
-    const guild = guilds.get(guildKey);
-    const channelId = guild?.logChannelId ?? bridge.logChannelId;
+  const guild = guilds.get(guildKey);
+  const channelId = guild?.logChannelId ?? bridge.logChannelId;
 
-    if (typeof payload === 'string' && guild && guilds.shouldShowTags()) {
-        return send(channelId, `**${guild.name}** — ${payload}`);
-    }
+  if (typeof payload === "string" && guild && guilds.shouldShowTags()) {
+    return send(channelId, `**${guild.name}** — ${payload}`);
+  }
 
-    return send(channelId, payload);
+  return send(channelId, payload);
 }
 
-module.exports = {logGlobal, logForGuild};
+module.exports = { logGlobal, logForGuild };

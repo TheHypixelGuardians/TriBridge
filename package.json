@@ -1,10 +1,11 @@
 {
   "name": "thgbridge",
-  "version": "1.0.0",
+  "version": "0.1.0-beta.1",
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js --ext js --watch src --watch .env"
   },
   "private": true,
   "keywords": [],
@@ -16,5 +17,8 @@
     "dotenv": "^17.3.1",
     "mineflayer": "^4.35.0",
     "prismarine-auth": "^2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }

@@ -1,8 +1,8 @@
-const guilds = require('../../../utils/guilds');
-const mcBots = require('../../../utils/mcBots');
-const createMcBot = require('../../../utils/createMcBot');
-const {logForGuild} = require('../../../utils/guildLog');
-const {requestSignIn} = require('../../../utils/deviceCode');
+const guilds = require("../../../utils/guilds");
+const mcBots = require("../../../utils/mcBots");
+const createMcBot = require("../../../utils/createMcBot");
+const { logForGuild } = require("../../../utils/guildLog");
+const { requestSignIn } = require("../../../utils/deviceCode");
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -21,19 +21,28 @@ const NOISY_ATTEMPTS = new Set([1, 6]);
  * @param {string} guildKey
  */
 async function attemptConnect(guildKey) {
-    try {
-        await createMcBot(guildKey, {onMsaCode: (info, guild) => requestSignIn(info, guild)});
-    } catch (error) {
-        const record = mcBots.getRecord(guildKey);
-        console.error(`[${guildKey}] connection attempt failed:`, error?.message ?? error);
+  try {
+    await createMcBot(guildKey, {
+      onMsaCode: (info, guild) => requestSignIn(info, guild),
+    });
+  } catch (error) {
+    const record = mcBots.getRecord(guildKey);
+    console.error(
+      `[${guildKey}] connection attempt failed:`,
+      error?.message ?? error,
+    );
 
-        if (NOISY_ATTEMPTS.has(record?.attempts)) {
-            const suffix = record.attempts >= 6
-                ? ' Giving up on notifications until it succeeds — check the account.'
-                : '';
-            await logForGuild(guildKey, `❌ Could not connect to Hypixel: ${error.message}.${suffix}`);
-        }
+    if (NOISY_ATTEMPTS.has(record?.attempts)) {
+      const suffix =
+        record.attempts >= 6
+          ? " Giving up on notifications until it succeeds — check the account."
+          : "";
+      await logForGuild(
+        guildKey,
+        `❌ Could not connect to Hypixel: ${error.message}.${suffix}`,
+      );
     }
+  }
 }
 
 /**
@@ -49,15 +58,16 @@ async function attemptConnect(guildKey) {
  * next tick tear down a bot that was still mid-handshake.
  */
 function poll() {
-    for (const guild of guilds.getEnabled()) {
-        const record = mcBots.ensureRecord(guild.key);
+  for (const guild of guilds.getEnabled()) {
+    const record = mcBots.ensureRecord(guild.key);
 
-        if (record.connected || record.connecting || record.awaitingDeviceCode) continue;
-        if (Date.now() < record.nextAttemptAt) continue;
+    if (record.connected || record.connecting || record.awaitingDeviceCode)
+      continue;
+    if (Date.now() < record.nextAttemptAt) continue;
 
-        void attemptConnect(guild.key);
-        return;
-    }
+    void attemptConnect(guild.key);
+    return;
+  }
 }
 
 // `clientReady` fires again if the Discord client fully reconnects, and a second
@@ -65,13 +75,13 @@ function poll() {
 let started = false;
 
 module.exports = () => {
-    if (started) return;
-    started = true;
+  if (started) return;
+  started = true;
 
-    // Once immediately, so boot is not delayed by a full poll interval. This is
-    // the only place that opens the initial connections — index.js deliberately
-    // does not, so there is exactly one code path for "connect a guild".
-    poll();
+  // Once immediately, so boot is not delayed by a full poll interval. This is
+  // the only place that opens the initial connections — index.js deliberately
+  // does not, so there is exactly one code path for "connect a guild".
+  poll();
 
-    setInterval(poll, POLL_INTERVAL_MS);
+  setInterval(poll, POLL_INTERVAL_MS);
 };

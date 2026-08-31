@@ -1,4 +1,4 @@
-const bridge = require('../bridge');
+const bridge = require("../bridge");
 
 /**
  * Whether an interaction came from the Discord server this bot instance serves.
@@ -23,8 +23,8 @@ const bridge = require('../bridge');
  * @returns {boolean}
  */
 function isAllowedServer(interaction) {
-    if (!bridge.discordServerId) return false;
-    return interaction.guildId === bridge.discordServerId;
+  if (!bridge.discordServerId) return false;
+  return interaction.guildId === bridge.discordServerId;
 }
 
-module.exports = {isAllowedServer};
+module.exports = { isAllowedServer };

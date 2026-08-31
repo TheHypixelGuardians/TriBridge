@@ -10,7 +10,7 @@ npm install
 Then restart the process:
 
 ```bash
-node src/index.js
+npm start
 ```
 
 ## What survives
@@ -23,6 +23,9 @@ The one thing to read before restarting is the release's entry in the
 [changelog](https://github.com/Trilleo/TriBridge/blob/master/CHANGELOG.md). A **major** version bump means a
 config format that existing `*Config.json` files cannot be read as; anything else is safe to pull and
 restart.
+
+While the bot is on its `0.1.0-beta.N` line there are no major bumps, so read the changelog entry itself for
+anything that changes a config file rather than relying on the number.
 
 ## After restarting
 

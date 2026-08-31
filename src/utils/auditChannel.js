@@ -1,25 +1,25 @@
-const fs = require('fs');
-const path = require('path');
-const bridge = require('../bridge');
+const fs = require("fs");
+const path = require("path");
+const bridge = require("../bridge");
 
-const CONFIG_PATH = path.join(__dirname, '..', '..', 'auditChannelConfig.json');
+const CONFIG_PATH = path.join(__dirname, "..", "..", "auditChannelConfig.json");
 
 let cachedConfig = null;
 
 function loadConfig() {
-    if (cachedConfig) return cachedConfig;
-    try {
-        const data = fs.readFileSync(CONFIG_PATH, 'utf-8');
-        cachedConfig = JSON.parse(data);
-    } catch {
-        cachedConfig = {channelId: null};
-    }
-    return cachedConfig;
+  if (cachedConfig) return cachedConfig;
+  try {
+    const data = fs.readFileSync(CONFIG_PATH, "utf-8");
+    cachedConfig = JSON.parse(data);
+  } catch {
+    cachedConfig = { channelId: null };
+  }
+  return cachedConfig;
 }
 
 function saveConfig(config) {
-    cachedConfig = config;
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+  cachedConfig = config;
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
 }
 
 /**
@@ -33,21 +33,21 @@ function saveConfig(config) {
  * @returns {string|null} Null when nothing is configured at either level.
  */
 function getAuditChannelId(guildKey) {
-    if (guildKey) {
-        // Required lazily: guilds.js is loaded by modules that this one is
-        // loaded by, and a top-level require would close the cycle.
-        const guilds = require('./guilds');
-        const scoped = guilds.get(guildKey)?.auditChannelId;
-        if (scoped) return scoped;
-    }
-    return loadConfig().channelId ?? null;
+  if (guildKey) {
+    // Required lazily: guilds.js is loaded by modules that this one is
+    // loaded by, and a top-level require would close the cycle.
+    const guilds = require("./guilds");
+    const scoped = guilds.get(guildKey)?.auditChannelId;
+    if (scoped) return scoped;
+  }
+  return loadConfig().channelId ?? null;
 }
 
 /**
  * @param {string|null} channelId Pass null to stop recording.
  */
 function setAuditChannelId(channelId) {
-    saveConfig({channelId: channelId ?? null});
+  saveConfig({ channelId: channelId ?? null });
 }
 
 /**
@@ -62,21 +62,21 @@ function setAuditChannelId(channelId) {
  *   channel when it has its own; otherwise the global one, as before.
  * @returns {Promise<boolean>} Whether the line landed.
  */
-async function logAudit(payload, {guildKey} = {}) {
-    const channelId = getAuditChannelId(guildKey);
-    if (!channelId || !bridge.discordClient) return false;
+async function logAudit(payload, { guildKey } = {}) {
+  const channelId = getAuditChannelId(guildKey);
+  if (!channelId || !bridge.discordClient) return false;
 
-    const options = typeof payload === 'string' ? {content: payload} : payload;
+  const options = typeof payload === "string" ? { content: payload } : payload;
 
-    try {
-        const channel = await bridge.discordClient.channels.fetch(channelId);
-        // Audit lines quote member-supplied names, so nothing in them may ping.
-        await channel.send({allowedMentions: {parse: []}, ...options});
-        return true;
-    } catch (error) {
-        console.error('Failed to write to the audit channel:', error);
-        return false;
-    }
+  try {
+    const channel = await bridge.discordClient.channels.fetch(channelId);
+    // Audit lines quote member-supplied names, so nothing in them may ping.
+    await channel.send({ allowedMentions: { parse: [] }, ...options });
+    return true;
+  } catch (error) {
+    console.error("Failed to write to the audit channel:", error);
+    return false;
+  }
 }
 
-module.exports = {getAuditChannelId, setAuditChannelId, logAudit};
+module.exports = { getAuditChannelId, setAuditChannelId, logAudit };

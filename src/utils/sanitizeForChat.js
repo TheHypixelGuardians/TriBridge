@@ -14,11 +14,11 @@ const MAX_CHAT_LENGTH = 100;
  * @returns {string} Single-line text with formatting codes removed.
  */
 function sanitizeForChat(text) {
-    return String(text ?? '')
-        .replace(/§./g, '')
-        .replace(/[\r\n]+/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+  return String(text ?? "")
+    .replace(/§./g, "")
+    .replace(/[\r\n]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -31,18 +31,17 @@ function sanitizeForChat(text) {
  *   nothing left to send after sanitizing.
  */
 function buildGuildChatCommand(displayName, text) {
-    const body = sanitizeForChat(text);
-    if (!body) return null;
+  const body = sanitizeForChat(text);
+  if (!body) return null;
 
-    const prefix = `/gc ${displayName}: `;
-    const budget = MAX_CHAT_LENGTH - prefix.length;
-    if (budget <= 0) return null;
+  const prefix = `/gc ${displayName}: `;
+  const budget = MAX_CHAT_LENGTH - prefix.length;
+  if (budget <= 0) return null;
 
-    const truncated = body.length > budget
-        ? `${body.substring(0, budget - 3)}...`
-        : body;
+  const truncated =
+    body.length > budget ? `${body.substring(0, budget - 3)}...` : body;
 
-    return `${prefix}${truncated}`;
+  return `${prefix}${truncated}`;
 }
 
-module.exports = {sanitizeForChat, buildGuildChatCommand, MAX_CHAT_LENGTH};
+module.exports = { sanitizeForChat, buildGuildChatCommand, MAX_CHAT_LENGTH };
