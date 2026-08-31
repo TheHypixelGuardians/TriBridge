@@ -1,8 +1,9 @@
 # The GitHub wiki
 
-The wiki pages live in [`wiki/`](../wiki) in this repository and are **published by pushing them to the
-wiki's own Git repository** (`https://github.com/Trilleo/TriBridge.wiki.git`). Keeping the source here means
-wiki edits go through the same review as code, and a feature commit can update the wiki alongside it.
+The wiki pages live in [`wiki/`](../wiki) in this repository and are copied into the wiki's own Git repository
+(`https://github.com/Trilleo/TriBridge.wiki.git`) **automatically, by a GitHub Actions workflow, on every push
+to `master` that touches them**. Keeping the source here means wiki edits go through the same review as code,
+a feature commit can update the wiki alongside it, and nobody has to remember to publish.
 
 ## Two readers, one wiki
 
@@ -55,16 +56,31 @@ member page and the configuration lives on the staff page.
 
 ## Publishing
 
-The wiki repo has no branch protection and no CI; a push is a publish.
+[`.github/workflows/wiki.yml`](../.github/workflows/wiki.yml) does it. Pushing to `master` with a change under
+`wiki/` clones the wiki repository, replaces its top-level `*.md` files with this folder's, and commits —
+skipping the commit entirely when nothing differs, so an unrelated push does not produce an empty wiki commit.
+It can also be run by hand from the Actions tab (`workflow_dispatch`).
+
+It authenticates with the automatic `GITHUB_TOKEN` and needs `permissions: contents: write`, which is what the
+workflow declares. There is nothing to configure and no secret to create.
+
+Two things it does **not** do:
+
+- **It never deletes a page you did not delete here.** The sync removes only top-level `*.md` files before
+  copying, so a page removed from `wiki/` does disappear — but anything created directly in the wiki's web UI
+  and not mirrored here is removed too. Treat `wiki/` as the only source: editing a page through GitHub's wiki
+  editor is fine as a preview, but the next push overwrites it.
+- **It does not initialise the wiki.** The wiki must be **enabled and initialised** in the repository settings
+  before that clone URL exists — create the first page through the web UI once, and every later publish is
+  automatic. Until then the workflow's clone step fails, which is the failure to expect on a fresh repository.
+
+The manual equivalent, if the workflow is ever unavailable:
 
 ```bash
 git clone https://github.com/Trilleo/TriBridge.wiki.git /tmp/tribridge-wiki
 cp wiki/*.md /tmp/tribridge-wiki/
 cd /tmp/tribridge-wiki && git add -A && git commit -m "Internal: Sync wiki from main repository" && git push
 ```
-
-The wiki must be **enabled and initialised** in the repository settings before that clone URL exists — create
-the first page through the web UI once, then push over it.
 
 ## Keeping it in sync
 

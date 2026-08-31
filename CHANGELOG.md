@@ -150,8 +150,12 @@
   + `docs/RELEASING.md` documents the two changelogs and the release and deploy process,
     `docs/COMMIT_STRUCTURE.md` the commit convention, and `docs/WIKI.md` how the wiki is written and
     published.
-+ Added a `wiki/` folder holding the source of the GitHub wiki, published by pushing it to the wiki's own
-  repository.
++ Added a `wiki/` folder holding the source of the GitHub wiki.
+  + `.github/workflows/wiki.yml` publishes it automatically: a push to `master` touching `wiki/` syncs the
+    folder into the wiki's own repository, so a page merged with the code is live with it and nobody has to
+    remember a publish step. It can also be run by hand from the Actions tab.
+  + It authenticates with the automatic `GITHUB_TOKEN`, so there is nothing to configure — but the wiki has
+    to be initialised once through the web UI before the first run can succeed.
   + The pages are split by audience: **Using the bridge** for guild members in the Discord server, **Running
     the bot** for whoever hosts it, plus help and development sections.
   + `Commands`, `Config files` and `Permissions` are exhaustive lists, so a missing entry is a visible gap

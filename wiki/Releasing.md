@@ -64,7 +64,10 @@ what to check afterwards, including the up-to-an-hour delay before new slash com
 
 ## The wiki
 
-These pages are published by pushing `wiki/` to the wiki's own repository. See
+These pages publish themselves. A push to `master` touching `wiki/` runs
+[`.github/workflows/wiki.yml`](https://github.com/Trilleo/TriBridge/blob/master/.github/workflows/wiki.yml),
+which copies the folder into the wiki's own repository — so there is no publish step at release time, and a
+page merged with the code is live with it. See
 [docs/WIKI.md](https://github.com/Trilleo/TriBridge/blob/master/docs/WIKI.md).
 
 ## Next

@@ -42,7 +42,10 @@ Before finishing any task that changes the bot, do all of the following:
      "simplified" away later.
 
 4. **Update the wiki** — the GitHub wiki is published from [wiki/](wiki/) in this repository, and it is the
-   page somebody finds from a search engine, so it must never lag behind the bot.
+   page somebody finds from a search engine, so it must never lag behind the bot. Publishing is automatic —
+   [.github/workflows/wiki.yml](.github/workflows/wiki.yml) syncs the folder to the wiki repository on every
+   push to `master` that touches it — so the only job here is keeping `wiki/` correct. Never publish by hand
+   and never edit a page through GitHub's wiki editor: the next push overwrites it.
    - The wiki is **split by audience**: *Using the bridge* is for guild members in the Discord server, *Running
      the bot* is for whoever hosts it and holds a bot-admin role. A page belongs to whichever reader can act on
      it. Where a feature has both halves (the global profile change, auditing), the member-facing consequence
