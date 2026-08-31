@@ -3,10 +3,10 @@
 TriBridge keeps **two** changelogs, written for different people, and both are updated in the same commit as
 the change itself.
 
-| File                    | Reader                                 | Voice                                                      |
-|-------------------------|----------------------------------------|------------------------------------------------------------|
-| `CHANGELOG.md`          | Whoever runs the bot, and future you   | Third person, complete, sub-bullets for the details        |
-| `DISCORD_CHANGELOG.md`  | Guild members reading an announcement  | Second person, one line per change, nothing they can't see |
+| File                   | Reader                                | Voice                                                      |
+|------------------------|---------------------------------------|------------------------------------------------------------|
+| `CHANGELOG.md`         | Whoever runs the bot, and future you  | Third person, complete, sub-bullets for the details        |
+| `DISCORD_CHANGELOG.md` | Guild members reading an announcement | Second person, one line per change, nothing they can't see |
 
 The full format lives in
 [docs/RELEASING.md](https://github.com/Trilleo/TriBridge/blob/master/docs/RELEASING.md). The summary:
@@ -24,7 +24,7 @@ indented `+` sub-bullets.
 #### Bridge
 
 + Added **guild-to-guild bridging**: chat in one Hypixel guild can now be shared straight into the others.
-  + Off by default and turned on per guild with `/guilds edit guild:sb crossbridge:True`.
+    + Off by default and turned on per guild with `/guilds edit guild:sb crossbridge:True`.
 ```
 
 Categories: `New Features`, `Improvements`, `Fixes`, `Technical Details`, `Removed Features` — only the ones

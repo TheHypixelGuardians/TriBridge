@@ -2,10 +2,10 @@
 
 TriBridge has **two** permission systems, and they are separate on purpose.
 
-| System                 | Checked                          | Used by                                                    |
-|------------------------|----------------------------------|------------------------------------------------------------|
-| **Discord permission** | Before the command runs          | `/adminrole` only — it needs **Administrator**              |
-| **Bot-admin role**     | Inside the command               | Everything else that is admin-gated                        |
+| System                 | Checked                 | Used by                                        |
+|------------------------|-------------------------|------------------------------------------------|
+| **Discord permission** | Before the command runs | `/adminrole` only — it needs **Administrator** |
+| **Bot-admin role**     | Inside the command      | Everything else that is admin-gated            |
 
 Bot-admin is a **flat list of Discord role ids**. Anyone holding any of those roles is an admin as far as the
 bot is concerned.

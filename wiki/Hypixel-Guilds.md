@@ -9,16 +9,16 @@ repair a broken registry — which is why Discord comes up even when no Minecraf
 
 ## What a guild has
 
-| Field            | Meaning                                                                                                  |
-|------------------|----------------------------------------------------------------------------------------------------------|
-| `key`            | Short internal id, e.g. `sb`. Lowercase letters, digits, `-` and `_`, up to 16 characters. **Immutable**  |
-| `name`           | Display name used in replies and logs                                                                    |
-| `tag`            | 2–8 letters or digits. Typed as `!tag message`, and shown beside names on incoming chat                   |
-| `account`        | Microsoft account email for this guild's Minecraft bot. **Immutable**, and no two guilds may share one    |
-| `color`          | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                             |
-| `logChannelId`   | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                               |
-| `auditChannelId` | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                        |
-| `enabled`        | `false` disconnects the guild without removing it                                                         |
+| Field            | Meaning                                                                                                         |
+|------------------|-----------------------------------------------------------------------------------------------------------------|
+| `key`            | Short internal id, e.g. `sb`. Lowercase letters, digits, `-` and `_`, up to 16 characters. **Immutable**        |
+| `name`           | Display name used in replies and logs                                                                           |
+| `tag`            | 2–8 letters or digits. Typed as `!tag message`, and shown beside names on incoming chat                         |
+| `account`        | Microsoft account email for this guild's Minecraft bot. **Immutable**, and no two guilds may share one          |
+| `color`          | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                                    |
+| `logChannelId`   | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                                     |
+| `auditChannelId` | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                              |
+| `enabled`        | `false` disconnects the guild without removing it                                                               |
 | `crossBridge`    | `true` shares chat with the other cross-bridged guilds — see [Guild-to-guild bridging](Guild-to-Guild-Bridging) |
 
 > **`key` and `account` cannot be changed.** `account` is the key prismarine-auth hashes for its token cache,

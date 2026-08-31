@@ -29,11 +29,11 @@ ignored — `2h then stop` is not two hours, it is an error.
 
 The effect has three legs, and two of them have their own switch on the panel:
 
-| Leg                     | Switch                        | Governs                                              |
-|-------------------------|-------------------------------|------------------------------------------------------|
-| Discord repost          | *always on*                   | The message in the bridge channel                    |
-| Discord → Minecraft     | **Discord → Minecraft: on/off** | The name guild chat is told                        |
-| Minecraft → Discord     | **Minecraft → Discord: on/off** | The name on incoming guild-chat embeds             |
+| Leg                 | Switch                          | Governs                                |
+|---------------------|---------------------------------|----------------------------------------|
+| Discord repost      | *always on*                     | The message in the bridge channel      |
+| Discord → Minecraft | **Discord → Minecraft: on/off** | The name guild chat is told            |
+| Minecraft → Discord | **Minecraft → Discord: on/off** | The name on incoming guild-chat embeds |
 
 Switching *Discord → Minecraft* off stops the disguise **at the bridge** rather than turning it off outright —
 Discord still shows the target's face, guild chat gets real names. That is the setting for running a joke in

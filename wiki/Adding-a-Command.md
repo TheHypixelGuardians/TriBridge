@@ -55,11 +55,11 @@ wording.
 
 ## 3. Get the permissions right
 
-| Gate                                     | Use                                                  |
-|------------------------------------------|------------------------------------------------------|
-| A real Discord permission                | `permissionsRequired: [PermissionFlagsBits.X]`       |
-| Bot-admin                                | `isAdmin(interaction.member)` inside the callback     |
-| Anyone                                   | Neither                                              |
+| Gate                      | Use                                               |
+|---------------------------|---------------------------------------------------|
+| A real Discord permission | `permissionsRequired: [PermissionFlagsBits.X]`    |
+| Bot-admin                 | `isAdmin(interaction.member)` inside the callback |
+| Anyone                    | Neither                                           |
 
 Do not invent a third path, and do not add a dispatch route that skips the single-server guard in
 `handleCommands.js`. See [Admin roles](Admin-Roles).

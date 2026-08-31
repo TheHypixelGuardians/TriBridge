@@ -6,17 +6,17 @@ so a `git pull` never touches it and nothing secret can be committed by accident
 Each file is created on demand the first time it is needed. A missing file is not an error — it means the
 feature has not been configured yet.
 
-| File                        | Holds                                                        | Managed with                    |
-|-----------------------------|--------------------------------------------------------------|---------------------------------|
-| `.env`                      | Token, bridge channel, log channel, first account            | Editing it — see [Configuration](Configuration) |
-| `.minecraft-auth/`          | Cached Microsoft tokens, one entry per account               | The bot                          |
-| `guildsConfig.json`         | The Hypixel guild registry                                   | [`/guilds`](Hypixel-Guilds)     |
-| `adminRolesConfig.json`     | Discord role ids that hold bot-admin                         | [`/adminrole`](Admin-Roles)     |
-| `linkedAccountsConfig.json` | Discord user → Minecraft name and UUID                       | [`/link`, `/unlink`](Account-Linking) |
-| `linkRoleConfig.json`       | The role given to linked users                               | [`/linkrole`](Link-Role)        |
-| `auditChannelConfig.json`   | The default audit channel                                    | [`/auditchannel`](Auditing)     |
-| `globalProfileConfig.json`  | The running global profile change, and its scope             | [`/adminpanel`](Global-Profile-Change) |
-| `featureRequestsConfig.json`| The request channel, the next id, and every request          | [`/request`, `/requeststatus`](Feature-Requests) |
+| File                         | Holds                                               | Managed with                                     |
+|------------------------------|-----------------------------------------------------|--------------------------------------------------|
+| `.env`                       | Token, bridge channel, log channel, first account   | Editing it — see [Configuration](Configuration)  |
+| `.minecraft-auth/`           | Cached Microsoft tokens, one entry per account      | The bot                                          |
+| `guildsConfig.json`          | The Hypixel guild registry                          | [`/guilds`](Hypixel-Guilds)                      |
+| `adminRolesConfig.json`      | Discord role ids that hold bot-admin                | [`/adminrole`](Admin-Roles)                      |
+| `linkedAccountsConfig.json`  | Discord user → Minecraft name and UUID              | [`/link`, `/unlink`](Account-Linking)            |
+| `linkRoleConfig.json`        | The role given to linked users                      | [`/linkrole`](Link-Role)                         |
+| `auditChannelConfig.json`    | The default audit channel                           | [`/auditchannel`](Auditing)                      |
+| `globalProfileConfig.json`   | The running global profile change, and its scope    | [`/adminpanel`](Global-Profile-Change)           |
+| `featureRequestsConfig.json` | The request channel, the next id, and every request | [`/request`, `/requeststatus`](Feature-Requests) |
 
 ## Back these up
 

@@ -24,13 +24,13 @@ because `/guilds` is the only way to repair a broken registry.
 
 `src/bridge.js` is the single shared-state module. Both sides import it to reach each other:
 
-| Field               | Is                                                                         |
-|---------------------|----------------------------------------------------------------------------|
-| `discordClient`     | The discord.js client                                                      |
-| `discordChannelId`  | The bridge channel                                                          |
-| `logChannelId`      | The global fallback log channel                                             |
-| `discordServerId`   | The one **Discord server** this instance serves                             |
-| `mcBots`            | `Map` of `guildKey → BotRecord`, one per Hypixel guild                      |
+| Field              | Is                                                     |
+|--------------------|--------------------------------------------------------|
+| `discordClient`    | The discord.js client                                  |
+| `discordChannelId` | The bridge channel                                     |
+| `logChannelId`     | The global fallback log channel                        |
+| `discordServerId`  | The one **Discord server** this instance serves        |
+| `mcBots`           | `Map` of `guildKey → BotRecord`, one per Hypixel guild |
 
 There is no dependency injection. New cross-client state belongs here.
 
@@ -93,8 +93,10 @@ module.exports = {
     permissionsRequired: [...],     // optional, PermissionFlagsBits
     botPermissions: [...],          // optional
     deleted: false,                 // optional; true unregisters the command
-    callback: async (client, interaction) => { ... },
-    autocomplete: async (client, interaction) => { ... },   // optional
+    callback: async (client, interaction) => { ...
+    },
+    autocomplete: async (client, interaction) => { ...
+    },   // optional
 };
 ```
 
@@ -122,11 +124,11 @@ command dispatch path that skips it.**
 
 Three helpers, each solving a problem you will otherwise rediscover:
 
-| Helper                                | Why it exists                                                                                             |
-|---------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| `queryGuild(record, cmd, opts)`       | Hypixel gives no request/response correlation. Serialises every query per bot with a settle window after   |
-| `sendChat(record, text, opts)`        | Spaces packets per account. `bot.chat` directly gets accounts muted; a broadcast multiplies the rate       |
-| `buildGuildChatCommand(name, body)`   | Flattens and truncates. `bot.chat` splits on newlines, so an unflattened message can inject a *command*    |
+| Helper                              | Why it exists                                                                                            |
+|-------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `queryGuild(record, cmd, opts)`     | Hypixel gives no request/response correlation. Serialises every query per bot with a settle window after |
+| `sendChat(record, text, opts)`      | Spaces packets per account. `bot.chat` directly gets accounts muted; a broadcast multiplies the rate     |
+| `buildGuildChatCommand(name, body)` | Flattens and truncates. `bot.chat` splits on newlines, so an unflattened message can inject a *command*  |
 
 `queryGuild` owns its listener and timer cleanup — never hand-roll a `message` listener. Pass `format: 'motd'`
 when the colour codes carry meaning (`§a` marks online players in `/g online`).

@@ -14,28 +14,28 @@ watching Discord.
 
 ## Start here
 
-| You are…                                          | Go to                                                  |
-|---------------------------------------------------|--------------------------------------------------------|
-| **In the Discord server, using the bridge**       | [Using the bridge](Using-the-Bridge)                   |
-| **Setting the bot up, or running it**             | [Installation](Installation)                           |
+| You are…                                    | Go to                                |
+|---------------------------------------------|--------------------------------------|
+| **In the Discord server, using the bridge** | [Using the bridge](Using-the-Bridge) |
+| **Setting the bot up, or running it**       | [Installation](Installation)         |
 
 ## What TriBridge does
 
-| Feature                                                | In one line                                                            |
-|--------------------------------------------------------|------------------------------------------------------------------------|
-| [The bridge](Using-the-Bridge)                         | One Discord channel and Hypixel guild chat, relayed both ways           |
-| [Guild tags](Guild-Tags)                               | `!sb hey` reaches one guild; anything else reaches all of them          |
-| [Guild-to-guild bridging](Guild-to-Guild-Bridging)     | Chat shared between the bridged guilds, in-game, opt-in per guild       |
-| [Account linking](Account-Linking)                     | Your messages wear your Minecraft head and name on both sides           |
-| [Networth](Networth)                                   | `!nw <username>` in chat, or `/networth`, from either side of the bridge |
-| [Hypixel guilds](Hypixel-Guilds)                       | Register, edit and sign in guilds entirely from Discord with `/guilds`  |
-| [Reconnection](Reconnection)                           | Dropped accounts come back on their own, one at a time                  |
-| [Admin roles](Admin-Roles)                             | A flat list of Discord roles that hold bot-admin                        |
-| [Admin panel](Admin-Panel)                             | `/adminpanel` — a button per admin function                            |
-| [Global profile change](Global-Profile-Change)         | Everyone wears one member's name and face, for a while                  |
-| [Auditing](Auditing)                                   | Every disguised message recorded with a jump link                       |
-| [Link role](Link-Role)                                 | A role handed out automatically to everyone who links                   |
-| [Feature requests](Feature-Requests)                   | `/request` opens a form; admins move it through a status                |
+| Feature                                            | In one line                                                              |
+|----------------------------------------------------|--------------------------------------------------------------------------|
+| [The bridge](Using-the-Bridge)                     | One Discord channel and Hypixel guild chat, relayed both ways            |
+| [Guild tags](Guild-Tags)                           | `!sb hey` reaches one guild; anything else reaches all of them           |
+| [Guild-to-guild bridging](Guild-to-Guild-Bridging) | Chat shared between the bridged guilds, in-game, opt-in per guild        |
+| [Account linking](Account-Linking)                 | Your messages wear your Minecraft head and name on both sides            |
+| [Networth](Networth)                               | `!nw <username>` in chat, or `/networth`, from either side of the bridge |
+| [Hypixel guilds](Hypixel-Guilds)                   | Register, edit and sign in guilds entirely from Discord with `/guilds`   |
+| [Reconnection](Reconnection)                       | Dropped accounts come back on their own, one at a time                   |
+| [Admin roles](Admin-Roles)                         | A flat list of Discord roles that hold bot-admin                         |
+| [Admin panel](Admin-Panel)                         | `/adminpanel` — a button per admin function                              |
+| [Global profile change](Global-Profile-Change)     | Everyone wears one member's name and face, for a while                   |
+| [Auditing](Auditing)                               | Every disguised message recorded with a jump link                        |
+| [Link role](Link-Role)                             | A role handed out automatically to everyone who links                    |
+| [Feature requests](Feature-Requests)               | `/request` opens a form; admins move it through a status                 |
 
 ## Quick reference
 

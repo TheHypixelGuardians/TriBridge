@@ -56,14 +56,14 @@ See [Networth](Networth).
 Everything else is a slash command. `/help` browses them by category; [Commands](Commands) lists them all.
 The ones you are most likely to want:
 
-| Command                | Does                                                        |
-|------------------------|-------------------------------------------------------------|
+| Command                | Does                                                                 |
+|------------------------|----------------------------------------------------------------------|
 | `/link <username>`     | Bind your Minecraft account — see [Account linking](Account-Linking) |
-| `/online`              | Who is online in the guild right now                        |
-| `/networth [username]` | A player's SkyBlock networth                                |
-| `/ping`                | Whether the bot is actually connected                       |
-| `/request`             | Suggest a feature — see [Feature requests](Feature-Requests) |
-| `/help`                | Every command, by category                                  |
+| `/online`              | Who is online in the guild right now                                 |
+| `/networth [username]` | A player's SkyBlock networth                                         |
+| `/ping`                | Whether the bot is actually connected                                |
+| `/request`             | Suggest a feature — see [Feature requests](Feature-Requests)         |
+| `/help`                | Every command, by category                                           |
 
 ## If a message does not arrive
 

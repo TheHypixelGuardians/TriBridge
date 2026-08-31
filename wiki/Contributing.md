@@ -18,14 +18,14 @@ against fakes — see [Architecture](Architecture).
 
 `<tag>: <message>`, one granular commit per logical change.
 
-| Tag             | Usage                                                | Example                                      |
-|:----------------|:-----------------------------------------------------|:---------------------------------------------|
-| **Feature**     | Brand-new functionality                              | `Feature: Add cross guilds message sync`     |
-| **Fix**         | Bugs, crashes, logic errors                          | `Fix: Keep tag markers on reposted messages` |
-| **Improvement** | Existing behaviour, done better                      | `Improvement: Change bot refresh time`       |
-| **Internal**    | Documentation, comments, repository maintenance      | `Internal: Reformat README.md`               |
-| **Backend**     | Dependency or configuration updates                  | `Backend: Update discord.js to 14.25.1`      |
-| **Update**      | Version bumps                                        | `Update: 1.2.1 release`                      |
+| Tag             | Usage                                           | Example                                      |
+|:----------------|:------------------------------------------------|:---------------------------------------------|
+| **Feature**     | Brand-new functionality                         | `Feature: Add cross guilds message sync`     |
+| **Fix**         | Bugs, crashes, logic errors                     | `Fix: Keep tag markers on reposted messages` |
+| **Improvement** | Existing behaviour, done better                 | `Improvement: Change bot refresh time`       |
+| **Internal**    | Documentation, comments, repository maintenance | `Internal: Reformat README.md`               |
+| **Backend**     | Dependency or configuration updates             | `Backend: Update discord.js to 14.25.1`      |
+| **Update**      | Version bumps                                   | `Update: 1.2.1 release`                      |
 
 Present tense, specific, no trailing period. The full convention is in
 [docs/COMMIT_STRUCTURE.md](https://github.com/Trilleo/TriBridge/blob/master/docs/COMMIT_STRUCTURE.md).

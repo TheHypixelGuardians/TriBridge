@@ -16,13 +16,13 @@ one guild whatever you put in front of it.
 
 ## The rules
 
-| You type      | What happens                                                                                  |
-|---------------|-----------------------------------------------------------------------------------------------|
-| `hey`         | Goes to every bridged guild                                                                   |
-| `!sb hey`     | Goes to the guild tagged `SB` only. The tag is stripped from both sides                        |
-| `!!sb hey`    | Goes everywhere as the literal text `!sb hey`                                                  |
-| `!nope hey`   | Goes everywhere as the literal text `!nope hey`, and gets a ❓                                  |
-| `!sb` alone   | No tag — a tag needs a space and something after it, so this is just the word `!sb`            |
+| You type    | What happens                                                                        |
+|-------------|-------------------------------------------------------------------------------------|
+| `hey`       | Goes to every bridged guild                                                         |
+| `!sb hey`   | Goes to the guild tagged `SB` only. The tag is stripped from both sides             |
+| `!!sb hey`  | Goes everywhere as the literal text `!sb hey`                                       |
+| `!nope hey` | Goes everywhere as the literal text `!nope hey`, and gets a ❓                       |
+| `!sb` alone | No tag — a tag needs a space and something after it, so this is just the word `!sb` |
 
 **The tag is stripped from what Discord shows, too.** After `!sb hello`, your message in the channel reads
 `hello` — the same words the guild got. The two sides never disagree about what was said.

@@ -19,13 +19,13 @@ An admin moves the request through a status with `/requeststatus`, and the origi
 — same message, new colour and label. So the channel is always the current state of every request rather than
 a log of status changes.
 
-| Status         | Means                                             |
-|----------------|---------------------------------------------------|
-| ⏳ Pending      | Nobody has looked at it yet — where every request starts |
-| 📌 Planned     | Accepted, and on the list to build                |
-| ✅ Accepted     | Agreed to                                         |
-| ❌ Denied       | Not going to happen                               |
-| 🔁 Duplicate   | Already requested — look for the earlier one       |
+| Status       | Means                                                    |
+|--------------|----------------------------------------------------------|
+| ⏳ Pending    | Nobody has looked at it yet — where every request starts |
+| 📌 Planned   | Accepted, and on the list to build                       |
+| ✅ Accepted   | Agreed to                                                |
+| ❌ Denied     | Not going to happen                                      |
+| 🔁 Duplicate | Already requested — look for the earlier one             |
 
 ## Next
 

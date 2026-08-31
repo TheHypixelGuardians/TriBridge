@@ -6,12 +6,12 @@ step.
 
 ## Requirements
 
-| Requirement           | Details                                                                                                      |
-|-----------------------|--------------------------------------------------------------------------------------------------------------|
-| **Node.js**           | **v22** or newer                                                                                             |
-| **npm**               | Included with Node.js                                                                                        |
+| Requirement           | Details                                                                                                                                              |
+|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Node.js**           | **v22** or newer                                                                                                                                     |
+| **npm**               | Included with Node.js                                                                                                                                |
 | **Discord bot**       | An application at the [Discord Developer Portal](https://discord.com/developers/applications) with the **Message Content** privileged intent enabled |
-| **Minecraft account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net` |
+| **Minecraft account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net`                                   |
 
 Dependencies are `discord.js`, `mineflayer`, `prismarine-auth` and `dotenv`; `npm install` handles them.
 

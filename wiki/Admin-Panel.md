@@ -11,11 +11,11 @@ Bot-admin only. See [Admin roles](Admin-Roles).
 
 ## The main view
 
-| Button              | Does                                                                    |
-|---------------------|-------------------------------------------------------------------------|
-| **Global Profile**  | Set up a [global profile change](Global-Profile-Change)                 |
-| **Stop effect**     | End a running effect immediately. Only enabled while one is running     |
-| **Refresh**         | Redraw the panel with the current state                                 |
+| Button             | Does                                                                |
+|--------------------|---------------------------------------------------------------------|
+| **Global Profile** | Set up a [global profile change](Global-Profile-Change)             |
+| **Stop effect**    | End a running effect immediately. Only enabled while one is running |
+| **Refresh**        | Redraw the panel with the current state                             |
 
 The embed above the buttons shows what is running: who everybody is currently appearing as, who started it,
 when, how much longer it has, and which bridge directions are switched on.

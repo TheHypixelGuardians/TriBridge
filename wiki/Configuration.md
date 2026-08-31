@@ -2,10 +2,10 @@
 
 TriBridge is configured in two places, and the split matters:
 
-| Where                  | Holds                                          | Changed by                              |
-|------------------------|------------------------------------------------|-----------------------------------------|
-| **`.env`**             | Credentials and the two channels it must know  | Editing the file and restarting          |
-| **`*Config.json`**     | Everything else                                | Slash commands, while the bot is running |
+| Where              | Holds                                         | Changed by                               |
+|--------------------|-----------------------------------------------|------------------------------------------|
+| **`.env`**         | Credentials and the two channels it must know | Editing the file and restarting          |
+| **`*Config.json`** | Everything else                               | Slash commands, while the bot is running |
 
 If you find yourself editing a `*Config.json` by hand, there is almost certainly a command for it. See
 [Config files](Config-Files).
@@ -21,13 +21,13 @@ LOG_CHANNEL=your_log_channel_id
 MINECRAFT_USERNAME=you@example.com
 ```
 
-| Variable             | Required | Description                                                                                          |
-|----------------------|----------|------------------------------------------------------------------------------------------------------|
-| `DISCORD_TOKEN`      | Yes      | Bot token from the Discord Developer Portal. The bot refuses to start without it                      |
-| `DISCORD_CHANNEL_ID` | Yes      | The **bridge channel** — the one channel wired to guild chat                                          |
-| `LOG_CHANNEL`        | Yes      | Where connection notices and warnings go. A Hypixel guild can override it with its own channel        |
-| `MINECRAFT_USERNAME` | First run | The Microsoft account email for the first Hypixel guild. **Ignored once `guildsConfig.json` exists** |
-| `DISCORD_GUILD_ID`   | No       | The only Discord server the bot accepts commands from. Defaults to the server the bridge channel is in |
+| Variable             | Required  | Description                                                                                            |
+|----------------------|-----------|--------------------------------------------------------------------------------------------------------|
+| `DISCORD_TOKEN`      | Yes       | Bot token from the Discord Developer Portal. The bot refuses to start without it                       |
+| `DISCORD_CHANNEL_ID` | Yes       | The **bridge channel** — the one channel wired to guild chat                                           |
+| `LOG_CHANNEL`        | Yes       | Where connection notices and warnings go. A Hypixel guild can override it with its own channel         |
+| `MINECRAFT_USERNAME` | First run | The Microsoft account email for the first Hypixel guild. **Ignored once `guildsConfig.json` exists**   |
+| `DISCORD_GUILD_ID`   | No        | The only Discord server the bot accepts commands from. Defaults to the server the bridge channel is in |
 
 To get a channel id: enable **Developer Mode** in Discord's Advanced settings, then right-click the channel →
 **Copy Channel ID**.
@@ -53,15 +53,15 @@ explicitly if the bridge channel is somewhere the bot cannot resolve at startup.
 
 ## Everything else
 
-| What                                     | Command                            | Page                                          |
-|------------------------------------------|------------------------------------|-----------------------------------------------|
-| Which Hypixel guilds are bridged         | `/guilds`                          | [Hypixel guilds](Hypixel-Guilds)              |
-| Guild-to-guild chat sharing              | `/guilds edit … crossbridge:True`  | [Guild-to-guild bridging](Guild-to-Guild-Bridging) |
-| Who counts as a bot admin                | `/adminrole`                       | [Admin roles](Admin-Roles)                    |
-| The role given to linked users           | `/linkrole`                        | [Link role](Link-Role)                        |
-| Where audit entries go                   | `/auditchannel`                    | [Auditing](Auditing)                          |
-| Where feature requests are posted        | `/requestchannel`                  | [Feature requests](Feature-Requests)          |
-| Per-guild log and audit channels         | `/guilds edit`                     | [Hypixel guilds](Hypixel-Guilds)              |
+| What                              | Command                           | Page                                               |
+|-----------------------------------|-----------------------------------|----------------------------------------------------|
+| Which Hypixel guilds are bridged  | `/guilds`                         | [Hypixel guilds](Hypixel-Guilds)                   |
+| Guild-to-guild chat sharing       | `/guilds edit … crossbridge:True` | [Guild-to-guild bridging](Guild-to-Guild-Bridging) |
+| Who counts as a bot admin         | `/adminrole`                      | [Admin roles](Admin-Roles)                         |
+| The role given to linked users    | `/linkrole`                       | [Link role](Link-Role)                             |
+| Where audit entries go            | `/auditchannel`                   | [Auditing](Auditing)                               |
+| Where feature requests are posted | `/requestchannel`                 | [Feature requests](Feature-Requests)               |
+| Per-guild log and audit channels  | `/guilds edit`                    | [Hypixel guilds](Hypixel-Guilds)                   |
 
 ## Restarting
 
