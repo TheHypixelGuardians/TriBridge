@@ -194,7 +194,8 @@ function enqueue(channelId, task) {
 
     // `.then(task, task)` so one failed repost does not stall the channel.
     const run = previous.then(task, task);
-    const chained = run.catch(() => {});
+    const chained = run.catch(() => {
+    });
 
     channelQueues.set(channelId, chained);
     chained.then(() => {

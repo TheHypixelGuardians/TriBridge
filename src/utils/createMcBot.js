@@ -60,11 +60,13 @@ function retireBot(record) {
     bot.on('error', (error) => {
         console.error(`[${record.key}] error from a retired bot:`, error?.message ?? error);
     });
-    bot.on('end', () => {});
+    bot.on('end', () => {
+    });
 
     try {
         bot.quit();
-    } catch { /* already disconnected */ }
+    } catch { /* already disconnected */
+    }
 }
 
 /**
@@ -114,7 +116,8 @@ async function createMcBot(guildKey, options = {}) {
         record.awaitingDeviceCode = true;
         try {
             const result = options.onMsaCode?.(info, guild);
-            if (result && typeof result.catch === 'function') result.catch(() => {});
+            if (result && typeof result.catch === 'function') result.catch(() => {
+            });
         } catch (error) {
             console.error(`[${guildKey}] device-code handler failed:`, error);
         }

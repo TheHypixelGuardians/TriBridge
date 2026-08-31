@@ -228,7 +228,8 @@ module.exports = async (client, interaction) => {
             await interaction.reply({
                 content: '❌ Something went wrong handling that. Check the console.',
                 ephemeral: true,
-            }).catch(() => {});
+            }).catch(() => {
+            });
         }
     }
 };

@@ -208,7 +208,7 @@ function writeCache(key, result) {
     if (!result.ok) {
         if (MISS_CODES.has(result.code)) ttl = CACHE_TTL_MISS;
         else if (TRANSIENT_CODES.has(result.code)) ttl = CACHE_TTL_TRANSIENT;
-        // Anything else (busy, cooldown) is about us, not about the player, and
+            // Anything else (busy, cooldown) is about us, not about the player, and
         // caching it would answer the next person with our own backpressure.
         else return;
     }

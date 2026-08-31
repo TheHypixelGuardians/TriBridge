@@ -49,7 +49,8 @@ function sendChat(record, text, options = {}) {
     };
 
     const result = record.chatQueue.chain.then(task, task);
-    record.chatQueue.chain = result.catch(() => {});
+    record.chatQueue.chain = result.catch(() => {
+    });
     return result;
 }
 

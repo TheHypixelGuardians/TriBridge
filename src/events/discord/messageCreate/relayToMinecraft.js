@@ -70,7 +70,8 @@ async function markUp(surviving, markers) {
     for (const marker of markers) {
         // Needs Add Reactions; a missing permission is not worth reporting per
         // message, and the message itself was still delivered.
-        await surviving.react(marker).catch(() => {});
+        await surviving.react(marker).catch(() => {
+        });
     }
 }
 

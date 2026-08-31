@@ -66,11 +66,13 @@ function beginSignIn(guildKey, interaction) {
         .then(() => interaction.followUp({
             content: '✅ Signed in. Connecting to Hypixel — `/guilds list` will show it online shortly.',
             ephemeral: true,
-        }).catch(() => {}))
+        }).catch(() => {
+        }))
         .catch((error) => interaction.followUp({
             content: `❌ Sign-in failed: ${error.message}\n> The guild is still registered. Retry with \`/guilds auth ${guildKey}\`.`,
             ephemeral: true,
-        }).catch(() => {}))
+        }).catch(() => {
+        }))
         .finally(unregister);
 }
 

@@ -23,7 +23,8 @@ class SerialQueue {
 
         // `.then(task, task)` so one failed task does not stall the key forever.
         const result = previous.then(task, task);
-        const settled = result.catch(() => {});
+        const settled = result.catch(() => {
+        });
 
         this.tails.set(key, settled);
         settled.then(() => {
@@ -57,7 +58,8 @@ class SerialQueue {
  */
 function chain(holder, task) {
     const result = holder.queue.then(task, task);
-    holder.queue = result.catch(() => {});
+    holder.queue = result.catch(() => {
+    });
     return result;
 }
 

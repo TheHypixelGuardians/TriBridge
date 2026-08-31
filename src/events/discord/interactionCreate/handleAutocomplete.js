@@ -16,7 +16,8 @@ module.exports = async (client, interaction) => {
     // Same guard as handleCommands.js: commands are registered globally, and the
     // suggestions name the Hypixel guilds this deployment manages.
     if (!isAllowedServer(interaction)) {
-        return interaction.respond([]).catch(() => {});
+        return interaction.respond([]).catch(() => {
+        });
     }
 
     const commandObject = getLocalCommands().find(
@@ -24,13 +25,15 @@ module.exports = async (client, interaction) => {
     );
 
     if (typeof commandObject?.autocomplete !== 'function') {
-        return interaction.respond([]).catch(() => {});
+        return interaction.respond([]).catch(() => {
+        });
     }
 
     try {
         await commandObject.autocomplete(client, interaction);
     } catch (error) {
         console.error('Autocomplete handler failed:', error);
-        await interaction.respond([]).catch(() => {});
+        await interaction.respond([]).catch(() => {
+        });
     }
 };
