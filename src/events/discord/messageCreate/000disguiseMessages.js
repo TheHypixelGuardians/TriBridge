@@ -1,4 +1,5 @@
 const bridge = require("../../../bridge");
+const guilds = require("../../../utils/guilds");
 const { appliesTo } = require("../../../utils/globalProfile");
 const {
   resolveIdentity,
@@ -20,6 +21,14 @@ module.exports = async (client, message) => {
   // repost. Two handlers deleting the same message would race, and the numeric
   // prefix only guarantees ordering — it does not make them cooperate.
   if (message.channel.id === bridge.discordChannelId) return;
+
+  // An officer channel is left alone for a different reason: reposting here
+  // would author the message as a webhook, and relayOfficerToMinecraft.js drops
+  // anything authored by a bot — so the officer's line would vanish from
+  // Discord and never reach Hypixel, with no error anywhere. It is also the
+  // consistent answer, since the disguise governs the two legs of the main
+  // bridge and has no business relabelling anyone in officer chat.
+  if (guilds.getByOfficerChannel(message.channel.id)) return;
 
   if (!appliesTo(message.author.id, message.channel.id)) return;
   if (shouldSkip(message)) return;

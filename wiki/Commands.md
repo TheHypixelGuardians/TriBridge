@@ -73,17 +73,21 @@ what was meant.
 
 🔒 The whole [Hypixel guild registry](Hypixel-Guilds), in one command.
 
-| Subcommand                                                                                              | Does                                                |
-|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------|
-| `/guilds list`                                                                                          | Every registered guild and its connection status    |
-| `/guilds add <key> <name> <tag> <account> [color]`                                                      | Register a guild and sign its Minecraft account in  |
-| `/guilds edit <guild> [name] [tag] [color] [logchannel] [auditchannel] [enabled] [crossbridge] [clear]` | Change a guild                                      |
-| `/guilds default <guild>`                                                                               | Choose the guild commands act on when none is given |
-| `/guilds remove <guild> [confirm]`                                                                      | Unregister a guild and disconnect its bot           |
-| `/guilds auth <guild>`                                                                                  | Sign a guild's Minecraft account in again           |
+| Subcommand                                                                                                                                    | Does                                                |
+|-----------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|
+| `/guilds list`                                                                                                                                | Every registered guild and its connection status    |
+| `/guilds add <key> <name> <tag> <account> [color]`                                                                                            | Register a guild and sign its Minecraft account in  |
+| `/guilds edit <guild> [name] [tag] [color] [logchannel] [auditchannel] [officerchannel] [enabled] [crossbridge] [crossbridgeofficer] [clear]` | Change a guild                                      |
+| `/guilds default <guild>`                                                                                                                     | Choose the guild commands act on when none is given |
+| `/guilds remove <guild> [confirm]`                                                                                                            | Unregister a guild and disconnect its bot           |
+| `/guilds auth <guild>`                                                                                                                        | Sign a guild's Minecraft account in again           |
 
 `key` and `account` are **immutable** — `/guilds edit` will not change them. `confirm:True` is required to
 remove the default guild.
+
+`officerchannel` opens a **two-way** [officer chat](Officer-Chat) channel: everyone who can post in it is
+speaking in officer chat in-game. `crossbridgeofficer` additionally shares officer chat with the other guilds,
+and needs `crossbridge` on for the same guild.
 
 ## Requests
 

@@ -223,9 +223,10 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   for plain text, `jsonMsg.toMotd()` when the color codes themselves carry meaning (e.g.
   `§a` marks online players in `/online`).
 - **Guild-chat parsing** is regex against Hypixel's English chat output and is inherently
-  brittle. It lives in `utils/guildChat.js` — `parseGuildChat()` and `parseGuildPresence()` —
-  because two relays read the same lines; don't re-inline the pattern in a handler. Keep the
-  documented format comment next to any regex you add or change.
+  brittle. It lives in `utils/guildChat.js` — `parseGuildChat()`, `parseGuildPresence()` and
+  `parseOfficerChat()` — because several relays read the same lines; don't re-inline the pattern
+  in a handler. Keep the documented format comment next to any regex you add or change, and keep
+  the officer pattern separate from `CHAT_PATTERN`.
 - **Relay loops:** `relayToDiscord.js` drops messages whose author matches *any* registered
   bot account, via `mcBots.isOwnAccountName()` — not just the emitting bot's own name, because
   two accounts that ended up in the same Hypixel guild would otherwise relay each other
@@ -247,6 +248,30 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   minutes late into another; don't remove that without another backpressure story. Presence
   lines are not forwarded, and the global profile disguise deliberately does not apply — its
   two switches govern the two Discord legs only.
+- **Officer chat has its own rails at every layer** and shares no code path with ordinary guild
+  chat: `OFFICER_PATTERN`/`parseOfficerChat()`, `buildOfficerChatCommand()`,
+  `officerCrossBridgeTargets()`/`relayOfficerAcrossGuilds()`, the `crossBridgeOfficer` flag, and
+  its own dedupe instances. The duplication is the point — widening `CHAT_PATTERN` to
+  `(?:Guild|Officer) > ` would push privileged chat into the bridge channel, the guild→guild
+  relay *and* the chat-command dispatcher in one edit, and reusing `crossBridge` would mean
+  switching ordinary sharing on also started broadcasting officer chat. Three handlers,
+  `relayOfficerToDiscord.js`, `relayOfficerToGuilds.js` and `relayOfficerToMinecraft.js`, all
+  inert until a guild has an `officerChannelId`. Four things must hold:
+    - **`guilds.getOfficerCrossBridged()` filters `getCrossBridged()`**, so `crossBridgeOfficer`
+      can never be reached with `crossBridge` off. Keep that gate in the one function.
+    - **`isOwnAccountName()` terminates both inbound paths**, as it does for `relayToGuilds.js`
+      — now also covering the copy this guild's own bot just spoke for the Discord channel.
+    - **The Discord leg resolves its guild from the channel** via `guilds.getByOfficerChannel()`;
+      there is no `!tag` routing and no fan-out. `/guilds edit` refuses a channel another guild
+      holds, which is what makes that lookup single-valued.
+    - **Never `resolveIdentity()` there** — it applies the global profile change. The officer leg
+      reads the account link directly, and `000disguiseMessages.js` skips officer channels
+      outright: a disguise repost is authored by a webhook, and the leg's `message.author.bot`
+      guard would then drop it, losing the officer's line with no error anywhere.
+  Access is the channel's Discord permissions and nothing else — deliberately no `isAdmin()`
+  check, since a second gate on an already-restricted channel mostly produces silent drops.
+  Document the rank requirement wherever this is described: the account needs to be able to read
+  *and* send officer chat, and Hypixel reports neither failure.
 - **Routing Discord→Minecraft:** `routeMessage()` from `utils/chatRouting.js` decides which
   guilds a bridge message reaches (`!tag` for one, otherwise all). It is pure — test it there
   rather than through the handler. Build the `/gc` command **once** and reuse it for every

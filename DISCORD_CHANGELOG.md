@@ -7,38 +7,39 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Officer chat
+
+- Officer chat can now have its own Discord channel, both ways — what you type there goes into officer chat
+  in-game, under your Minecraft name if you are linked.
+- Anyone who can post there is talking in officer chat, so it gets locked down the same way.
+- It can also be shared with the other guilds' officer chat, tagged like `[SB] Notch: hello`.
+- Off until an admin sets it up with `/guilds edit`.
+
 ### Guild-to-guild chat
 
-- Guild chat can now be shared between the bridged Hypixel guilds, so you can talk to the other guilds from
-  in-game without watching Discord.
-- Messages from another guild arrive with its tag on the name, like `[SB] Notch: hello`, so you always know
-  who you are talking to.
-- Joins and leaves are not shared — just the other guilds' actual conversation.
-- Admins turn this on per guild with `/guilds edit`, and it stays off until they do.
-
-### Tag fixes
-
-- Guild tags no longer stay stuck on your message here. `!sb hello` now shows as `hello`, matching what the
-  guild actually received.
-- The ❓ and 📡 markers stick around properly now, so a mistyped tag or an offline guild is always visible —
-  including for linked users, who used to lose them.
+- Guild chat can now be shared between the bridged guilds, so you can talk to them from in-game without
+  watching Discord.
+- Messages from another guild arrive tagged on the name, like `[SB] Notch: hello`.
+- Joins and leaves are not shared — just the conversation.
+- Off until an admin turns it on per guild.
 
 ### Multiple guilds
 
-- This channel can now bridge more than one Hypixel guild at the same time.
+- This channel can now bridge more than one Hypixel guild at once. Nothing changes if only one is set up.
 - Start a message with a guild's tag to reach just that guild — `!sb hey` only goes to the SkyBlock guild.
-  No tag still goes to every guild, exactly like before.
-- Need to start a message with a literal `!`? Type it twice — `!!sb hi` comes out as `!sb hi`.
-- Guild chat coming back here is colour-coded and tagged, so you can tell at a glance which guild said what.
-- `/online` and `/ping` now cover every guild at once, and `/online` takes a `guild` if you only want one.
-- `/link` works if you are in any of the bridged guilds, not just one of them.
-- Nothing changes if only one guild is set up — no tags, same colours, same everything.
+  No tag still reaches every guild.
+- To start a message with a literal `!`, type it twice — `!!sb hi` comes out as `!sb hi`.
+- A tag nobody recognises gets a ❓ and is still delivered everywhere; a tagged guild that is offline gets a
+  📡. Nothing is ever silently dropped.
+- Incoming guild chat is colour-coded and tagged, so you can tell which guild said what.
+- `/online` and `/ping` cover every guild at once, and `/online` takes a `guild` for just one. `/link` works
+  if you are in any of them.
 
 ### SkyBlock networth
 
 - Type `!nw <username>` in guild chat or here and the bot tells you that player's networth.
 - It picks their richest profile and counts everything — cosmetics and soulbound included.
-- Someone with their inventory API off gets an `(API off)` note, because the number will be too low.
+- Someone with their inventory API off gets an `(API off)` note — the number will be too low.
 - `/networth` does the same here, and with no username it uses your linked account.
 
 ## Version 1.2.1

@@ -212,6 +212,14 @@ module.exports = {
           required: false,
         },
         {
+          name: "officerchannel",
+          description:
+            "Two-way officer chat channel. Anyone who can post there speaks as an officer.",
+          type: ApplicationCommandOptionType.Channel,
+          channel_types: [ChannelType.GuildText],
+          required: false,
+        },
+        {
           name: "enabled",
           description: "Whether the bot should stay connected to this guild.",
           type: ApplicationCommandOptionType.Boolean,
@@ -225,15 +233,23 @@ module.exports = {
           required: false,
         },
         {
+          name: "crossbridgeofficer",
+          description:
+            "Also share officer chat with them, both ways. Needs crossbridge on.",
+          type: ApplicationCommandOptionType.Boolean,
+          required: false,
+        },
+        {
           name: "clear",
           description:
-            "Clear a per-guild channel override so it falls back to the global one.",
+            "Clear a per-guild channel so it falls back or switches off.",
           type: ApplicationCommandOptionType.String,
           required: false,
           choices: [
             { name: "Log channel", value: "log" },
             { name: "Audit channel", value: "audit" },
-            { name: "Both", value: "both" },
+            { name: "Officer channel", value: "officer" },
+            { name: "Log and audit channels", value: "both" },
           ],
         },
       ],
@@ -313,12 +329,17 @@ async function handleList(interaction) {
   const lines = all.map((guild) => {
     const marker = guild.key === defaultKey ? " ⭐" : "";
     const cross = guild.crossBridge === true ? " 🔁" : "";
+    const officerCross =
+      guild.crossBridge === true && guild.crossBridgeOfficer === true
+        ? " 🛡️"
+        : "";
     const ign = guild.mcName ? ` as \`${guild.mcName}\`` : "";
     return (
-      `**${guild.name}** \`${guild.key}\` [${guild.tag}]${marker}${cross}\n` +
+      `**${guild.name}** \`${guild.key}\` [${guild.tag}]${marker}${cross}${officerCross}\n` +
       `> ${mcBots.describeStatusLabel(guild.key)}${ign} · ${maskAccount(guild.account)} · ${guild.color}\n` +
       `> Log: ${guild.logChannelId ? `<#${guild.logChannelId}>` : "global"} · ` +
-      `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : "global"}`
+      `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : "global"} · ` +
+      `Officer: ${guild.officerChannelId ? `<#${guild.officerChannelId}>` : "off"}`
     );
   });
 
@@ -326,6 +347,10 @@ async function handleList(interaction) {
   const crossFooter =
     guilds.getCrossBridged().length > 0
       ? " · 🔁 shares guild chat with the other 🔁 guilds"
+      : "";
+  const officerCrossFooter =
+    guilds.getOfficerCrossBridged().length > 0
+      ? " · 🛡️ shares officer chat too"
       : "";
 
   const embed = new EmbedBuilder()
@@ -337,7 +362,8 @@ async function handleList(interaction) {
         (guilds.broadcastByDefault()
           ? "⭐ default · untagged messages go to every guild"
           : "⭐ default · untagged messages go to the default guild") +
-        crossFooter,
+        crossFooter +
+        officerCrossFooter,
     });
 
   return interaction.reply({ embeds: [embed], ephemeral: true });
@@ -432,13 +458,20 @@ async function handleEdit(interaction) {
   const crossBridge = interaction.options.getBoolean("crossbridge");
   if (crossBridge !== null) patch.crossBridge = crossBridge;
 
+  const crossBridgeOfficer =
+    interaction.options.getBoolean("crossbridgeofficer");
+  if (crossBridgeOfficer !== null)
+    patch.crossBridgeOfficer = crossBridgeOfficer;
+
   const clear = interaction.options.getString("clear");
   if (clear === "log" || clear === "both") patch.logChannelId = null;
   if (clear === "audit" || clear === "both") patch.auditChannelId = null;
+  if (clear === "officer") patch.officerChannelId = null;
 
   for (const [optionName, field] of [
     ["logchannel", "logChannelId"],
     ["auditchannel", "auditChannelId"],
+    ["officerchannel", "officerChannelId"],
   ]) {
     const channel = interaction.options.getChannel(optionName);
     if (!channel) continue;
@@ -453,6 +486,22 @@ async function handleEdit(interaction) {
         ephemeral: true,
       });
     }
+
+    // An officer channel maps back to exactly one guild, because that lookup is
+    // how a reply typed there knows where to go. Sharing one between two guilds
+    // would silently deliver one guild's officers into the other's chat.
+    if (field === "officerChannelId") {
+      const owner = guilds.getByOfficerChannel(channel.id);
+      if (owner && owner.key !== key) {
+        return interaction.reply({
+          content:
+            `❌ <#${channel.id}> is already **${owner.name}**'s officer channel.\n` +
+            "> Each guild needs its own, so replies typed there reach the right officer chat.",
+          ephemeral: true,
+        });
+      }
+    }
+
     patch[field] = channel.id;
   }
 
@@ -468,25 +517,63 @@ async function handleEdit(interaction) {
 
   const guild = result.guild;
 
+  const notes = [];
+
   // Turning it on for one guild does nothing on its own, and the admin has no
   // way to see that from this reply — say so rather than let them think it is
   // broken.
   const partners = guilds.getCrossBridged().filter((g) => g.key !== guild.key);
-  const crossNote =
-    patch.crossBridge === true && partners.length === 0
-      ? "\n> ⚠️ No other guild has cross-bridging on yet, so nothing is shared until a second one does."
-      : patch.crossBridge === true
-        ? `\n> 🔁 Now sharing guild chat with **${partners.map((g) => g.name).join("**, **")}**.`
-        : "";
+  if (patch.crossBridge === true) {
+    notes.push(
+      partners.length === 0
+        ? "⚠️ No other guild has cross-bridging on yet, so nothing is shared until a second one does."
+        : `🔁 Now sharing guild chat with **${partners.map((g) => g.name).join("**, **")}**.`,
+    );
+  }
+
+  if (patch.crossBridgeOfficer === true) {
+    const officerPartners = guilds
+      .getOfficerCrossBridged()
+      .filter((g) => g.key !== guild.key);
+
+    // Stored but inert. Silence here looks exactly like a bug, because the
+    // setting was accepted and nothing happens.
+    if (guild.crossBridge !== true) {
+      notes.push(
+        "⚠️ Saved, but inert until `crossbridge` is on too — officer chat never " +
+          "crosses between guilds that are not already sharing ordinary chat.",
+      );
+    } else if (officerPartners.length === 0) {
+      notes.push(
+        "⚠️ No other guild shares officer chat yet, so nothing is shared until a second one does.",
+      );
+    } else {
+      notes.push(
+        `🛡️ Now sharing officer chat with **${officerPartners.map((g) => g.name).join("**, **")}**.`,
+      );
+    }
+  }
+
+  // The one moment an admin is guaranteed to read this. The security of the
+  // officer bridge is entirely this channel's Discord permissions.
+  if (patch.officerChannelId) {
+    notes.push(
+      `🛡️ <#${patch.officerChannelId}> is **two-way** — everyone who can post there ` +
+        "is speaking in officer chat in-game, so restrict it accordingly.",
+      "The bot's account also needs a guild rank that can read and send officer chat, or replies go nowhere.",
+    );
+  }
 
   return interaction.reply({
     content:
       `✅ Updated **${guild.name}** \`${guild.key}\` [${guild.tag}].\n` +
       `> ${guild.enabled === false ? "Disabled" : "Enabled"} · ${guild.color} · ` +
-      `Cross-bridge: ${guild.crossBridge === true ? "on" : "off"} · ` +
+      `Cross-bridge: ${guild.crossBridge === true ? "on" : "off"}` +
+      `${guild.crossBridgeOfficer === true ? " (+ officer)" : ""} · ` +
       `Log: ${guild.logChannelId ? `<#${guild.logChannelId}>` : "global"} · ` +
-      `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : "global"}` +
-      crossNote,
+      `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : "global"} · ` +
+      `Officer: ${guild.officerChannelId ? `<#${guild.officerChannelId}>` : "off"}` +
+      notes.map((note) => `\n> ${note}`).join(""),
     ephemeral: true,
   });
 }

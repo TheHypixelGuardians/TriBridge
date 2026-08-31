@@ -23,6 +23,7 @@
 
 - [Hypixel guilds](Hypixel-Guilds)
 - [Guild-to-guild bridging](Guild-to-Guild-Bridging)
+- [Officer chat](Officer-Chat)
 - [Reconnection](Reconnection)
 
 **Administration**

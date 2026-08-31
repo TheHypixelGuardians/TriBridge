@@ -1,7 +1,10 @@
 const guilds = require("./guilds");
 const mcBots = require("./mcBots");
 const { sendChat } = require("./chatQueue");
-const { buildGuildChatCommand } = require("./sanitizeForChat");
+const {
+  buildGuildChatCommand,
+  buildOfficerChatCommand,
+} = require("./sanitizeForChat");
 
 // A forwarded line that has sat in a bot's outbound queue this long is dropped.
 // Guild chat is a conversation: a reply landing a minute after the thing it
@@ -80,4 +83,72 @@ function relayAcrossGuilds(source, username, content) {
   return sent;
 }
 
-module.exports = { crossBridgeTargets, relayAcrossGuilds, MAX_RELAY_AGE_MS };
+/**
+ * The guilds an *officer*-chat line spoken in `sourceKey` should be forwarded
+ * to.
+ *
+ * Same symmetry rule as {@link crossBridgeTargets}, over the smaller set of
+ * guilds that opted into sharing officer chat specifically.
+ *
+ * @param {string} sourceKey The Hypixel guild the line came from.
+ * @returns {object[]} Registry records, never including the source itself.
+ */
+function officerCrossBridgeTargets(sourceKey) {
+  const key = String(sourceKey ?? "").toLowerCase();
+  if (!key) return [];
+
+  const participating = guilds.getOfficerCrossBridged();
+  if (!participating.some((g) => g.key === key)) return [];
+
+  return participating.filter((g) => g.key !== key);
+}
+
+/**
+ * Forwards one officer-chat line to every other officer-cross-bridged guild.
+ *
+ * Deliberately a second function rather than a `command` parameter on
+ * {@link relayAcrossGuilds}. Officer chat and ordinary chat resolve their
+ * targets from different sets, and a shared function would be one edit away
+ * from delivering one into the other.
+ *
+ * Callers must have already dropped lines spoken by one of the bot's own
+ * accounts — see {@link relayAcrossGuilds}, for which that guard is equally
+ * load-bearing.
+ *
+ * @param {object} source Registry record of the guild the line came from.
+ * @param {string} username The Minecraft name that spoke.
+ * @param {string} content What they said.
+ * @returns {number} How many guilds it was handed to.
+ */
+function relayOfficerAcrossGuilds(source, username, content) {
+  if (!source) return 0;
+
+  const targets = officerCrossBridgeTargets(source.key);
+  if (targets.length === 0) return 0;
+
+  const command = buildOfficerChatCommand(
+    `[${source.tag}] ${username}`,
+    content,
+  );
+  if (!command) return 0;
+
+  let sent = 0;
+
+  for (const guild of targets) {
+    const record = mcBots.getRecord(guild.key);
+    if (!record?.connected || !record.bot) continue;
+
+    void sendChat(record, command, { maxAgeMs: MAX_RELAY_AGE_MS });
+    sent += 1;
+  }
+
+  return sent;
+}
+
+module.exports = {
+  crossBridgeTargets,
+  relayAcrossGuilds,
+  officerCrossBridgeTargets,
+  relayOfficerAcrossGuilds,
+  MAX_RELAY_AGE_MS,
+};

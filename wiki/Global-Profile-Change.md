@@ -56,9 +56,12 @@ testing would silently relabel guild members who never agreed to take part.
 
 Applies server-wide, except:
 
-- **channels you excluded** in the scope view, and
+- **channels you excluded** in the scope view,
 - **channels where the bot lacks Manage Webhooks or Manage Messages** — those are skipped and left completely
-  alone, with one warning to the log channel. They are never partially disguised.
+  alone, with one warning to the log channel. They are never partially disguised, and
+- **[officer channels](Officer-Chat)**, always. A channel that exists to record what officers said is the last
+  place to relabel who said it, and reposting there would break the reply leg outright — the repost is
+  authored by a webhook, and the officer bridge ignores anything a bot posted.
 
 The target is never disguised as themselves; reposting would cost a send and a delete to produce exactly the
 same message.

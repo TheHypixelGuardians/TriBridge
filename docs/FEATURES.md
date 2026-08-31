@@ -106,9 +106,10 @@ code can complete the sign-in with **their own** Microsoft account and bind the 
 
 ### The rest of `/guilds`
 
-`/guilds list` shows every guild with its connection status, marking cross-bridged guilds with 🔁. `/guilds
-edit` changes the name, tag, colour, per-guild channels, `enabled` and `crossbridge`, and its `clear` option
-drops a per-guild channel override so it falls back to the global one. `/guilds default` picks the guild that
+`/guilds list` shows every guild with its connection status, marking cross-bridged guilds with 🔁 and those
+also sharing officer chat with 🛡️. `/guilds edit` changes the name, tag, colour, per-guild channels,
+`enabled`, `crossbridge` and `crossbridgeofficer`, and its `clear` option drops a per-guild channel so it
+falls back to the global one — or, for the officer channel, switches it off. `/guilds default` picks the guild that
 commands act on when none is given. `/guilds remove` unregisters a guild and disconnects its bot; removing the
 default guild requires `confirm:True`. Account addresses are masked in every reply.
 
@@ -144,6 +145,57 @@ speaker rather than as something they said.
   over is discarded. Guild chat is a conversation: a reply landing a minute after the thing it answers is
   confusing rather than late, and without a ceiling one guild being spammed would push every other guild's
   bridge further and further behind.
+
+## Officer chat
+
+Hypixel's officer chat is not part of the main bridge and never appears in the bridge channel. It gets a
+channel of its own, per guild, switched on by naming one:
+
+```
+/guilds edit guild:sb officerchannel:#sb-officer-chat
+```
+
+From then on officer chat in that guild is posted there, and anything typed there is spoken back into officer
+chat in-game. `/guilds edit guild:sb clear:Officer channel` switches it off again.
+
+- **Two-way, and that is the whole security model.** Everyone who can post in the channel is speaking in
+  officer chat in-game. Access is governed by Discord's own channel permissions and nothing else: there is
+  deliberately no second bot-side check, because a gate on top of an already-restricted channel mostly
+  produces messages that disappear with nothing said about why.
+- **The bot needs the rank.** Its Minecraft account must hold a guild rank that can both read and send
+  officer chat. Hypixel reports neither failure, so without it the channel stays empty or quietly swallows
+  every reply — there is no error to go looking for.
+- **Names come from the account link.** A linked user's message reaches officer chat under their Minecraft
+  name, everyone else under their Discord name. A running [global profile change](#global-profile-change)
+  never applies here: a channel that exists to record what officers said is the last place to relabel who
+  said it.
+- **No routing and no fan-out.** The channel a message is typed in *is* the guild, so `!tag` prefixes mean
+  nothing here, and a reply reaches that guild's officer chat only — even with officer sharing on below. Two
+  guilds cannot share one officer channel, and `/guilds edit` refuses to set one that is already taken.
+- **Chat commands are not answered.** `!nw` typed in officer chat or in the officer channel is just something
+  an officer said.
+- **One channel per guild, no global fallback.** Unlike the log and audit channels, a guild with no officer
+  channel set has the feature off rather than pointing somewhere shared — officer chat from two guilds
+  landing in one channel by default is not a sensible thing to do quietly.
+
+### Sharing officer chat between guilds
+
+Officer chat can also cross between guilds, into each other's officer chat:
+
+```
+/guilds edit guild:sb crossbridgeofficer:True
+/guilds edit guild:main crossbridgeofficer:True
+```
+
+It follows the same rules as [guild-to-guild bridging](#guild-to-guild-bridging) — symmetric, off by default,
+takes two guilds, tags the source guild onto the name, drops lines older than ten seconds — with one extra
+condition: **`crossbridge` has to be on for the same guild.** Officer chat never starts crossing between
+guilds that are not already sharing their ordinary chat, so the more sensitive setting can never be reached
+without the less sensitive one. `/guilds edit` accepts the flag on its own but says that it is inert.
+
+Turning it on roughly doubles how much a guild's Minecraft account says in-game, and that rate is the thing
+keeping accounts out of Hypixel's spam filter. It is worth switching on where officer channels are actually
+busy rather than everywhere by default.
 
 ## Chat commands
 
@@ -316,7 +368,10 @@ and avatar — in Discord, in the guild-chat copy, and on guild chat coming back
   before it goes server-wide. On the guild-chat side a tester is recognised by their
   [account link](#account-linking) — without that, testing would silently relabel guild members who never
   agreed to take part.
-- **Channels can be excluded** from a live effect.
+- **Channels can be excluded** from a live effect, and [officer channels](#officer-chat) are excluded from it
+  always. A channel that exists to record what officers said is the last place to relabel who said it, and
+  reposting there would break the reply leg outright — the repost is authored by a webhook, and the officer
+  bridge ignores anything a bot posted.
 - **The target is never disguised as themselves**, and a lapsed effect is cleared the next time anything asks
   whether it is running, so a timer lost to a restart or a clock jump can never leave the disguise stuck on.
 

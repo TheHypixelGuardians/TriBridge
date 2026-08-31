@@ -31,10 +31,36 @@ function sanitizeForChat(text) {
  *   nothing left to send after sanitizing.
  */
 function buildGuildChatCommand(displayName, text) {
+  return buildChatCommand("/gc", displayName, text);
+}
+
+/**
+ * Builds an `/oc <displayName>: <text>` command for officer chat.
+ *
+ * Separate entry point rather than a parameter on the guild-chat builder, so
+ * that no caller can be switched between ordinary and officer chat by passing a
+ * different value through.
+ *
+ * @param {string} displayName Name to attribute the message to in officer chat.
+ * @param {string} text Raw Discord message content.
+ * @returns {string|null} The command to pass to `bot.chat`, or null if there is
+ *   nothing left to send after sanitizing.
+ */
+function buildOfficerChatCommand(displayName, text) {
+  return buildChatCommand("/oc", displayName, text);
+}
+
+/**
+ * @param {string} command The Hypixel chat command, without a trailing space.
+ * @param {string} displayName
+ * @param {string} text
+ * @returns {string|null}
+ */
+function buildChatCommand(command, displayName, text) {
   const body = sanitizeForChat(text);
   if (!body) return null;
 
-  const prefix = `/gc ${displayName}: `;
+  const prefix = `${command} ${displayName}: `;
   const budget = MAX_CHAT_LENGTH - prefix.length;
   if (budget <= 0) return null;
 
@@ -44,4 +70,9 @@ function buildGuildChatCommand(displayName, text) {
   return `${prefix}${truncated}`;
 }
 
-module.exports = { sanitizeForChat, buildGuildChatCommand, MAX_CHAT_LENGTH };
+module.exports = {
+  sanitizeForChat,
+  buildGuildChatCommand,
+  buildOfficerChatCommand,
+  MAX_CHAT_LENGTH,
+};

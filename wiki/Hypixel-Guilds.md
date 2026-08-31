@@ -9,17 +9,19 @@ repair a broken registry — which is why Discord comes up even when no Minecraf
 
 ## What a guild has
 
-| Field            | Meaning                                                                                                         |
-|------------------|-----------------------------------------------------------------------------------------------------------------|
-| `key`            | Short internal id, e.g. `sb`. Lowercase letters, digits, `-` and `_`, up to 16 characters. **Immutable**        |
-| `name`           | Display name used in replies and logs                                                                           |
-| `tag`            | 2–8 letters or digits. Typed as `!tag message`, and shown beside names on incoming chat                         |
-| `account`        | Microsoft account email for this guild's Minecraft bot. **Immutable**, and no two guilds may share one          |
-| `color`          | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                                    |
-| `logChannelId`   | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                                     |
-| `auditChannelId` | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                              |
-| `enabled`        | `false` disconnects the guild without removing it                                                               |
-| `crossBridge`    | `true` shares chat with the other cross-bridged guilds — see [Guild-to-guild bridging](Guild-to-Guild-Bridging) |
+| Field                | Meaning                                                                                                         |
+|----------------------|-----------------------------------------------------------------------------------------------------------------|
+| `key`                | Short internal id, e.g. `sb`. Lowercase letters, digits, `-` and `_`, up to 16 characters. **Immutable**        |
+| `name`               | Display name used in replies and logs                                                                           |
+| `tag`                | 2–8 letters or digits. Typed as `!tag message`, and shown beside names on incoming chat                         |
+| `account`            | Microsoft account email for this guild's Minecraft bot. **Immutable**, and no two guilds may share one          |
+| `color`              | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                                    |
+| `logChannelId`       | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                                     |
+| `auditChannelId`     | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                              |
+| `officerChannelId`   | Optional two-way [officer chat](Officer-Chat) channel. No fallback — unset means off                            |
+| `enabled`            | `false` disconnects the guild without removing it                                                               |
+| `crossBridge`        | `true` shares chat with the other cross-bridged guilds — see [Guild-to-guild bridging](Guild-to-Guild-Bridging) |
+| `crossBridgeOfficer` | `true` shares [officer chat](Officer-Chat) with them too. Needs `crossBridge` on as well                        |
 
 > **`key` and `account` cannot be changed.** `account` is the key prismarine-auth hashes for its token cache,
 > so editing it later silently starts a fresh device-code flow against a different cache file. Renaming means
@@ -59,12 +61,17 @@ guild, because it runs arbitrary commands as a Minecraft account.
 ```
 /guilds edit guild:sb name:SkyBlock tag:SB color:#2ECC71
 /guilds edit guild:sb logchannel:#sb-log auditchannel:#sb-audit
+/guilds edit guild:sb officerchannel:#sb-officer-chat
 /guilds edit guild:sb enabled:False
-/guilds edit guild:sb clear:Both
+/guilds edit guild:sb clear:Log and audit channels
 ```
 
-`clear` drops a per-guild channel override — **Log channel**, **Audit channel** or **Both** — so it falls back
-to the global one again.
+`clear` drops a per-guild channel — **Log channel**, **Audit channel** or **Log and audit channels** falls
+back to the global one again, and **Officer channel** switches [officer chat](Officer-Chat) off, since that
+one has no global fallback.
+
+> ⚠️ An officer channel is **two-way**: everyone who can post in it is speaking in officer chat in-game.
+> Restrict it with Discord's channel permissions before setting it — see [Officer chat](Officer-Chat).
 
 `enabled:False` disconnects the guild and stops the reconnect poller trying it, without losing its settings or
 its cached token. It is the right way to take a guild offline for a while.
@@ -96,8 +103,9 @@ Repeats the device-code flow for a guild whose token has expired or been revoked
 /guilds list
 ```
 
-Every registered guild with its connection status, its tag and colour, and a 🔁 on the guilds taking part in
-[guild-to-guild bridging](Guild-to-Guild-Bridging). Account addresses are masked.
+Every registered guild with its connection status, its tag and colour, its channels, a 🔁 on the guilds taking
+part in [guild-to-guild bridging](Guild-to-Guild-Bridging) and a 🛡️ on those sharing
+[officer chat](Officer-Chat) as well. Account addresses are masked.
 
 ## With only one guild
 
@@ -115,5 +123,6 @@ seconds is treated as a duplicate. You get one embed. Still, put one account per
 ## Next
 
 - [Guild-to-guild bridging](Guild-to-Guild-Bridging)
+- [Officer chat](Officer-Chat)
 - [Reconnection](Reconnection)
 - [Guild tags](Guild-Tags)
