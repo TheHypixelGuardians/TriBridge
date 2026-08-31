@@ -1,4 +1,4 @@
-const bridge = require('../../../bridge');
+const bridge = require("../../../bridge");
 
 /**
  * Resolves the single Discord server this bot instance serves into
@@ -14,30 +14,34 @@ const bridge = require('../../../bridge');
  * lands — see utils/serverGuard.js for why that failure mode is deliberate.
  */
 module.exports = async (client) => {
-    const configured = process.env.DISCORD_GUILD_ID;
-    if (configured) {
-        bridge.discordServerId = configured;
-        console.log(`Serving Discord server ${configured} (from DISCORD_GUILD_ID).`);
-        return;
-    }
+  const configured = process.env.DISCORD_GUILD_ID;
+  if (configured) {
+    bridge.discordServerId = configured;
+    console.log(
+      `Serving Discord server ${configured} (from DISCORD_GUILD_ID).`,
+    );
+    return;
+  }
 
-    try {
-        const channel = await client.channels.fetch(bridge.discordChannelId);
-        bridge.discordServerId = channel?.guildId ?? null;
+  try {
+    const channel = await client.channels.fetch(bridge.discordChannelId);
+    bridge.discordServerId = channel?.guildId ?? null;
 
-        if (bridge.discordServerId) {
-            console.log(`Serving Discord server ${bridge.discordServerId} (from DISCORD_CHANNEL_ID).`);
-        } else {
-            console.error(
-                'DISCORD_CHANNEL_ID does not resolve to a server channel. All commands ' +
-                'will be refused until this is fixed or DISCORD_GUILD_ID is set.',
-            );
-        }
-    } catch (error) {
-        console.error(
-            'Could not resolve the bridge channel\'s Discord server. All commands will be ' +
-            'refused until this is fixed or DISCORD_GUILD_ID is set.',
-            error,
-        );
+    if (bridge.discordServerId) {
+      console.log(
+        `Serving Discord server ${bridge.discordServerId} (from DISCORD_CHANNEL_ID).`,
+      );
+    } else {
+      console.error(
+        "DISCORD_CHANNEL_ID does not resolve to a server channel. All commands " +
+          "will be refused until this is fixed or DISCORD_GUILD_ID is set.",
+      );
     }
+  } catch (error) {
+    console.error(
+      "Could not resolve the bridge channel's Discord server. All commands will be " +
+        "refused until this is fixed or DISCORD_GUILD_ID is set.",
+      error,
+    );
+  }
 };

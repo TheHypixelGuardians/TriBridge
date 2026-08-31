@@ -1,8 +1,8 @@
-const mcBots = require('../../../utils/mcBots');
-const {parseGuildChat} = require('../../../utils/guildChat');
-const {createRelayDedupe} = require('../../../utils/relayDedupe');
-const {relayAcrossGuilds} = require('../../../utils/crossBridge');
-const {isChatCommand} = require('../../../utils/chatCommands');
+const mcBots = require("../../../utils/mcBots");
+const { parseGuildChat } = require("../../../utils/guildChat");
+const { createRelayDedupe } = require("../../../utils/relayDedupe");
+const { relayAcrossGuilds } = require("../../../utils/crossBridge");
+const { isChatCommand } = require("../../../utils/chatCommands");
 
 // Module-cached, so it is shared across every bot — see utils/relayDedupe.js.
 // Separate from the Discord relay's instance on purpose: neither should be able
@@ -10,40 +10,40 @@ const {isChatCommand} = require('../../../utils/chatCommands');
 const isDuplicate = createRelayDedupe();
 
 module.exports = async (client, jsonMsg) => {
-    // `client` is the emitting mineflayer bot, not the Discord client.
-    if (client.tribridgeRetired) return;
+  // `client` is the emitting mineflayer bot, not the Discord client.
+  if (client.tribridgeRetired) return;
 
-    const guild = mcBots.guildForBot(client);
-    if (!guild) return;
+  const guild = mcBots.guildForBot(client);
+  if (!guild) return;
 
-    const cleanMsg = jsonMsg.toString().replace(/§./g, '');
+  const cleanMsg = jsonMsg.toString().replace(/§./g, "");
 
-    const parsed = parseGuildChat(cleanMsg);
-    if (!parsed) return;
+  const parsed = parseGuildChat(cleanMsg);
+  if (!parsed) return;
 
-    // The load-bearing loop guard. A line forwarded into this guild was spoken
-    // here by this guild's own bot account, so without this it would be picked
-    // up and forwarded straight back out, and the two guilds would echo one
-    // message at each other until Hypixel muted both accounts. Checking every
-    // registered account rather than just the emitting one also covers two bots
-    // that ended up in the same Hypixel guild.
-    if (mcBots.isOwnAccountName(parsed.username)) return;
+  // The load-bearing loop guard. A line forwarded into this guild was spoken
+  // here by this guild's own bot account, so without this it would be picked
+  // up and forwarded straight back out, and the two guilds would echo one
+  // message at each other until Hypixel muted both accounts. Checking every
+  // registered account rather than just the emitting one also covers two bots
+  // that ended up in the same Hypixel guild.
+  if (mcBots.isOwnAccountName(parsed.username)) return;
 
-    // A bot command belongs to the guild it was typed in. Forwarding it is noise
-    // to everyone else, and it would spend every cross-bridged guild's shared
-    // chat budget on a line none of them asked for — the same budget that keeps
-    // the accounts out of Hypixel's spam filter.
-    if (isChatCommand(parsed.content)) return;
+  // A bot command belongs to the guild it was typed in. Forwarding it is noise
+  // to everyone else, and it would spend every cross-bridged guild's shared
+  // chat budget on a line none of them asked for — the same budget that keeps
+  // the accounts out of Hypixel's spam filter.
+  if (isChatCommand(parsed.content)) return;
 
-    if (isDuplicate(guild.key, parsed.username, parsed.content)) return;
+  if (isDuplicate(guild.key, parsed.username, parsed.content)) return;
 
-    // Deliberately only player chat. Join/leave lines are noise in someone
-    // else's guild and would spend the shared per-account rate budget that real
-    // messages need.
-    //
-    // Also deliberately the real Minecraft name, even while a global profile
-    // change is running: its two switches govern the two Discord legs of the
-    // bridge, and quietly inventing a third rule for guild → guild would hide
-    // who is talking from people who never saw the announcement.
-    relayAcrossGuilds(guild, parsed.username, parsed.content);
+  // Deliberately only player chat. Join/leave lines are noise in someone
+  // else's guild and would spend the shared per-account rate budget that real
+  // messages need.
+  //
+  // Also deliberately the real Minecraft name, even while a global profile
+  // change is running: its two switches govern the two Discord legs of the
+  // bridge, and quietly inventing a third rule for guild → guild would hide
+  // who is talking from people who never saw the announcement.
+  relayAcrossGuilds(guild, parsed.username, parsed.content);
 };

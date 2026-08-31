@@ -16,7 +16,7 @@ const NAME_PATTERN = /^\w{1,16}$/;
  * @returns {boolean}
  */
 function isValidMinecraftName(name) {
-    return NAME_PATTERN.test(String(name ?? ''));
+  return NAME_PATTERN.test(String(name ?? ""));
 }
 
-module.exports = {isValidMinecraftName, NAME_PATTERN};
+module.exports = { isValidMinecraftName, NAME_PATTERN };

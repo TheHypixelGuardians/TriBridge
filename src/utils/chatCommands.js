@@ -1,10 +1,10 @@
-const guilds = require('./guilds');
+const guilds = require("./guilds");
 
 // Commands anyone can type into guild chat or the bridge channel. Both spellings
 // of the same thing, because `!networth` is what people try first.
 const COMMANDS = new Map([
-    ['nw', 'networth'],
-    ['networth', 'networth'],
+  ["nw", "networth"],
+  ["networth", "networth"],
 ]);
 
 // Guild tags that would collide with a command name. `/guilds add` and
@@ -31,22 +31,22 @@ const COMMAND_PREFIX = /^!([A-Za-z]{1,12})(?:\s+([\s\S]*))?$/;
  *   everything after it, or null if this is ordinary chat.
  */
 function parseChatCommand(text) {
-    const raw = String(text ?? '').trim();
-    if (raw.startsWith('!!')) return null;
+  const raw = String(text ?? "").trim();
+  if (raw.startsWith("!!")) return null;
 
-    const match = raw.match(COMMAND_PREFIX);
-    if (!match) return null;
+  const match = raw.match(COMMAND_PREFIX);
+  if (!match) return null;
 
-    const name = COMMANDS.get(match[1].toLowerCase());
-    if (!name) return null;
+  const name = COMMANDS.get(match[1].toLowerCase());
+  if (!name) return null;
 
-    // A guild that is already tagged `nw` keeps its routing. Reserving the tag
-    // stops new ones being created, but an install that predates this must not
-    // silently lose a working prefix.
-    const clash = guilds.getByTag(match[1]);
-    if (clash && clash.enabled !== false) return null;
+  // A guild that is already tagged `nw` keeps its routing. Reserving the tag
+  // stops new ones being created, but an install that predates this must not
+  // silently lose a working prefix.
+  const clash = guilds.getByTag(match[1]);
+  if (clash && clash.enabled !== false) return null;
 
-    return {name, args: (match[2] ?? '').trim()};
+  return { name, args: (match[2] ?? "").trim() };
 }
 
 /**
@@ -61,7 +61,7 @@ function parseChatCommand(text) {
  * @returns {boolean}
  */
 function isChatCommand(text) {
-    return parseChatCommand(text) !== null;
+  return parseChatCommand(text) !== null;
 }
 
-module.exports = {parseChatCommand, isChatCommand, RESERVED_TAGS};
+module.exports = { parseChatCommand, isChatCommand, RESERVED_TAGS };

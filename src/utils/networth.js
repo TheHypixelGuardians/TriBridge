@@ -1,9 +1,9 @@
-const {SerialQueue} = require('./serialQueue');
-const {isValidMinecraftName} = require('./minecraftName');
-const {lookupProfile} = require('./mojang');
+const { SerialQueue } = require("./serialQueue");
+const { isValidMinecraftName } = require("./minecraftName");
+const { lookupProfile } = require("./mojang");
 
 /** @type {NetworthProvider} */
-const defaultProvider = require('./skycryptProvider');
+const defaultProvider = require("./skycryptProvider");
 
 /**
  * One SkyBlock profile's networth figures.
@@ -56,15 +56,21 @@ const CACHE_TTL_MISS = 5 * 60_000;
 const CACHE_TTL_TRANSIENT = 30_000;
 const CACHE_LIMIT = 500;
 
-const MISS_CODES = new Set(['unknown-player', 'no-profiles', 'no-networth']);
-const TRANSIENT_CODES = new Set(['timeout', 'network', 'upstream-error', 'upstream-busy', 'malformed']);
+const MISS_CODES = new Set(["unknown-player", "no-profiles", "no-networth"]);
+const TRANSIENT_CODES = new Set([
+  "timeout",
+  "network",
+  "upstream-error",
+  "upstream-busy",
+  "malformed",
+]);
 
 // Everything upstream runs through one key. Blunt on purpose: these are
 // multi-megabyte JSON.parse calls on the same thread as a live Discord gateway,
 // and with the cache and single-flight in front of it this queue is empty almost
 // always. The ceiling is what stops a 15-second upstream stall turning into a
 // backlog of answers that arrive long after anyone cares.
-const QUEUE_KEY = 'networth';
+const QUEUE_KEY = "networth";
 const MAX_QUEUED = 4;
 
 const queue = new SerialQueue();
@@ -80,7 +86,12 @@ const inflight = new Map();
 
 let queued = 0;
 
-const UNITS = [[1e12, 't'], [1e9, 'b'], [1e6, 'm'], [1e3, 'k']];
+const UNITS = [
+  [1e12, "t"],
+  [1e9, "b"],
+  [1e6, "m"],
+  [1e3, "k"],
+];
 
 /**
  * Compact coin count: `12.4b`, `998m`, `4.1k`.
@@ -95,19 +106,19 @@ const UNITS = [[1e12, 't'], [1e9, 'b'], [1e6, 'm'], [1e3, 'k']];
  * @returns {string}
  */
 function formatCoins(value) {
-    const amount = Number(value);
-    if (!Number.isFinite(amount) || amount <= 0) return '0';
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount <= 0) return "0";
 
-    for (const [size, suffix] of UNITS) {
-        if (amount < size) continue;
+  for (const [size, suffix] of UNITS) {
+    if (amount < size) continue;
 
-        const scaled = amount / size;
-        // Three significant figures, so the string stays narrow at every scale.
-        const text = scaled >= 100 ? String(Math.round(scaled)) : scaled.toFixed(1);
-        return `${text.replace(/\.0$/, '')}${suffix}`;
-    }
+    const scaled = amount / size;
+    // Three significant figures, so the string stays narrow at every scale.
+    const text = scaled >= 100 ? String(Math.round(scaled)) : scaled.toFixed(1);
+    return `${text.replace(/\.0$/, "")}${suffix}`;
+  }
 
-    return String(Math.round(amount));
+  return String(Math.round(amount));
 }
 
 /**
@@ -117,9 +128,9 @@ function formatCoins(value) {
  * @returns {string}
  */
 function formatExact(value) {
-    const amount = Number(value);
-    if (!Number.isFinite(amount)) return '0';
-    return Math.round(amount).toLocaleString('en-US');
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "0";
+  return Math.round(amount).toLocaleString("en-US");
 }
 
 /**
@@ -137,26 +148,26 @@ function formatExact(value) {
  * @returns {ProfileNetworth|null}
  */
 function pickBest(profiles) {
-    if (!Array.isArray(profiles) || profiles.length === 0) return null;
+  if (!Array.isArray(profiles) || profiles.length === 0) return null;
 
-    let best = null;
-    for (const profile of profiles) {
-        if (!best) {
-            best = profile;
-            continue;
-        }
-        if (profile.networth !== best.networth) {
-            if (profile.networth > best.networth) best = profile;
-            continue;
-        }
-        if (profile.current !== best.current) {
-            if (profile.current) best = profile;
-            continue;
-        }
-        if (profile.profileId < best.profileId) best = profile;
+  let best = null;
+  for (const profile of profiles) {
+    if (!best) {
+      best = profile;
+      continue;
     }
+    if (profile.networth !== best.networth) {
+      if (profile.networth > best.networth) best = profile;
+      continue;
+    }
+    if (profile.current !== best.current) {
+      if (profile.current) best = profile;
+      continue;
+    }
+    if (profile.profileId < best.profileId) best = profile;
+  }
 
-    return best;
+  return best;
 }
 
 /**
@@ -168,21 +179,21 @@ function pickBest(profiles) {
  * @returns {number} Seconds left on the cooldown, or 0 if they may ask.
  */
 function consumeCooldown(requesterKey) {
-    const now = Date.now();
+  const now = Date.now();
 
-    if (lastAsk.size > COOLDOWN_LIMIT) {
-        for (const [key, at] of lastAsk) {
-            if (now - at > COOLDOWN_MS) lastAsk.delete(key);
-        }
+  if (lastAsk.size > COOLDOWN_LIMIT) {
+    for (const [key, at] of lastAsk) {
+      if (now - at > COOLDOWN_MS) lastAsk.delete(key);
     }
+  }
 
-    const previous = lastAsk.get(requesterKey);
-    if (previous && now - previous < COOLDOWN_MS) {
-        return Math.max(1, Math.ceil((COOLDOWN_MS - (now - previous)) / 1000));
-    }
+  const previous = lastAsk.get(requesterKey);
+  if (previous && now - previous < COOLDOWN_MS) {
+    return Math.max(1, Math.ceil((COOLDOWN_MS - (now - previous)) / 1000));
+  }
 
-    lastAsk.set(requesterKey, now);
-    return 0;
+  lastAsk.set(requesterKey, now);
+  return 0;
 }
 
 /**
@@ -190,13 +201,13 @@ function consumeCooldown(requesterKey) {
  * @returns {object|null}
  */
 function readCache(key) {
-    const entry = cache.get(key);
-    if (!entry) return null;
-    if (Date.now() > entry.expiresAt) {
-        cache.delete(key);
-        return null;
-    }
-    return entry.result;
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    cache.delete(key);
+    return null;
+  }
+  return entry.result;
 }
 
 /**
@@ -204,23 +215,23 @@ function readCache(key) {
  * @param {object} result
  */
 function writeCache(key, result) {
-    let ttl = CACHE_TTL_OK;
-    if (!result.ok) {
-        if (MISS_CODES.has(result.code)) ttl = CACHE_TTL_MISS;
-        else if (TRANSIENT_CODES.has(result.code)) ttl = CACHE_TTL_TRANSIENT;
-            // Anything else (busy, cooldown) is about us, not about the player, and
-        // caching it would answer the next person with our own backpressure.
-        else return;
-    }
+  let ttl = CACHE_TTL_OK;
+  if (!result.ok) {
+    if (MISS_CODES.has(result.code)) ttl = CACHE_TTL_MISS;
+    else if (TRANSIENT_CODES.has(result.code)) ttl = CACHE_TTL_TRANSIENT;
+    // Anything else (busy, cooldown) is about us, not about the player, and
+    // caching it would answer the next person with our own backpressure.
+    else return;
+  }
 
-    const now = Date.now();
-    if (cache.size > CACHE_LIMIT) {
-        for (const [key2, entry] of cache) {
-            if (now > entry.expiresAt) cache.delete(key2);
-        }
+  const now = Date.now();
+  if (cache.size > CACHE_LIMIT) {
+    for (const [key2, entry] of cache) {
+      if (now > entry.expiresAt) cache.delete(key2);
     }
+  }
 
-    cache.set(key, {result, expiresAt: now + ttl});
+  cache.set(key, { result, expiresAt: now + ttl });
 }
 
 /**
@@ -231,35 +242,40 @@ function writeCache(key, result) {
  * @returns {Promise<object>}
  */
 async function fetchFresh(requested, provider) {
-    let player = {username: requested, uuid: null};
+  let player = { username: requested, uuid: null };
 
-    // Mojang first. It costs about 200ms and buys canonical casing, a uuid for
-    // the embed avatar, typos never reaching the multi-megabyte endpoint, and —
-    // the reason it is not optional — the only way to tell "no such account"
-    // apart from "SkyCrypt has never loaded them", which need opposite advice.
-    try {
-        const profile = await lookupProfile(requested);
-        if (!profile) return {ok: false, code: 'unknown-player', detail: requested};
-        player = {username: profile.name, uuid: profile.uuid};
-    } catch (error) {
-        // Fail open when Mojang is unreachable, the same way /link does: "we
-        // could not check" must never be reported as "it is not there".
-        console.error('Mojang lookup failed during a networth lookup:', error?.message ?? error);
-    }
+  // Mojang first. It costs about 200ms and buys canonical casing, a uuid for
+  // the embed avatar, typos never reaching the multi-megabyte endpoint, and —
+  // the reason it is not optional — the only way to tell "no such account"
+  // apart from "SkyCrypt has never loaded them", which need opposite advice.
+  try {
+    const profile = await lookupProfile(requested);
+    if (!profile)
+      return { ok: false, code: "unknown-player", detail: requested };
+    player = { username: profile.name, uuid: profile.uuid };
+  } catch (error) {
+    // Fail open when Mojang is unreachable, the same way /link does: "we
+    // could not check" must never be reported as "it is not there".
+    console.error(
+      "Mojang lookup failed during a networth lookup:",
+      error?.message ?? error,
+    );
+  }
 
-    const result = await provider.fetchNetworth(player);
-    if (!result.ok) return {...result, detail: result.detail ?? player.username};
+  const result = await provider.fetchNetworth(player);
+  if (!result.ok)
+    return { ...result, detail: result.detail ?? player.username };
 
-    const best = pickBest(result.profiles);
-    if (!best) return {ok: false, code: 'no-networth', detail: player.username};
+  const best = pickBest(result.profiles);
+  if (!best) return { ok: false, code: "no-networth", detail: player.username };
 
-    return {
-        ok: true,
-        player: {name: player.username, uuid: player.uuid},
-        best,
-        profiles: result.profiles,
-        attribution: provider.attribution,
-    };
+  return {
+    ok: true,
+    player: { name: player.username, uuid: player.uuid },
+    best,
+    profiles: result.profiles,
+    attribution: provider.attribution,
+  };
 }
 
 /**
@@ -275,67 +291,69 @@ async function fetchFresh(requested, provider) {
  * @param {NetworthProvider} [options.provider] Override, for offline tests.
  * @returns {Promise<object>}
  */
-async function lookup({username, requesterKey, provider = defaultProvider}) {
-    // First, so that one reply costs one cooldown however it turns out.
-    const wait = consumeCooldown(String(requesterKey));
-    if (wait > 0) return {ok: false, code: 'cooldown', detail: String(wait)};
+async function lookup({ username, requesterKey, provider = defaultProvider }) {
+  // First, so that one reply costs one cooldown however it turns out.
+  const wait = consumeCooldown(String(requesterKey));
+  if (wait > 0) return { ok: false, code: "cooldown", detail: String(wait) };
 
-    const requested = String(username ?? '').trim();
-    // Handled here rather than by the callers so that "one reply costs one
-    // cooldown" holds for every outcome, including `!nw` typed on its own.
-    if (!requested) return {ok: false, code: 'usage'};
-    if (!isValidMinecraftName(requested)) {
-        return {ok: false, code: 'invalid-name', detail: requested};
+  const requested = String(username ?? "").trim();
+  // Handled here rather than by the callers so that "one reply costs one
+  // cooldown" holds for every outcome, including `!nw` typed on its own.
+  if (!requested) return { ok: false, code: "usage" };
+  if (!isValidMinecraftName(requested)) {
+    return { ok: false, code: "invalid-name", detail: requested };
+  }
+
+  const key = requested.toLowerCase();
+
+  const cached = readCache(key);
+  if (cached) return cached;
+
+  // Between the cache and the queue on purpose: three people asking about the
+  // same player at once should make one request and should not occupy three
+  // queue slots waiting to find that out.
+  const existing = inflight.get(key);
+  if (existing) return existing;
+
+  if (queued >= MAX_QUEUED) return { ok: false, code: "busy" };
+
+  const promise = (async () => {
+    queued += 1;
+    try {
+      const result = await queue.run(QUEUE_KEY, () =>
+        fetchFresh(requested, provider),
+      );
+      writeCache(key, result);
+      return result;
+    } catch (error) {
+      console.error("Networth lookup failed:", error);
+      return { ok: false, code: "error" };
+    } finally {
+      queued -= 1;
+      if (inflight.get(key) === promise) inflight.delete(key);
     }
+  })();
 
-    const key = requested.toLowerCase();
-
-    const cached = readCache(key);
-    if (cached) return cached;
-
-    // Between the cache and the queue on purpose: three people asking about the
-    // same player at once should make one request and should not occupy three
-    // queue slots waiting to find that out.
-    const existing = inflight.get(key);
-    if (existing) return existing;
-
-    if (queued >= MAX_QUEUED) return {ok: false, code: 'busy'};
-
-    const promise = (async () => {
-        queued += 1;
-        try {
-            const result = await queue.run(QUEUE_KEY, () => fetchFresh(requested, provider));
-            writeCache(key, result);
-            return result;
-        } catch (error) {
-            console.error('Networth lookup failed:', error);
-            return {ok: false, code: 'error'};
-        } finally {
-            queued -= 1;
-            if (inflight.get(key) === promise) inflight.delete(key);
-        }
-    })();
-
-    inflight.set(key, promise);
-    return promise;
+  inflight.set(key, promise);
+  return promise;
 }
 
 /**
  * Clears the cooldown, cache and in-flight state. For offline tests only.
  */
 function resetState() {
-    lastAsk.clear();
-    cache.clear();
-    inflight.clear();
-    queued = 0;
+  lastAsk.clear();
+  cache.clear();
+  inflight.clear();
+  queued = 0;
 }
 
 module.exports = {
-    lookup,
-    pickBest,
-    formatCoins,
-    formatExact,
-    resetState,
-    COOLDOWN_MS,
-    CACHE_TTL_OK,
+  lookup,
+  pickBest,
+  formatCoins,
+  formatExact,
+  resetState,
+  COOLDOWN_MS,
+  CACHE_TTL_OK,
 };

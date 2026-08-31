@@ -68,7 +68,11 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
    npm install
    ```
 
-3. **Create a `.env` file** in the project root:
+3. **Create a `.env` file** in the project root. Copy [`.env.example`](.env.example) and fill it in:
+
+   ```bash
+   cp .env.example .env
+   ```
 
    ```env
    DISCORD_TOKEN=your_discord_bot_token
@@ -95,7 +99,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
 5. **Start it**
 
    ```bash
-   node src/index.js
+   npm start
    ```
 
    On a fresh install the account in `MINECRAFT_USERNAME` is registered as the first Hypixel guild and a
@@ -140,8 +144,11 @@ Plus the chat commands typed in guild chat or the bridge channel: `!nw <username
 ## Usage
 
 ```bash
-node src/index.js
+npm start
 ```
+
+While working on the bot, `npm run dev` restarts it whenever a source file or the `.env` changes. Both are
+wrappers around `node src/index.js`, which still works on its own.
 
 Everything past the first Hypixel guild is configured from Discord rather than from files:
 

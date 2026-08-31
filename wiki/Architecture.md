@@ -220,7 +220,8 @@ code can complete the sign-in with their own Microsoft account.
   `jsonMsg.toMotd()` when the colour codes carry meaning.
 - **Discord limits:** embed description 4096, message content 2000. Truncate explicitly when relaying server
   output.
-- **Style:** 4-space indent, single quotes, semicolons, JSDoc on non-trivial helpers.
+- **Style:** Prettier defaults — 2-space indent, double quotes, semicolons, trailing commas, 80 columns, as
+  recorded in `.prettierrc`. JSDoc on non-trivial helpers.
 
 ## Testing without connecting
 

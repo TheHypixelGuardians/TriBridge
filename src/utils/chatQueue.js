@@ -22,36 +22,38 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * @returns {Promise<boolean>} Whether the line was handed to mineflayer.
  */
 function sendChat(record, text, options = {}) {
-    if (!record || !text) return Promise.resolve(false);
+  if (!record || !text) return Promise.resolve(false);
 
-    const maxAgeMs = Number(options.maxAgeMs) > 0 ? Number(options.maxAgeMs) : 0;
-    const queuedAt = Date.now();
+  const maxAgeMs = Number(options.maxAgeMs) > 0 ? Number(options.maxAgeMs) : 0;
+  const queuedAt = Date.now();
 
-    const task = async () => {
-        const wait = record.chatQueue.last + MIN_INTERVAL_MS - Date.now();
-        if (wait > 0) await sleep(wait);
+  const task = async () => {
+    const wait = record.chatQueue.last + MIN_INTERVAL_MS - Date.now();
+    if (wait > 0) await sleep(wait);
 
-        if (maxAgeMs && Date.now() - queuedAt > maxAgeMs) return false;
+    if (maxAgeMs && Date.now() - queuedAt > maxAgeMs) return false;
 
-        // Re-read after the wait: the bot may have gone away while queued, and
-        // caching it across an await is exactly how a retired bot gets used.
-        const bot = record.bot;
-        if (!bot || !record.connected || bot.tribridgeRetired) return false;
+    // Re-read after the wait: the bot may have gone away while queued, and
+    // caching it across an await is exactly how a retired bot gets used.
+    const bot = record.bot;
+    if (!bot || !record.connected || bot.tribridgeRetired) return false;
 
-        try {
-            bot.chat(text);
-            record.chatQueue.last = Date.now();
-            return true;
-        } catch (error) {
-            console.error(`[${record.key}] failed to send chat:`, error?.message ?? error);
-            return false;
-        }
-    };
+    try {
+      bot.chat(text);
+      record.chatQueue.last = Date.now();
+      return true;
+    } catch (error) {
+      console.error(
+        `[${record.key}] failed to send chat:`,
+        error?.message ?? error,
+      );
+      return false;
+    }
+  };
 
-    const result = record.chatQueue.chain.then(task, task);
-    record.chatQueue.chain = result.catch(() => {
-    });
-    return result;
+  const result = record.chatQueue.chain.then(task, task);
+  record.chatQueue.chain = result.catch(() => {});
+  return result;
 }
 
-module.exports = {sendChat, MIN_INTERVAL_MS};
+module.exports = { sendChat, MIN_INTERVAL_MS };

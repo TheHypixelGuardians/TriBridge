@@ -1,25 +1,30 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const CONFIG_PATH = path.join(__dirname, '..', '..', 'linkedAccountsConfig.json');
+const CONFIG_PATH = path.join(
+  __dirname,
+  "..",
+  "..",
+  "linkedAccountsConfig.json",
+);
 
 let cachedConfig = null;
 
 function loadConfig() {
-    if (cachedConfig) return cachedConfig;
-    try {
-        const data = fs.readFileSync(CONFIG_PATH, 'utf-8');
-        cachedConfig = JSON.parse(data);
-        if (!cachedConfig.links) cachedConfig.links = {};
-    } catch {
-        cachedConfig = {links: {}};
-    }
-    return cachedConfig;
+  if (cachedConfig) return cachedConfig;
+  try {
+    const data = fs.readFileSync(CONFIG_PATH, "utf-8");
+    cachedConfig = JSON.parse(data);
+    if (!cachedConfig.links) cachedConfig.links = {};
+  } catch {
+    cachedConfig = { links: {} };
+  }
+  return cachedConfig;
 }
 
 function saveConfig(config) {
-    cachedConfig = config;
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+  cachedConfig = config;
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
 }
 
 /**
@@ -27,7 +32,7 @@ function saveConfig(config) {
  * @returns {{uuid: string, name: string}|null}
  */
 function getLink(discordId) {
-    return loadConfig().links[discordId] ?? null;
+  return loadConfig().links[discordId] ?? null;
 }
 
 /**
@@ -37,15 +42,15 @@ function getLink(discordId) {
  * @returns {{discordId: string, uuid: string, name: string}|null}
  */
 function getLinkByName(mcName) {
-    const target = String(mcName ?? '').toLowerCase();
-    const links = loadConfig().links;
+  const target = String(mcName ?? "").toLowerCase();
+  const links = loadConfig().links;
 
-    for (const [discordId, link] of Object.entries(links)) {
-        if (link.name.toLowerCase() === target) {
-            return {discordId, ...link};
-        }
+  for (const [discordId, link] of Object.entries(links)) {
+    if (link.name.toLowerCase() === target) {
+      return { discordId, ...link };
     }
-    return null;
+  }
+  return null;
 }
 
 /**
@@ -59,15 +64,15 @@ function getLinkByName(mcName) {
  * @returns {{ok: true}|{ok: false, reason: 'taken', discordId: string}}
  */
 function setLink(discordId, profile) {
-    const existing = getLinkByName(profile.name);
-    if (existing && existing.discordId !== discordId) {
-        return {ok: false, reason: 'taken', discordId: existing.discordId};
-    }
+  const existing = getLinkByName(profile.name);
+  if (existing && existing.discordId !== discordId) {
+    return { ok: false, reason: "taken", discordId: existing.discordId };
+  }
 
-    const config = loadConfig();
-    config.links[discordId] = {uuid: profile.uuid, name: profile.name};
-    saveConfig(config);
-    return {ok: true};
+  const config = loadConfig();
+  config.links[discordId] = { uuid: profile.uuid, name: profile.name };
+  saveConfig(config);
+  return { ok: true };
 }
 
 /**
@@ -76,23 +81,23 @@ function setLink(discordId, profile) {
  *   the user had none.
  */
 function removeLink(discordId) {
-    const config = loadConfig();
-    const existing = config.links[discordId];
-    if (!existing) return null;
+  const config = loadConfig();
+  const existing = config.links[discordId];
+  if (!existing) return null;
 
-    delete config.links[discordId];
-    saveConfig(config);
-    return existing;
+  delete config.links[discordId];
+  saveConfig(config);
+  return existing;
 }
 
 /**
  * @returns {Array<{discordId: string, uuid: string, name: string}>}
  */
 function getAllLinks() {
-    return Object.entries(loadConfig().links).map(([discordId, link]) => ({
-        discordId,
-        ...link,
-    }));
+  return Object.entries(loadConfig().links).map(([discordId, link]) => ({
+    discordId,
+    ...link,
+  }));
 }
 
-module.exports = {getLink, getLinkByName, setLink, removeLink, getAllLinks};
+module.exports = { getLink, getLinkByName, setLink, removeLink, getAllLinks };

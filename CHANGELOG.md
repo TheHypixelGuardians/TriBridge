@@ -166,6 +166,25 @@
 + `CLAUDE.md`'s after-every-change checklist grew from three steps to six, covering `docs/FEATURES.md`, the
   wiki and the `docs/` workflow files.
 
+#### Misc
+
++ Added `npm start` and `npm run dev` as the supported ways to launch the bot. `npm start` runs it as before;
+  `npm run dev` restarts it automatically whenever a source file or the `.env` changes, which is what to use
+  while working on it. `node src/index.js` still works exactly as it did.
+    + `nodemon` is the only development dependency, and nothing needs it to *run* the bot — a deployment can
+      still install with `npm install --omit=dev`.
++ Added `.env.example`, a template holding the four required variables, to copy to `.env` on a fresh install
+  rather than typing them out.
++ Removed the placeholder `test` script. There is still no test suite, so `npm test` now says the script is
+  missing instead of pretending to be one.
++ `package.json` now carries a `0.1.0-beta.N` pre-release version, and is bumped as part of every release —
+  it had been left at `1.0.0` through three of them. See `docs/RELEASING.md`.
++ The source is now formatted with Prettier's default style — two-space indent, double quotes, trailing
+  commas, 80 columns — in place of the previous four-space, single-quote layout. Nothing the bot does
+  changed; it is whitespace and quote marks across all 85 files.
+    + `.prettierrc` records the settings, so an editor set to format on save now agrees with the repository
+      instead of reformatting every file it opens.
+
 ## Version 1.2.1
 
 ### New Features

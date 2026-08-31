@@ -1,6 +1,6 @@
-const {EmbedBuilder} = require('discord.js');
-const bridge = require('../bridge');
-const {logForGuild} = require('./guildLog');
+const { EmbedBuilder } = require("discord.js");
+const bridge = require("../bridge");
+const { logForGuild } = require("./guildLog");
 
 /**
  * Delivers Microsoft device-sign-in codes into Discord.
@@ -23,10 +23,10 @@ const sinks = new Map();
  * @returns {() => void} Unregisters the sink.
  */
 function registerSink(guildKey, deliver) {
-    sinks.set(guildKey, deliver);
-    return () => {
-        if (sinks.get(guildKey) === deliver) sinks.delete(guildKey);
-    };
+  sinks.set(guildKey, deliver);
+  return () => {
+    if (sinks.get(guildKey) === deliver) sinks.delete(guildKey);
+  };
 }
 
 /**
@@ -35,24 +35,24 @@ function registerSink(guildKey, deliver) {
  * @returns {EmbedBuilder}
  */
 function buildCodeEmbed(info, guild) {
-    const embed = new EmbedBuilder()
-        .setTitle('🔐 Microsoft sign-in required')
-        .setColor(0xE67E22)
-        .setDescription(
-            `**${guild.name}** needs its Minecraft account signed in.\n\n` +
-            `1. Open ${info.verification_uri}\n` +
-            `2. Enter the code \`${info.user_code}\`\n` +
-            `3. Sign in as \`${guild.account}\`\n\n` +
-            '> This signs the bot into that Microsoft account. Do not share this code — ' +
-            'anyone who has it can complete the sign-in with a different account.',
-        );
+  const embed = new EmbedBuilder()
+    .setTitle("🔐 Microsoft sign-in required")
+    .setColor(0xe67e22)
+    .setDescription(
+      `**${guild.name}** needs its Minecraft account signed in.\n\n` +
+        `1. Open ${info.verification_uri}\n` +
+        `2. Enter the code \`${info.user_code}\`\n` +
+        `3. Sign in as \`${guild.account}\`\n\n` +
+        "> This signs the bot into that Microsoft account. Do not share this code — " +
+        "anyone who has it can complete the sign-in with a different account.",
+    );
 
-    if (info.expires_in) {
-        const expiresAt = Math.floor((Date.now() + info.expires_in * 1000) / 1000);
-        embed.addFields({name: 'Expires', value: `<t:${expiresAt}:R>`});
-    }
+  if (info.expires_in) {
+    const expiresAt = Math.floor((Date.now() + info.expires_in * 1000) / 1000);
+    embed.addFields({ name: "Expires", value: `<t:${expiresAt}:R>` });
+  }
 
-    return embed;
+  return embed;
 }
 
 /**
@@ -68,36 +68,42 @@ function buildCodeEmbed(info, guild) {
  * @returns {Promise<void>}
  */
 async function requestSignIn(info, guild) {
-    const embed = buildCodeEmbed(info, guild);
-    let delivered = false;
+  const embed = buildCodeEmbed(info, guild);
+  let delivered = false;
 
-    const sink = sinks.get(guild.key);
-    if (sink) {
-        try {
-            await sink(embed);
-            delivered = true;
-        } catch (error) {
-            console.error(`[${guild.key}] could not show the sign-in code in Discord:`, error);
-        }
+  const sink = sinks.get(guild.key);
+  if (sink) {
+    try {
+      await sink(embed);
+      delivered = true;
+    } catch (error) {
+      console.error(
+        `[${guild.key}] could not show the sign-in code in Discord:`,
+        error,
+      );
     }
+  }
 
-    if (!delivered && guild.addedBy && bridge.discordClient) {
-        try {
-            const user = await bridge.discordClient.users.fetch(guild.addedBy);
-            await user.send({embeds: [embed]});
-            delivered = true;
-        } catch (error) {
-            console.error(`[${guild.key}] could not DM the sign-in code:`, error?.message ?? error);
-        }
+  if (!delivered && guild.addedBy && bridge.discordClient) {
+    try {
+      const user = await bridge.discordClient.users.fetch(guild.addedBy);
+      await user.send({ embeds: [embed] });
+      delivered = true;
+    } catch (error) {
+      console.error(
+        `[${guild.key}] could not DM the sign-in code:`,
+        error?.message ?? error,
+      );
     }
+  }
 
-    // Code-free on purpose: the log channel is not private.
-    await logForGuild(
-        guild.key,
-        delivered
-            ? '🔐 A Microsoft sign-in is in progress for this guild.'
-            : `🔐 This guild needs a Microsoft sign-in — an admin can run \`/guilds auth ${guild.key}\` to get the code.`,
-    );
+  // Code-free on purpose: the log channel is not private.
+  await logForGuild(
+    guild.key,
+    delivered
+      ? "🔐 A Microsoft sign-in is in progress for this guild."
+      : `🔐 This guild needs a Microsoft sign-in — an admin can run \`/guilds auth ${guild.key}\` to get the code.`,
+  );
 }
 
-module.exports = {registerSink, buildCodeEmbed, requestSignIn};
+module.exports = { registerSink, buildCodeEmbed, requestSignIn };

@@ -1,4 +1,4 @@
-const getAllFiles = require('../utils/getAllFiles');
+const getAllFiles = require("../utils/getAllFiles");
 
 /**
  * Binds every file under `<eventsPath>/<eventName>/` to `client.on(eventName)`.
@@ -15,30 +15,30 @@ const getAllFiles = require('../utils/getAllFiles');
  *   site simply ignores it.
  */
 module.exports = (client, eventsPath) => {
-    const eventFolders = getAllFiles(eventsPath, true);
-    const registered = [];
+  const eventFolders = getAllFiles(eventsPath, true);
+  const registered = [];
 
-    for (const eventFolder of eventFolders) {
-        const eventFiles = getAllFiles(eventFolder);
-        eventFiles.sort((a, b) => (a > b ? 1 : -1));
+  for (const eventFolder of eventFolders) {
+    const eventFiles = getAllFiles(eventFolder);
+    eventFiles.sort((a, b) => (a > b ? 1 : -1));
 
-        const eventName = eventFolder.replace(/\\/g, '/').split('/').pop();
+    const eventName = eventFolder.replace(/\\/g, "/").split("/").pop();
 
-        const listener = async (...args) => {
-            for (const eventFile of eventFiles) {
-                const eventFunction = require(eventFile);
-                await eventFunction(client, ...args);
-            }
-        };
-
-        client.on(eventName, listener);
-        registered.push({eventName, listener});
-    }
-
-    return () => {
-        for (const {eventName, listener} of registered) {
-            client.off(eventName, listener);
-        }
-        registered.length = 0;
+    const listener = async (...args) => {
+      for (const eventFile of eventFiles) {
+        const eventFunction = require(eventFile);
+        await eventFunction(client, ...args);
+      }
     };
+
+    client.on(eventName, listener);
+    registered.push({ eventName, listener });
+  }
+
+  return () => {
+    for (const { eventName, listener } of registered) {
+      client.off(eventName, listener);
+    }
+    registered.length = 0;
+  };
 };

@@ -14,6 +14,8 @@ step.
 | **Minecraft account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net`                                   |
 
 Dependencies are `discord.js`, `mineflayer`, `prismarine-auth` and `dotenv`; `npm install` handles them.
+`nodemon` is a development dependency used only by `npm run dev`, so a server that just runs the bot can
+install with `npm install --omit=dev`.
 
 > **The bot account is a real account.** It sits in the guild, it can be muted by Hypixel's spam filter, and
 > it is subject to the [server rules](https://hypixel.net/rules) like any other. Use an account you are
@@ -34,8 +36,13 @@ Dependencies are `discord.js`, `mineflayer`, `prismarine-auth` and `dotenv`; `np
    npm install
    ```
 
-3. **Create the `.env` file** in the project root. See [Configuration](Configuration) for every variable and
-   what it does; the minimum is:
+3. **Create the `.env` file** in the project root. Copy `.env.example` and fill it in:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   See [Configuration](Configuration) for every variable and what it does; the minimum is:
 
    ```env
    DISCORD_TOKEN=your_discord_bot_token
@@ -49,7 +56,7 @@ Dependencies are `discord.js`, `mineflayer`, `prismarine-auth` and `dotenv`; `np
 5. **Start it**
 
    ```bash
-   node src/index.js
+   npm start
    ```
 
 6. **Complete the Microsoft sign-in.** On a fresh install the account in `MINECRAFT_USERNAME` is registered as
@@ -105,6 +112,10 @@ TriBridge is a foreground process with no built-in supervision. Use whatever you
 ```bash
 node src/index.js
 ```
+
+Point the supervisor at `node` directly rather than at `npm start`. `npm` would sit between the supervisor and
+the bot as an extra process, and stop and restart signals have to pass through it to reach the process that
+actually holds the Discord and Hypixel connections.
 
 The bot reconnects to Hypixel on its own ([Reconnection](Reconnection)); it does not restart *itself* if the
 Node process dies, which is what the supervisor is for.

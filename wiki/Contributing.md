@@ -7,12 +7,23 @@ git clone https://github.com/Trilleo/TriBridge.git
 npm install
 ```
 
-Node v22 or newer. There is no build step, no test suite and no linter — `npm test` is a placeholder that
-exits 1.
+Node v22 or newer. There is no build step, no test suite and no linter, so there is no `npm test` — the script
+does not exist.
+
+Two ways to run it:
+
+| Command       | Does                                                                             |
+|---------------|----------------------------------------------------------------------------------|
+| `npm start`   | Runs the bot once, the same as `node src/index.js`                               |
+| `npm run dev` | Runs it under `nodemon`, restarting on any change to a source file or the `.env` |
 
 Running the bot connects to **live** Discord and Hypixel, with real accounts in real guilds. Don't start it to
 verify a change unless you have a bot and a guild of your own to point it at. A good deal is testable offline
 against fakes — see [Architecture](Architecture).
+
+`npm run dev` restarts on every save, so it reconnects the Minecraft accounts every time — leaving it running
+while editing will sign them in repeatedly and can get them throttled by Hypixel. Stop it while you work, and
+start it when you want to try something.
 
 ## Commit messages
 
@@ -45,8 +56,16 @@ Present tense, specific, no trailing period. The full convention is in
 
 ## Style
 
-4-space indent, single quotes, semicolons, CommonJS, JSDoc on non-trivial helper functions. Match the file you
-are in.
+CommonJS, and [Prettier](https://prettier.io) with its default settings — 2-space indent, double quotes,
+semicolons, trailing commas, 80 columns. The settings are in `.prettierrc`, so an editor that formats on save
+agrees with the repository instead of fighting it. Reformat with:
+
+```bash
+npx prettier --write "src/**/*.js"
+```
+
+JSDoc on non-trivial helper functions. Prettier does not reflow comments, and much of this codebase's value is
+in them — see below.
 
 ## Reporting things
 

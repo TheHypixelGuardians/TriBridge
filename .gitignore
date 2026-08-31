@@ -1,5 +1,6 @@
 .env
 node_modules
+.cursor
 .minecraft-auth
 adminRolesConfig.json
 linkedAccountsConfig.json

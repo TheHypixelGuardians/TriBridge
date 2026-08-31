@@ -1,7 +1,7 @@
-const guilds = require('../../../utils/guilds');
-const mcBots = require('../../../utils/mcBots');
-const queryGuild = require('../../../utils/queryGuild');
-const {logForGuild} = require('../../../utils/guildLog');
+const guilds = require("../../../utils/guilds");
+const mcBots = require("../../../utils/mcBots");
+const queryGuild = require("../../../utils/queryGuild");
+const { logForGuild } = require("../../../utils/guildLog");
 
 // Latched per pair so the warning is posted once, not on every reconnect.
 const warned = new Set();
@@ -19,39 +19,46 @@ const warned = new Set();
  * would cost a `/guild list` on every spawn for nothing.
  */
 module.exports = async (client) => {
-    if (guilds.count() <= 1) return;
+  if (guilds.count() <= 1) return;
 
-    const guild = mcBots.guildForBot(client);
-    if (!guild) return;
+  const guild = mcBots.guildForBot(client);
+  if (!guild) return;
 
-    const record = mcBots.getRecord(guild.key);
-    if (!record || record.hypixelGuildName) return;
+  const record = mcBots.getRecord(guild.key);
+  if (!record || record.hypixelGuildName) return;
 
-    const query = await queryGuild(record, '/guild list', {format: 'motd', idleMs: 1000});
-    if (!query.ok) return;
+  const query = await queryGuild(record, "/guild list", {
+    format: "motd",
+    idleMs: 1000,
+  });
+  if (!query.ok) return;
 
-    const name = findGuildName(query.lines);
-    if (!name) return;
+  const name = findGuildName(query.lines);
+  if (!name) return;
 
-    record.hypixelGuildName = name;
+  record.hypixelGuildName = name;
 
-    const clash = mcBots.getAllRecords().find((other) =>
-        other.key !== record.key
-        && other.hypixelGuildName
-        && other.hypixelGuildName.toLowerCase() === name.toLowerCase());
-
-    if (!clash) return;
-
-    const pairKey = [record.key, clash.key].sort().join('|');
-    if (warned.has(pairKey)) return;
-    warned.add(pairKey);
-
-    await logForGuild(
-        guild.key,
-        `⚠️ \`${record.key}\` and \`${clash.key}\` are both in the Hypixel guild **${name}**.\n` +
-        '> Each guild needs its own account, or their messages will collide. ' +
-        'Duplicates are being dropped for now.',
+  const clash = mcBots
+    .getAllRecords()
+    .find(
+      (other) =>
+        other.key !== record.key &&
+        other.hypixelGuildName &&
+        other.hypixelGuildName.toLowerCase() === name.toLowerCase(),
     );
+
+  if (!clash) return;
+
+  const pairKey = [record.key, clash.key].sort().join("|");
+  if (warned.has(pairKey)) return;
+  warned.add(pairKey);
+
+  await logForGuild(
+    guild.key,
+    `⚠️ \`${record.key}\` and \`${clash.key}\` are both in the Hypixel guild **${name}**.\n` +
+      "> Each guild needs its own account, or their messages will collide. " +
+      "Duplicates are being dropped for now.",
+  );
 };
 
 /**
@@ -64,9 +71,12 @@ module.exports = async (client) => {
  * @returns {string|null}
  */
 function findGuildName(lines) {
-    for (const raw of lines) {
-        const match = raw.replace(/§./g, '').trim().match(/^Guild Name:\s*(.+)$/);
-        if (match) return match[1].trim();
-    }
-    return null;
+  for (const raw of lines) {
+    const match = raw
+      .replace(/§./g, "")
+      .trim()
+      .match(/^Guild Name:\s*(.+)$/);
+    if (match) return match[1].trim();
+  }
+  return null;
 }

@@ -1,7 +1,7 @@
-const {ApplicationCommandOptionType} = require('discord.js');
-const guilds = require('./guilds');
-const mcBots = require('./mcBots');
-const {respondWithGuilds} = require('./guildAutocomplete');
+const { ApplicationCommandOptionType } = require("discord.js");
+const guilds = require("./guilds");
+const mcBots = require("./mcBots");
+const { respondWithGuilds } = require("./guildAutocomplete");
 
 /**
  * The `guild` option every Minecraft-touching command carries.
@@ -10,11 +10,11 @@ const {respondWithGuilds} = require('./guildAutocomplete');
  * and with several the default guild stays one keystroke away.
  */
 const GUILD_OPTION = {
-    name: 'guild',
-    description: 'Which Hypixel guild to act on. Defaults to the default guild.',
-    type: ApplicationCommandOptionType.String,
-    required: false,
-    autocomplete: true,
+  name: "guild",
+  description: "Which Hypixel guild to act on. Defaults to the default guild.",
+  type: ApplicationCommandOptionType.String,
+  required: false,
+  autocomplete: true,
 };
 
 /**
@@ -25,12 +25,12 @@ const GUILD_OPTION = {
  * @returns {(client: unknown, interaction: import('discord.js').AutocompleteInteraction) => Promise<void>}
  */
 function guildOptionAutocomplete(options = {}) {
-    return async (client, interaction) => {
-        if (interaction.options.getFocused(true).name !== 'guild') {
-            return interaction.respond([]);
-        }
-        return respondWithGuilds(interaction, options);
-    };
+  return async (client, interaction) => {
+    if (interaction.options.getFocused(true).name !== "guild") {
+      return interaction.respond([]);
+    }
+    return respondWithGuilds(interaction, options);
+  };
 }
 
 /**
@@ -46,62 +46,69 @@ function guildOptionAutocomplete(options = {}) {
  * @returns {{ok: true, guild: object, record: import('./mcBots').BotRecord}
  *   | {ok: false, message: string}}
  */
-function resolveTarget(interaction, {optionName = 'guild', requireConnected = true} = {}) {
-    if (!guilds.isConfigured()) {
-        return {
-            ok: false,
-            message: '⚠️ No Hypixel guilds are configured yet.\n' +
-                '> An admin can add one with `/guilds add`.',
-        };
+function resolveTarget(
+  interaction,
+  { optionName = "guild", requireConnected = true } = {},
+) {
+  if (!guilds.isConfigured()) {
+    return {
+      ok: false,
+      message:
+        "⚠️ No Hypixel guilds are configured yet.\n" +
+        "> An admin can add one with `/guilds add`.",
+    };
+  }
+
+  const raw = interaction.options.getString?.(optionName) ?? null;
+  let guild;
+
+  if (raw) {
+    const key = guilds.resolveKey(raw);
+    if (!key) {
+      return {
+        ok: false,
+        message:
+          `❌ There is no Hypixel guild called \`${raw}\`.\n` +
+          "> Run `/guilds list` to see the registered ones.",
+      };
     }
-
-    const raw = interaction.options.getString?.(optionName) ?? null;
-    let guild;
-
-    if (raw) {
-        const key = guilds.resolveKey(raw);
-        if (!key) {
-            return {
-                ok: false,
-                message: `❌ There is no Hypixel guild called \`${raw}\`.\n` +
-                    '> Run `/guilds list` to see the registered ones.',
-            };
-        }
-        guild = guilds.get(key);
-    } else {
-        guild = guilds.getDefault();
-        if (!guild) {
-            return {
-                ok: false,
-                message: '⚠️ Every registered Hypixel guild is disabled.\n' +
-                    '> Enable one with `/guilds edit <guild> enabled:True`.',
-            };
-        }
+    guild = guilds.get(key);
+  } else {
+    guild = guilds.getDefault();
+    if (!guild) {
+      return {
+        ok: false,
+        message:
+          "⚠️ Every registered Hypixel guild is disabled.\n" +
+          "> Enable one with `/guilds edit <guild> enabled:True`.",
+      };
     }
+  }
 
-    if (guild.enabled === false) {
-        return {
-            ok: false,
-            message: `⚠️ **${guild.name}** is disabled.\n` +
-                `> Enable it with \`/guilds edit ${guild.key} enabled:True\`.`,
-        };
-    }
+  if (guild.enabled === false) {
+    return {
+      ok: false,
+      message:
+        `⚠️ **${guild.name}** is disabled.\n` +
+        `> Enable it with \`/guilds edit ${guild.key} enabled:True\`.`,
+    };
+  }
 
-    const record = mcBots.ensureRecord(guild.key);
+  const record = mcBots.ensureRecord(guild.key);
 
-    if (requireConnected && !(record.connected && record.bot)) {
-        const detail = record.awaitingDeviceCode
-            ? ` It is waiting for a Microsoft sign-in — run \`/guilds auth ${guild.key}\`.`
-            : '';
-        return {
-            ok: false,
-            message: guilds.shouldShowTags()
-                ? `❌ The Minecraft bot for **${guild.name}** is not connected.${detail}`
-                : `❌ The Minecraft bot is not connected.${detail}`,
-        };
-    }
+  if (requireConnected && !(record.connected && record.bot)) {
+    const detail = record.awaitingDeviceCode
+      ? ` It is waiting for a Microsoft sign-in — run \`/guilds auth ${guild.key}\`.`
+      : "";
+    return {
+      ok: false,
+      message: guilds.shouldShowTags()
+        ? `❌ The Minecraft bot for **${guild.name}** is not connected.${detail}`
+        : `❌ The Minecraft bot is not connected.${detail}`,
+    };
+  }
 
-    return {ok: true, guild, record};
+  return { ok: true, guild, record };
 }
 
 /**
@@ -112,7 +119,7 @@ function resolveTarget(interaction, {optionName = 'guild', requireConnected = tr
  * @returns {string}
  */
 function inGuild(guild) {
-    return guilds.shouldShowTags() ? ` in **${guild.name}**` : '';
+  return guilds.shouldShowTags() ? ` in **${guild.name}**` : "";
 }
 
 /**
@@ -127,8 +134,8 @@ function inGuild(guild) {
  * @returns {string}
  */
 function guildPhrase(guild, capital = false) {
-    if (guilds.shouldShowTags()) return `**${guild.name}**`;
-    return capital ? 'The guild' : 'the guild';
+  if (guilds.shouldShowTags()) return `**${guild.name}**`;
+  return capital ? "The guild" : "the guild";
 }
 
 /**
@@ -138,20 +145,20 @@ function guildPhrase(guild, capital = false) {
  * @returns {string}
  */
 function describeQueryFailure(result) {
-    if (result.reason === 'send-failed') {
-        return '❌ Failed to send the command to the server.';
-    }
-    if (result.reason === 'busy') {
-        return '⚠️ The bot is busy answering another command. Try again in a moment.';
-    }
-    return '❌ The Minecraft bot is not connected.';
+  if (result.reason === "send-failed") {
+    return "❌ Failed to send the command to the server.";
+  }
+  if (result.reason === "busy") {
+    return "⚠️ The bot is busy answering another command. Try again in a moment.";
+  }
+  return "❌ The Minecraft bot is not connected.";
 }
 
 module.exports = {
-    GUILD_OPTION,
-    guildOptionAutocomplete,
-    resolveTarget,
-    inGuild,
-    guildPhrase,
-    describeQueryFailure,
+  GUILD_OPTION,
+  guildOptionAutocomplete,
+  resolveTarget,
+  inGuild,
+  guildPhrase,
+  describeQueryFailure,
 };

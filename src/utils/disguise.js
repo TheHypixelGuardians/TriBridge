@@ -1,10 +1,22 @@
-const {EmbedBuilder, MessageFlags, PermissionFlagsBits} = require('discord.js');
-const {logAudit} = require('./auditChannel');
-const {logGlobal} = require('./guildLog');
-const {formatDuration} = require('./duration');
-const {appliesTo, getTarget, disguisesToMinecraft} = require('./globalProfile');
-const {getLink} = require('./linkedAccounts');
-const {getRelayWebhook, clearRelayWebhook, resolveWebhookTarget} = require('./relayWebhook');
+const {
+  EmbedBuilder,
+  MessageFlags,
+  PermissionFlagsBits,
+} = require("discord.js");
+const { logAudit } = require("./auditChannel");
+const { logGlobal } = require("./guildLog");
+const { formatDuration } = require("./duration");
+const {
+  appliesTo,
+  getTarget,
+  disguisesToMinecraft,
+} = require("./globalProfile");
+const { getLink } = require("./linkedAccounts");
+const {
+  getRelayWebhook,
+  clearRelayWebhook,
+  resolveWebhookTarget,
+} = require("./relayWebhook");
 
 // Discord caps a webhook username at 80 characters and rejects any containing
 // "discord" or "clyde".
@@ -13,7 +25,7 @@ const MAX_CONTENT = 2000;
 
 // U+200B. Written as an escape because an invisible character in the source is
 // a trap for the next person to edit this file.
-const ZERO_WIDTH_SPACE = '\u200b';
+const ZERO_WIDTH_SPACE = "\u200b";
 
 // Latched so a missing permission reports once instead of on every message.
 let warnedAboutRepost = false;
@@ -23,18 +35,18 @@ let warnedAboutRepost = false;
 const channelQueues = new Map();
 
 function headURL(id) {
-    return `https://mc-heads.net/avatar/${encodeURIComponent(id)}`;
+  return `https://mc-heads.net/avatar/${encodeURIComponent(id)}`;
 }
 
 async function warnAboutRepostOnce() {
-    if (warnedAboutRepost) return;
-    warnedAboutRepost = true;
+  if (warnedAboutRepost) return;
+  warnedAboutRepost = true;
 
-    await logGlobal(
-        '⚠️ Could not repost a message under another identity. Check that I have the ' +
-        '**Manage Webhooks** and **Manage Messages** permissions in that channel. ' +
-        'Falling back to normal relaying until this is fixed.',
-    );
+  await logGlobal(
+    "⚠️ Could not repost a message under another identity. Check that I have the " +
+      "**Manage Webhooks** and **Manage Messages** permissions in that channel. " +
+      "Falling back to normal relaying until this is fixed.",
+  );
 }
 
 /**
@@ -48,14 +60,14 @@ async function warnAboutRepostOnce() {
  * @returns {string}
  */
 function sanitizeWebhookName(name) {
-    const cleaned = String(name ?? '')
-        .replace(/(d)(iscord)/gi, `$1${ZERO_WIDTH_SPACE}$2`)
-        .replace(/(c)(lyde)/gi, `$1${ZERO_WIDTH_SPACE}$2`)
-        .trim()
-        .slice(0, MAX_WEBHOOK_NAME)
-        .trim();
+  const cleaned = String(name ?? "")
+    .replace(/(d)(iscord)/gi, `$1${ZERO_WIDTH_SPACE}$2`)
+    .replace(/(c)(lyde)/gi, `$1${ZERO_WIDTH_SPACE}$2`)
+    .trim()
+    .slice(0, MAX_WEBHOOK_NAME)
+    .trim();
 
-    return cleaned || 'Member';
+  return cleaned || "Member";
 }
 
 /**
@@ -67,17 +79,17 @@ function sanitizeWebhookName(name) {
  * @returns {boolean}
  */
 function shouldSkip(message) {
-    // Nothing a webhook can carry: the send would 400 and the message would be
-    // left behind anyway, so don't spend the attempt.
-    if (!message.content && message.attachments.size === 0) return true;
+  // Nothing a webhook can carry: the send would 400 and the message would be
+  // left behind anyway, so don't spend the attempt.
+  if (!message.content && message.attachments.size === 0) return true;
 
-    return Boolean(
-        message.system
-        || message.stickers?.size
-        || message.poll
-        || message.messageSnapshots?.size
-        || message.flags?.has(MessageFlags.IsVoiceMessage),
-    );
+  return Boolean(
+    message.system ||
+    message.stickers?.size ||
+    message.poll ||
+    message.messageSnapshots?.size ||
+    message.flags?.has(MessageFlags.IsVoiceMessage),
+  );
 }
 
 /**
@@ -90,16 +102,18 @@ function shouldSkip(message) {
  * @returns {boolean}
  */
 function canRepostIn(channel) {
-    const target = resolveWebhookTarget(channel);
-    if (!target) return false;
+  const target = resolveWebhookTarget(channel);
+  if (!target) return false;
 
-    const me = channel.guild?.members?.me;
-    if (!me) return false;
+  const me = channel.guild?.members?.me;
+  if (!me) return false;
 
-    return Boolean(
-        target.channel.permissionsFor(me)?.has(PermissionFlagsBits.ManageWebhooks)
-        && channel.permissionsFor(me)?.has(PermissionFlagsBits.ManageMessages),
-    );
+  return Boolean(
+    target.channel
+      .permissionsFor(me)
+      ?.has(PermissionFlagsBits.ManageWebhooks) &&
+    channel.permissionsFor(me)?.has(PermissionFlagsBits.ManageMessages),
+  );
 }
 
 /**
@@ -116,42 +130,42 @@ function canRepostIn(channel) {
  * @returns {{name: string, avatarURL: string|null, chatName: string, repost: boolean, disguised: boolean}}
  */
 function resolveIdentity(message) {
-    if (appliesTo(message.author.id, message.channel.id)) {
-        const target = getTarget();
-        const link = getLink(message.author.id);
-
-        return {
-            name: target.name,
-            avatarURL: target.avatarURL,
-            // The Discord → Minecraft leg can be switched off on its own: the
-            // repost still wears the target's face in Discord, but guild chat
-            // is told who really spoke.
-            chatName: disguisesToMinecraft()
-                ? target.mcName || target.name
-                : link?.name || message.author.username,
-            repost: true,
-            disguised: true,
-        };
-    }
-
+  if (appliesTo(message.author.id, message.channel.id)) {
+    const target = getTarget();
     const link = getLink(message.author.id);
-    if (link) {
-        return {
-            name: link.name,
-            avatarURL: headURL(link.uuid),
-            chatName: link.name,
-            repost: true,
-            disguised: false,
-        };
-    }
 
     return {
-        name: message.author.username,
-        avatarURL: null,
-        chatName: message.author.username,
-        repost: false,
-        disguised: false,
+      name: target.name,
+      avatarURL: target.avatarURL,
+      // The Discord → Minecraft leg can be switched off on its own: the
+      // repost still wears the target's face in Discord, but guild chat
+      // is told who really spoke.
+      chatName: disguisesToMinecraft()
+        ? target.mcName || target.name
+        : link?.name || message.author.username,
+      repost: true,
+      disguised: true,
     };
+  }
+
+  const link = getLink(message.author.id);
+  if (link) {
+    return {
+      name: link.name,
+      avatarURL: headURL(link.uuid),
+      chatName: link.name,
+      repost: true,
+      disguised: false,
+    };
+  }
+
+  return {
+    name: message.author.username,
+    avatarURL: null,
+    chatName: message.author.username,
+    repost: false,
+    disguised: false,
+  };
 }
 
 /**
@@ -168,17 +182,17 @@ function resolveIdentity(message) {
  * @returns {string|undefined}
  */
 function buildContent(message, contentOverride) {
-    const body = (contentOverride ?? message.content) || '';
-    const referenced = message.reference?.messageId;
+  const body = (contentOverride ?? message.content) || "";
+  const referenced = message.reference?.messageId;
 
-    if (!referenced) return body || undefined;
+  if (!referenced) return body || undefined;
 
-    const url = `https://discord.com/channels/${message.guildId}/${message.channelId}/${referenced}`;
-    const combined = `-# ↩ [replying to a message](${url})\n${body}`.trim();
+  const url = `https://discord.com/channels/${message.guildId}/${message.channelId}/${referenced}`;
+  const combined = `-# ↩ [replying to a message](${url})\n${body}`.trim();
 
-    return combined.length > MAX_CONTENT
-        ? `${combined.slice(0, MAX_CONTENT - 1)}…`
-        : combined;
+  return combined.length > MAX_CONTENT
+    ? `${combined.slice(0, MAX_CONTENT - 1)}…`
+    : combined;
 }
 
 /**
@@ -190,65 +204,67 @@ function buildContent(message, contentOverride) {
  * @template T
  */
 function enqueue(channelId, task) {
-    const previous = channelQueues.get(channelId) ?? Promise.resolve();
+  const previous = channelQueues.get(channelId) ?? Promise.resolve();
 
-    // `.then(task, task)` so one failed repost does not stall the channel.
-    const run = previous.then(task, task);
-    const chained = run.catch(() => {
-    });
+  // `.then(task, task)` so one failed repost does not stall the channel.
+  const run = previous.then(task, task);
+  const chained = run.catch(() => {});
 
-    channelQueues.set(channelId, chained);
-    chained.then(() => {
-        // Drop the entry once nothing queued behind us, so idle channels do not
-        // accumulate settled promises forever.
-        if (channelQueues.get(channelId) === chained) channelQueues.delete(channelId);
-    });
+  channelQueues.set(channelId, chained);
+  chained.then(() => {
+    // Drop the entry once nothing queued behind us, so idle channels do not
+    // accumulate settled promises forever.
+    if (channelQueues.get(channelId) === chained)
+      channelQueues.delete(channelId);
+  });
 
-    return run;
+  return run;
 }
 
 async function sendRepost(message, identity, options) {
-    const target = resolveWebhookTarget(message.channel);
-    if (!target) return {ok: false, url: null, message: null};
+  const target = resolveWebhookTarget(message.channel);
+  if (!target) return { ok: false, url: null, message: null };
 
-    let sent;
-    try {
-        const webhook = await getRelayWebhook(target.channel);
+  let sent;
+  try {
+    const webhook = await getRelayWebhook(target.channel);
 
-        // Repost before deleting: if the webhook send throws, the user's
-        // original message survives rather than vanishing.
-        sent = await webhook.send({
-            content: buildContent(message, options?.content),
-            username: sanitizeWebhookName(identity.name),
-            avatarURL: identity.avatarURL ?? undefined,
-            files: [...message.attachments.values()].map((attachment) => attachment.url),
-            threadId: target.threadId,
-            // A webhook post is not subject to the author's own permissions, so
-            // an unrestricted repost would let anyone ping @everyone.
-            allowedMentions: {parse: ['users']},
-        });
-    } catch (error) {
-        // The webhook may have been deleted out from under us; drop the cache
-        // so the next message recreates it.
-        clearRelayWebhook(target.channel.id);
-        console.error('Failed to repost a message:', error);
-        await warnAboutRepostOnce();
-        return {ok: false, url: null, message: null};
-    }
+    // Repost before deleting: if the webhook send throws, the user's
+    // original message survives rather than vanishing.
+    sent = await webhook.send({
+      content: buildContent(message, options?.content),
+      username: sanitizeWebhookName(identity.name),
+      avatarURL: identity.avatarURL ?? undefined,
+      files: [...message.attachments.values()].map(
+        (attachment) => attachment.url,
+      ),
+      threadId: target.threadId,
+      // A webhook post is not subject to the author's own permissions, so
+      // an unrestricted repost would let anyone ping @everyone.
+      allowedMentions: { parse: ["users"] },
+    });
+  } catch (error) {
+    // The webhook may have been deleted out from under us; drop the cache
+    // so the next message recreates it.
+    clearRelayWebhook(target.channel.id);
+    console.error("Failed to repost a message:", error);
+    await warnAboutRepostOnce();
+    return { ok: false, url: null, message: null };
+  }
 
-    try {
-        await message.delete();
-    } catch {
-        // Already deleted, or missing Manage Messages; the repost still landed.
-    }
+  try {
+    await message.delete();
+  } catch {
+    // Already deleted, or missing Manage Messages; the repost still landed.
+  }
 
-    return {
-        ok: true,
-        url: sent?.id
-            ? `https://discord.com/channels/${message.guildId}/${message.channelId}/${sent.id}`
-            : null,
-        message: sent ?? null,
-    };
+  return {
+    ok: true,
+    url: sent?.id
+      ? `https://discord.com/channels/${message.guildId}/${message.channelId}/${sent.id}`
+      : null,
+    message: sent ?? null,
+  };
 }
 
 /**
@@ -265,7 +281,9 @@ async function sendRepost(message, identity, options) {
  *   that was just deleted.
  */
 function repostAs(message, identity, options) {
-    return enqueue(message.channel.id, () => sendRepost(message, identity, options));
+  return enqueue(message.channel.id, () =>
+    sendRepost(message, identity, options),
+  );
 }
 
 /**
@@ -277,11 +295,11 @@ function repostAs(message, identity, options) {
  * @param {string|null} url Jump link to the repost.
  */
 async function auditDisguise(message, identity, url) {
-    const jump = url ? ` — [jump](${url})` : '';
-    await logAudit(
-        `🎭 <@${message.author.id}> (\`${message.author.username}\`) posted as ` +
-        `**${identity.name}** in <#${message.channel.id}>${jump}`,
-    );
+  const jump = url ? ` — [jump](${url})` : "";
+  await logAudit(
+    `🎭 <@${message.author.id}> (\`${message.author.username}\`) posted as ` +
+      `**${identity.name}** in <#${message.channel.id}>${jump}`,
+  );
 }
 
 /**
@@ -294,10 +312,10 @@ async function auditDisguise(message, identity, url) {
  *   lands in that guild's own audit channel when it has one.
  */
 async function auditGuildChatDisguise(username, shownAs, guildKey) {
-    await logAudit(
-        `🎭 Guild chat from \`${username}\` was shown as **${shownAs}** in the bridge channel`,
-        {guildKey},
-    );
+  await logAudit(
+    `🎭 Guild chat from \`${username}\` was shown as **${shownAs}** in the bridge channel`,
+    { guildKey },
+  );
 }
 
 /**
@@ -308,10 +326,10 @@ async function auditGuildChatDisguise(username, shownAs, guildKey) {
  * @returns {string[]}
  */
 function switchedOffLegs(state) {
-    const legs = [];
-    if (state.disguiseToMinecraft === false) legs.push('Discord → Minecraft');
-    if (state.disguiseToDiscord === false) legs.push('Minecraft → Discord');
-    return legs;
+  const legs = [];
+  if (state.disguiseToMinecraft === false) legs.push("Discord → Minecraft");
+  if (state.disguiseToDiscord === false) legs.push("Minecraft → Discord");
+  return legs;
 }
 
 /**
@@ -319,35 +337,40 @@ function switchedOffLegs(state) {
  * @param {string} startedBy Discord ID of the admin who started it.
  */
 async function announceStarted(state, startedBy) {
-    const ends = state.expiresAt === null
-        ? 'when somebody stops it'
-        : `<t:${Math.floor(state.expiresAt / 1000)}:R>`;
+  const ends =
+    state.expiresAt === null
+      ? "when somebody stops it"
+      : `<t:${Math.floor(state.expiresAt / 1000)}:R>`;
 
-    const off = switchedOffLegs(state);
+  const off = switchedOffLegs(state);
 
-    const embed = new EmbedBuilder()
-        .setTitle('🎭 Global profile change started')
-        .setDescription(
-            state.mode === 'test'
-                ? 'Running in **test mode** — only listed testers, in listed channels, are affected.'
-                : 'Running **live** — everybody in the server is affected.',
-        )
-        .addFields(
-            {name: 'Everyone appears as', value: `<@${state.target.userId}>`, inline: true},
-            {name: 'Started by', value: `<@${startedBy}>`, inline: true},
-            {name: 'Ends', value: ends, inline: true},
-        )
-        .setColor(0xE67E22)
-        .setTimestamp();
+  const embed = new EmbedBuilder()
+    .setTitle("🎭 Global profile change started")
+    .setDescription(
+      state.mode === "test"
+        ? "Running in **test mode** — only listed testers, in listed channels, are affected."
+        : "Running **live** — everybody in the server is affected.",
+    )
+    .addFields(
+      {
+        name: "Everyone appears as",
+        value: `<@${state.target.userId}>`,
+        inline: true,
+      },
+      { name: "Started by", value: `<@${startedBy}>`, inline: true },
+      { name: "Ends", value: ends, inline: true },
+    )
+    .setColor(0xe67e22)
+    .setTimestamp();
 
-    if (off.length > 0) {
-        embed.addFields({
-            name: 'Not disguised across',
-            value: off.map((leg) => `\`${leg}\``).join(', '),
-        });
-    }
+  if (off.length > 0) {
+    embed.addFields({
+      name: "Not disguised across",
+      value: off.map((leg) => `\`${leg}\``).join(", "),
+    });
+  }
 
-    await logAudit({embeds: [embed]});
+  await logAudit({ embeds: [embed] });
 }
 
 /**
@@ -355,33 +378,37 @@ async function announceStarted(state, startedBy) {
  * @param {string} reason Short phrase describing why it ended.
  */
 async function announceEnded(previous, reason) {
-    const ran = previous.startedAt ? formatDuration(Date.now() - previous.startedAt) : 'unknown';
+  const ran = previous.startedAt
+    ? formatDuration(Date.now() - previous.startedAt)
+    : "unknown";
 
-    const embed = new EmbedBuilder()
-        .setTitle('🎭 Global profile change ended')
-        .setDescription(`Everybody is back to their own name and avatar — ${reason}.`)
-        .addFields(
-            {
-                name: 'Was appearing as',
-                value: previous.target ? `<@${previous.target.userId}>` : 'unknown',
-                inline: true,
-            },
-            {name: 'Ran for', value: ran, inline: true},
-        )
-        .setColor(0x2ECC71)
-        .setTimestamp();
+  const embed = new EmbedBuilder()
+    .setTitle("🎭 Global profile change ended")
+    .setDescription(
+      `Everybody is back to their own name and avatar — ${reason}.`,
+    )
+    .addFields(
+      {
+        name: "Was appearing as",
+        value: previous.target ? `<@${previous.target.userId}>` : "unknown",
+        inline: true,
+      },
+      { name: "Ran for", value: ran, inline: true },
+    )
+    .setColor(0x2ecc71)
+    .setTimestamp();
 
-    await logAudit({embeds: [embed]});
+  await logAudit({ embeds: [embed] });
 }
 
 module.exports = {
-    resolveIdentity,
-    repostAs,
-    shouldSkip,
-    canRepostIn,
-    sanitizeWebhookName,
-    auditDisguise,
-    auditGuildChatDisguise,
-    announceStarted,
-    announceEnded,
+  resolveIdentity,
+  repostAs,
+  shouldSkip,
+  canRepostIn,
+  sanitizeWebhookName,
+  auditDisguise,
+  auditGuildChatDisguise,
+  announceStarted,
+  announceEnded,
 };

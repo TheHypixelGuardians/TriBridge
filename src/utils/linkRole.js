@@ -1,26 +1,26 @@
-const fs = require('fs');
-const path = require('path');
-const {PermissionFlagsBits} = require('discord.js');
-const bridge = require('../bridge');
+const fs = require("fs");
+const path = require("path");
+const { PermissionFlagsBits } = require("discord.js");
+const bridge = require("../bridge");
 
-const CONFIG_PATH = path.join(__dirname, '..', '..', 'linkRoleConfig.json');
+const CONFIG_PATH = path.join(__dirname, "..", "..", "linkRoleConfig.json");
 
 let cachedConfig = null;
 
 function loadConfig() {
-    if (cachedConfig) return cachedConfig;
-    try {
-        const data = fs.readFileSync(CONFIG_PATH, 'utf-8');
-        cachedConfig = JSON.parse(data);
-    } catch {
-        cachedConfig = {roleId: null};
-    }
-    return cachedConfig;
+  if (cachedConfig) return cachedConfig;
+  try {
+    const data = fs.readFileSync(CONFIG_PATH, "utf-8");
+    cachedConfig = JSON.parse(data);
+  } catch {
+    cachedConfig = { roleId: null };
+  }
+  return cachedConfig;
 }
 
 function saveConfig(config) {
-    cachedConfig = config;
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+  cachedConfig = config;
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
 }
 
 /**
@@ -28,7 +28,7 @@ function saveConfig(config) {
  *   account, or null when the feature is not configured.
  */
 function getLinkRoleId() {
-    return loadConfig().roleId ?? null;
+  return loadConfig().roleId ?? null;
 }
 
 /**
@@ -36,7 +36,7 @@ function getLinkRoleId() {
  *   role deliberately leaves the previous one on members — see CHANGELOG.
  */
 function setLinkRoleId(roleId) {
-    saveConfig({roleId: roleId ?? null});
+  saveConfig({ roleId: roleId ?? null });
 }
 
 /**
@@ -52,14 +52,16 @@ function setLinkRoleId(roleId) {
  *   is not in the server (left, or never joined).
  */
 async function resolveMember(userId) {
-    if (!bridge.discordClient || !bridge.discordServerId) return null;
+  if (!bridge.discordClient || !bridge.discordServerId) return null;
 
-    try {
-        const guild = await bridge.discordClient.guilds.fetch(bridge.discordServerId);
-        return await guild.members.fetch(userId);
-    } catch {
-        return null;
-    }
+  try {
+    const guild = await bridge.discordClient.guilds.fetch(
+      bridge.discordServerId,
+    );
+    return await guild.members.fetch(userId);
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -75,33 +77,36 @@ async function resolveMember(userId) {
  *   `changed` is false when the member already had (or already lacked) the role.
  */
 async function applyLinkRole(member, action) {
-    const roleId = getLinkRoleId();
-    if (!roleId) return {ok: false, reason: 'unconfigured'};
+  const roleId = getLinkRoleId();
+  if (!roleId) return { ok: false, reason: "unconfigured" };
 
-    const role = member.guild.roles.cache.get(roleId)
-        ?? await member.guild.roles.fetch(roleId).catch(() => null);
-    if (!role) return {ok: false, reason: 'missing-role'};
+  const role =
+    member.guild.roles.cache.get(roleId) ??
+    (await member.guild.roles.fetch(roleId).catch(() => null));
+  if (!role) return { ok: false, reason: "missing-role" };
 
-    const has = member.roles.cache.has(roleId);
-    if (action === 'add' ? has : !has) return {ok: true, changed: false};
+  const has = member.roles.cache.has(roleId);
+  if (action === "add" ? has : !has) return { ok: true, changed: false };
 
-    const me = member.guild.members.me;
-    if (!me?.permissions.has(PermissionFlagsBits.ManageRoles)
-        || role.comparePositionTo(me.roles.highest) >= 0
-        || role.managed) {
-        return {ok: false, reason: 'forbidden'};
+  const me = member.guild.members.me;
+  if (
+    !me?.permissions.has(PermissionFlagsBits.ManageRoles) ||
+    role.comparePositionTo(me.roles.highest) >= 0 ||
+    role.managed
+  ) {
+    return { ok: false, reason: "forbidden" };
+  }
+
+  try {
+    if (action === "add") {
+      await member.roles.add(role, "Linked a Minecraft account.");
+    } else {
+      await member.roles.remove(role, "Unlinked their Minecraft account.");
     }
-
-    try {
-        if (action === 'add') {
-            await member.roles.add(role, 'Linked a Minecraft account.');
-        } else {
-            await member.roles.remove(role, 'Unlinked their Minecraft account.');
-        }
-        return {ok: true, changed: true};
-    } catch (error) {
-        return {ok: false, reason: 'error', error};
-    }
+    return { ok: true, changed: true };
+  } catch (error) {
+    return { ok: false, reason: "error", error };
+  }
 }
 
 /**
@@ -109,12 +114,12 @@ async function applyLinkRole(member, action) {
  * @returns {Promise<ReturnType<typeof applyLinkRole>|{ok: false, reason: 'no-member'}>}
  */
 async function applyLinkRoleById(userId, action) {
-    if (!getLinkRoleId()) return {ok: false, reason: 'unconfigured'};
+  if (!getLinkRoleId()) return { ok: false, reason: "unconfigured" };
 
-    const member = await resolveMember(userId);
-    if (!member) return {ok: false, reason: 'no-member'};
+  const member = await resolveMember(userId);
+  if (!member) return { ok: false, reason: "no-member" };
 
-    return applyLinkRole(member, action);
+  return applyLinkRole(member, action);
 }
 
 /**
@@ -125,24 +130,24 @@ async function applyLinkRoleById(userId, action) {
  * @returns {string|null}
  */
 function describeFailure(result) {
-    switch (result.reason) {
-        case 'unconfigured':
-        case 'no-member':
-            return null;
-        case 'missing-role':
-            return 'the configured link role no longer exists — set a new one with `/linkrole set`';
-        case 'forbidden':
-            return 'I need **Manage Roles** and a role ranked above the link role';
-        default:
-            return `an unexpected error occurred: ${result.error?.message ?? 'unknown'}`;
-    }
+  switch (result.reason) {
+    case "unconfigured":
+    case "no-member":
+      return null;
+    case "missing-role":
+      return "the configured link role no longer exists — set a new one with `/linkrole set`";
+    case "forbidden":
+      return "I need **Manage Roles** and a role ranked above the link role";
+    default:
+      return `an unexpected error occurred: ${result.error?.message ?? "unknown"}`;
+  }
 }
 
 module.exports = {
-    getLinkRoleId,
-    setLinkRoleId,
-    resolveMember,
-    applyLinkRole,
-    applyLinkRoleById,
-    describeFailure,
+  getLinkRoleId,
+  setLinkRoleId,
+  resolveMember,
+  applyLinkRole,
+  applyLinkRoleById,
+  describeFailure,
 };

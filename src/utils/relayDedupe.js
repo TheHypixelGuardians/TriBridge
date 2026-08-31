@@ -20,27 +20,31 @@ const RECENT_LIMIT = 200;
  * @returns {(guildKey: string, username: string, content: string) => boolean}
  */
 function createRelayDedupe() {
-    const recentlyRelayed = new Map();
+  const recentlyRelayed = new Map();
 
-    return function isDuplicate(guildKey, username, content) {
-        const now = Date.now();
+  return function isDuplicate(guildKey, username, content) {
+    const now = Date.now();
 
-        if (recentlyRelayed.size > RECENT_LIMIT) {
-            for (const [key, entry] of recentlyRelayed) {
-                if (now - entry.at > RECENT_TTL_MS) recentlyRelayed.delete(key);
-            }
-        }
+    if (recentlyRelayed.size > RECENT_LIMIT) {
+      for (const [key, entry] of recentlyRelayed) {
+        if (now - entry.at > RECENT_TTL_MS) recentlyRelayed.delete(key);
+      }
+    }
 
-        const signature = `${String(username).toLowerCase()}|${content}`;
-        const previous = recentlyRelayed.get(signature);
+    const signature = `${String(username).toLowerCase()}|${content}`;
+    const previous = recentlyRelayed.get(signature);
 
-        if (previous && previous.key !== guildKey && now - previous.at < RECENT_TTL_MS) {
-            return true;
-        }
+    if (
+      previous &&
+      previous.key !== guildKey &&
+      now - previous.at < RECENT_TTL_MS
+    ) {
+      return true;
+    }
 
-        recentlyRelayed.set(signature, {key: guildKey, at: now});
-        return false;
-    };
+    recentlyRelayed.set(signature, { key: guildKey, at: now });
+    return false;
+  };
 }
 
-module.exports = {createRelayDedupe, RECENT_TTL_MS, RECENT_LIMIT};
+module.exports = { createRelayDedupe, RECENT_TTL_MS, RECENT_LIMIT };

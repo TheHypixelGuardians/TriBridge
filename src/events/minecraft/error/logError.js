@@ -1,3 +1,3 @@
 module.exports = (client, err) => {
-    console.error('Minecraft Bot Error:', err);
+  console.error("Minecraft Bot Error:", err);
 };

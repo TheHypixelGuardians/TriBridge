@@ -75,8 +75,11 @@ Before finishing any task that changes the bot, do all of the following:
 
 Releases: bump `version` in `package.json`, then in **both** [CHANGELOG.md](CHANGELOG.md) and
 [DISCORD_CHANGELOG.md](DISCORD_CHANGELOG.md) rename `## Unreleased` to `## Version X.Y.Z` and add a fresh
-empty `## Unreleased` above it. Semver — patch for fixes, minor for features, major for breaking changes (e.g. a
-config format that existing `*Config.json` files can't be read as). Never tag or push tags unless asked.
+empty `## Unreleased` above it. The bot is on a pre-release beta line — versions are `0.1.0-beta.N`, lowercase
+and no leading `v`, bumping the trailing number; ordinary semver (patch for fixes, minor for features, major
+for a config format existing `*Config.json` files can't be read as) resumes at `1.0.0`. Bumping `package.json`
+is the step that gets forgotten — it sat at `1.0.0` through three releases. Never tag or push tags unless
+asked.
 
 ## Project
 
@@ -86,8 +89,9 @@ messages both ways; slash commands let Discord admins run guild management comma
 in-game.
 
 - CommonJS (`"type": "commonjs"`) — use `require`/`module.exports`, not ESM.
-- No build step, no test suite, no linter. `npm test` is a placeholder that exits 1.
-- Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`.
+- No build step, no test suite, no linter — there is no `test` script, so `npm test` reports a missing one.
+- Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`. `nodemon` is the only
+  dev dependency, used by `npm run dev` and needed by nothing that runs the bot.
 - Documentation lives in two places: [docs/](docs/) holds the canonical reference
   ([FEATURES.md](docs/FEATURES.md)) and the workflow docs, and [wiki/](wiki/) is the source of the GitHub
   wiki, which restates the same material split by audience. [wiki/Architecture.md](wiki/Architecture.md) is
@@ -100,7 +104,8 @@ in-game.
 
 ```bash
 npm install
-node src/index.js
+npm start                 # or: node src/index.js
+npm run dev               # nodemon, restarts on any source or .env change
 ```
 
 Requires a `.env` (gitignored) with `DISCORD_TOKEN`, `DISCORD_CHANNEL_ID`, `LOG_CHANNEL`,
@@ -272,7 +277,9 @@ Global command propagation can take up to an hour on Discord's side. The diff co
 - **Discord embed limits:** description 4096 chars, message content 2000. Existing code
   truncates explicitly (see `online.js`, `send.js`); do the same for anything relaying
   server output.
-- Style: 4-space indent, single quotes, semicolons, JSDoc on non-trivial helper functions.
+- Style: Prettier's default style — 2-space indent, double quotes, semicolons, trailing commas, 80
+  columns. `.prettierrc` records the settings; reformat with
+  `npx prettier --write "src/**/*.js"`. JSDoc on non-trivial helper functions.
 
 ## Account linking
 
