@@ -8,28 +8,28 @@ Before finishing any task that changes the bot, do all of the following:
 
 1. **Update the changelog** — add an entry for the change under `## Unreleased` in [CHANGELOG.md](CHANGELOG.md),
    in the same commit as the change itself so the changelog never lags behind.
-   - Format is SkyHanni-style: `##` release section (`Unreleased` / `Version X.Y.Z`), then a `###` category
-     (`New Features` / `Improvements` / `Fixes` / `Technical Details` / `Removed Features`), then a `####`
-     feature area (`Bridge`, `Account Linking`, `Management`, `Information`, `Requests`, `Admin Panel`,
-     `Documentation`, `Core`, `Misc` — free-form, `Misc` is the catch-all), then `+` bullets, one change per
-     bullet, indented `+` sub-bullets for details.
-   - Only include categories and feature areas that actually have entries — omit empty ones.
-   - Write entries for the people running and using the bot, not for developers: "Added `/whois` to look up a
-     link", not "Refactored linkedAccounts". Refactors, dependency bumps and tooling go under
-     `### Technical Details`.
-   - Skip the changelog only for changes with no effect on the running bot or its workflow (e.g. a doc typo).
+    - Format is SkyHanni-style: `##` release section (`Unreleased` / `Version X.Y.Z`), then a `###` category
+      (`New Features` / `Improvements` / `Fixes` / `Technical Details` / `Removed Features`), then a `####`
+      feature area (`Bridge`, `Account Linking`, `Management`, `Information`, `Requests`, `Admin Panel`,
+      `Documentation`, `Core`, `Misc` — free-form, `Misc` is the catch-all), then `+` bullets, one change per
+      bullet, indented `+` sub-bullets for details.
+    - Only include categories and feature areas that actually have entries — omit empty ones.
+    - Write entries for the people running and using the bot, not for developers: "Added `/whois` to look up a
+      link", not "Refactored linkedAccounts". Refactors, dependency bumps and tooling go under
+      `### Technical Details`.
+    - Skip the changelog only for changes with no effect on the running bot or its workflow (e.g. a doc typo).
 
 2. **Check the Discord changelog** — [DISCORD_CHANGELOG.md](DISCORD_CHANGELOG.md) is the short,
    copy-pasteable version posted in the announcement channel. It gets a line only for changes guild members
    would actually notice — new commands, changed behaviour, user-visible fixes. Internal work, refactors and
    anything under `### Technical Details` never appears there.
-   - Written in second person, for guild members rather than server staff, and much shorter than the main
-     entry: one line per change, no sub-bullets.
-   - Only markdown Discord renders — `#`/`##`/`###`, `**bold**`, `` `code` ``, `-` bullets, `> ` quotes. No
-     tables, no `+` bullets, no titled links. Each `##` section must stay under 2000 characters so it pastes
-     as a single message.
-   - During development add entries under the same `## Unreleased` heading as the main changelog; rename it at
-     release time in both files together.
+    - Written in second person, for guild members rather than server staff, and much shorter than the main
+      entry: one line per change, no sub-bullets.
+    - Only markdown Discord renders — `#`/`##`/`###`, `**bold**`, `` `code` ``, `-` bullets, `> ` quotes. No
+      tables, no `+` bullets, no titled links. Each `##` section must stay under 2000 characters so it pastes
+      as a single message.
+    - During development add entries under the same `## Unreleased` heading as the main changelog; rename it at
+      release time in both files together.
 
 3. **Document the feature** — every user-visible feature is described in [docs/FEATURES.md](docs/FEATURES.md),
    which is the canonical description the README and the wiki both point at. A new feature gets its own `##`
@@ -37,30 +37,30 @@ Before finishing any task that changes the bot, do all of the following:
    feature updates that feature's section rather than appending a note to the end of it. Write for whoever runs
    or uses the bot — implementation notes belong in the changelog's `### Technical Details` and in
    [wiki/Architecture.md](wiki/Architecture.md).
-   - One exception worth keeping: where a rule exists because the obvious alternative was actively harmful (a
-     silent drop, a Hypixel mute, a permission escalation), say so. That sentence is what stops the rule being
-     "simplified" away later.
+    - One exception worth keeping: where a rule exists because the obvious alternative was actively harmful (a
+      silent drop, a Hypixel mute, a permission escalation), say so. That sentence is what stops the rule being
+      "simplified" away later.
 
 4. **Update the wiki** — the GitHub wiki is published from [wiki/](wiki/) in this repository, and it is the
    page somebody finds from a search engine, so it must never lag behind the bot. Publishing is automatic —
    [.github/workflows/wiki.yml](.github/workflows/wiki.yml) syncs the folder to the wiki repository on every
    push to `master` that touches it — so the only job here is keeping `wiki/` correct. Never publish by hand
    and never edit a page through GitHub's wiki editor: the next push overwrites it.
-   - The wiki is **split by audience**: *Using the bridge* is for guild members in the Discord server, *Running
-     the bot* is for whoever hosts it and holds a bot-admin role. A page belongs to whichever reader can act on
-     it. Where a feature has both halves (the global profile change, auditing), the member-facing consequence
-     is a paragraph on the member page and the configuration lives on the staff page.
-   - A **new feature** gets its own `wiki/<Page-Name>.md`, plus a line in [wiki/_Sidebar.md](wiki/_Sidebar.md)
-     under the right section and a row in the feature table of [wiki/Home.md](wiki/Home.md).
-   - A **change to an existing feature** updates that feature's page, in the same task as the code.
-   - Three pages are **exhaustive lists**, so a missing entry is a visible gap: a new or changed command
-     touches [wiki/Commands.md](wiki/Commands.md), a new config file touches
-     [wiki/Config-Files.md](wiki/Config-Files.md), and a new permission or intent touches
-     [wiki/Permissions.md](wiki/Permissions.md).
-   - Page names are titles: renaming a file breaks every link to it. Links between pages are relative and
-     extension-less (`[Guild tags](Guild-Tags)`); links into this repository are absolute GitHub URLs. See
-     [docs/WIKI.md](docs/WIKI.md) for the conventions and how pages are published.
-   - Never put a real token, channel id, role id or account address in a page — the wiki is public.
+    - The wiki is **split by audience**: *Using the bridge* is for guild members in the Discord server, *Running
+      the bot* is for whoever hosts it and holds a bot-admin role. A page belongs to whichever reader can act on
+      it. Where a feature has both halves (the global profile change, auditing), the member-facing consequence
+      is a paragraph on the member page and the configuration lives on the staff page.
+    - A **new feature** gets its own `wiki/<Page-Name>.md`, plus a line in [wiki/_Sidebar.md](wiki/_Sidebar.md)
+      under the right section and a row in the feature table of [wiki/Home.md](wiki/Home.md).
+    - A **change to an existing feature** updates that feature's page, in the same task as the code.
+    - Three pages are **exhaustive lists**, so a missing entry is a visible gap: a new or changed command
+      touches [wiki/Commands.md](wiki/Commands.md), a new config file touches
+      [wiki/Config-Files.md](wiki/Config-Files.md), and a new permission or intent touches
+      [wiki/Permissions.md](wiki/Permissions.md).
+    - Page names are titles: renaming a file breaks every link to it. Links between pages are relative and
+      extension-less (`[Guild tags](Guild-Tags)`); links into this repository are absolute GitHub URLs. See
+      [docs/WIKI.md](docs/WIKI.md) for the conventions and how pages are published.
+    - Never put a real token, channel id, role id or account address in a page — the wiki is public.
 
 5. **Check the README** — if the change affects anything [README.md](README.md) mentions (commands,
    installation, `.env` variables, Discord permissions/intents, Node version, dependencies, how the relay

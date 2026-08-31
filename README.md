@@ -46,12 +46,12 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
 
 ## Prerequisites
 
-| Requirement           | Details                                                                                                      |
-|-----------------------|--------------------------------------------------------------------------------------------------------------|
-| **Node.js**           | v22 or newer                                                                                                 |
-| **npm**               | Included with Node.js                                                                                        |
+| Requirement           | Details                                                                                                                                              |
+|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Node.js**           | v22 or newer                                                                                                                                         |
+| **npm**               | Included with Node.js                                                                                                                                |
 | **Discord bot**       | An application at the [Discord Developer Portal](https://discord.com/developers/applications) with the **Message Content** privileged intent enabled |
-| **Minecraft account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net` |
+| **Minecraft account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net`                                   |
 
 ## Installation
 
@@ -78,7 +78,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
    ```
 
    | Variable             | Description                                                                                          |
-   |----------------------|------------------------------------------------------------------------------------------------------|
+      |----------------------|------------------------------------------------------------------------------------------------------|
    | `DISCORD_TOKEN`      | Bot token from the Discord Developer Portal                                                          |
    | `DISCORD_CHANNEL_ID` | The bridge channel — the one channel wired to guild chat                                             |
    | `LOG_CHANNEL`        | Where connection notices and warnings go. A Hypixel guild can override it with its own channel        |
@@ -89,7 +89,8 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
    > registered globally, so it refuses any command sent from another server — otherwise an administrator of
    > any other server the bot was added to could add themselves to the bot's admin roles.
 
-4. **Invite the bot** with the permissions listed in [Permissions](https://github.com/Trilleo/TriBridge/wiki/Permissions).
+4. **Invite the bot** with the permissions listed
+   in [Permissions](https://github.com/Trilleo/TriBridge/wiki/Permissions).
 
 5. **Start it**
 
@@ -107,30 +108,30 @@ Full walkthrough: [Installation](https://github.com/Trilleo/TriBridge/wiki/Insta
 
 ## Commands
 
-| Command                                     | Category    | Description                                                        |
-|---------------------------------------------|-------------|--------------------------------------------------------------------|
-| `/invite <username> [guild]`                | Management  | Invite a player to a Hypixel guild (admin only)                     |
-| `/kick <username> [reason] [guild]`         | Management  | Kick a member from a Hypixel guild (admin only)                     |
-| `/promote <username> [guild]`               | Management  | Promote a member in a Hypixel guild (admin only)                    |
-| `/demote <username> [guild]`                | Management  | Demote a member in a Hypixel guild (admin only)                     |
-| `/send <message> [guild]`                   | Management  | Run a command as the Minecraft account and show the reply (admin only) |
-| `/login [guild]`                            | Management  | Connect the bots; all disconnected guilds by default (admin only)    |
+| Command                                     | Category    | Description                                                               |
+|---------------------------------------------|-------------|---------------------------------------------------------------------------|
+| `/invite <username> [guild]`                | Management  | Invite a player to a Hypixel guild (admin only)                           |
+| `/kick <username> [reason] [guild]`         | Management  | Kick a member from a Hypixel guild (admin only)                           |
+| `/promote <username> [guild]`               | Management  | Promote a member in a Hypixel guild (admin only)                          |
+| `/demote <username> [guild]`                | Management  | Demote a member in a Hypixel guild (admin only)                           |
+| `/send <message> [guild]`                   | Management  | Run a command as the Minecraft account and show the reply (admin only)    |
+| `/login [guild]`                            | Management  | Connect the bots; all disconnected guilds by default (admin only)         |
 | `/guilds add/remove/list/edit/default/auth` | Management  | Manage the bridged Hypixel guilds and sign their accounts in (admin only) |
-| `/adminrole add/remove <role>`              | Management  | Configure the bot-admin roles (server admin only)                    |
-| `/adminpanel`                               | Management  | Open the admin panel (admin only)                                    |
-| `/auditchannel set/show/clear [guild]`      | Management  | Choose where admin panel actions are recorded (admin only)           |
-| `/link <username>`                          | Linking     | Bind your Minecraft account to your Discord account                  |
-| `/unlink [user]`                            | Linking     | Remove a link — your own, or anyone's (admin only)                   |
-| `/links`                                    | Linking     | List every linked Minecraft account (admin only)                     |
-| `/whois <user\|username>`                   | Linking     | Look up a link in either direction (admin only)                      |
-| `/linkrole set/show/clear <role>`           | Linking     | Choose the role given to linked users (admin only)                   |
-| `/networth [username]`                      | Information | A player's SkyBlock networth on their richest profile                |
-| `/online [guild]`                           | Information | Who is online in every guild, or one                                 |
-| `/ping`                                     | Information | Discord latency and each guild's Minecraft connection status         |
-| `/help`                                     | Information | Browse all commands by category                                      |
-| `/request`                                  | Requests    | Submit a feature request through a short form                        |
-| `/requestchannel set/show <channel>`        | Requests    | Choose where feature requests are posted (admin only)                |
-| `/requeststatus <id> <status>`              | Requests    | Mark a request accepted, denied, planned or duplicate (admin only)   |
+| `/adminrole add/remove <role>`              | Management  | Configure the bot-admin roles (server admin only)                         |
+| `/adminpanel`                               | Management  | Open the admin panel (admin only)                                         |
+| `/auditchannel set/show/clear [guild]`      | Management  | Choose where admin panel actions are recorded (admin only)                |
+| `/link <username>`                          | Linking     | Bind your Minecraft account to your Discord account                       |
+| `/unlink [user]`                            | Linking     | Remove a link — your own, or anyone's (admin only)                        |
+| `/links`                                    | Linking     | List every linked Minecraft account (admin only)                          |
+| `/whois <user\|username>`                   | Linking     | Look up a link in either direction (admin only)                           |
+| `/linkrole set/show/clear <role>`           | Linking     | Choose the role given to linked users (admin only)                        |
+| `/networth [username]`                      | Information | A player's SkyBlock networth on their richest profile                     |
+| `/online [guild]`                           | Information | Who is online in every guild, or one                                      |
+| `/ping`                                     | Information | Discord latency and each guild's Minecraft connection status              |
+| `/help`                                     | Information | Browse all commands by category                                           |
+| `/request`                                  | Requests    | Submit a feature request through a short form                             |
+| `/requestchannel set/show <channel>`        | Requests    | Choose where feature requests are posted (admin only)                     |
+| `/requeststatus <id> <status>`              | Requests    | Mark a request accepted, denied, planned or duplicate (admin only)        |
 
 Plus the chat commands typed in guild chat or the bridge channel: `!nw <username>` for a networth lookup, and
 `!tag message` to aim at one guild. Full reference:

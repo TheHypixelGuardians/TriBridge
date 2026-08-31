@@ -10,10 +10,10 @@ a feature commit can update the wiki alongside it, and nobody has to remember to
 TriBridge has two audiences and they want opposite things, so the pages are split into two runs and the
 sidebar keeps them apart:
 
-| Section              | Reader                                          | Assumes                                       |
-|----------------------|-------------------------------------------------|-----------------------------------------------|
-| **Using the bridge** | A guild member in the Discord server            | No access to the host, the `.env` or the console |
-| **Running the bot**  | Whoever hosts the bot and holds a bot-admin role | A terminal, the repository, and `/guilds`     |
+| Section              | Reader                                           | Assumes                                          |
+|----------------------|--------------------------------------------------|--------------------------------------------------|
+| **Using the bridge** | A guild member in the Discord server             | No access to the host, the `.env` or the console |
+| **Running the bot**  | Whoever hosts the bot and holds a bot-admin role | A terminal, the repository, and `/guilds`        |
 
 A page belongs to whichever reader can act on it. `/link` is a member page even though it touches a config
 file; `/linkrole` is a staff page even though members feel the result. When a feature genuinely has both
@@ -22,18 +22,18 @@ member page and the configuration lives on the staff page.
 
 ## The pages
 
-| File                                                                                         | Page                                                       |
-|----------------------------------------------------------------------------------------------|------------------------------------------------------------|
-| `Home.md`                                                                                    | Landing page — the two entry points and a feature table    |
-| `_Sidebar.md`                                                                                | Navigation shown beside every page                         |
-| `_Footer.md`                                                                                 | Footer shown under every page                              |
-| `Using-the-Bridge.md`, `Guild-Tags.md`, `Account-Linking.md`, `Networth.md`, `Feature-Requests.md` | Using the bridge                                     |
-| `Commands.md`                                                                                | Every slash command, both audiences, in one table          |
-| `Installation.md`, `Configuration.md`, `Config-Files.md`, `Permissions.md`, `Updating.md`     | Running the bot — setup                                    |
-| `Hypixel-Guilds.md`, `Guild-to-Guild-Bridging.md`, `Reconnection.md`                          | Running the bot — the guild registry                       |
-| `Admin-Roles.md`, `Admin-Panel.md`, `Global-Profile-Change.md`, `Auditing.md`, `Link-Role.md` | Running the bot — administration                           |
-| `FAQ.md`, `Troubleshooting.md`                                                                | Help                                                       |
-| `Architecture.md`, `Adding-a-Command.md`, `Contributing.md`, `Releasing.md`                   | Development                                                |
+| File                                                                                               | Page                                                    |
+|----------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| `Home.md`                                                                                          | Landing page — the two entry points and a feature table |
+| `_Sidebar.md`                                                                                      | Navigation shown beside every page                      |
+| `_Footer.md`                                                                                       | Footer shown under every page                           |
+| `Using-the-Bridge.md`, `Guild-Tags.md`, `Account-Linking.md`, `Networth.md`, `Feature-Requests.md` | Using the bridge                                        |
+| `Commands.md`                                                                                      | Every slash command, both audiences, in one table       |
+| `Installation.md`, `Configuration.md`, `Config-Files.md`, `Permissions.md`, `Updating.md`          | Running the bot — setup                                 |
+| `Hypixel-Guilds.md`, `Guild-to-Guild-Bridging.md`, `Reconnection.md`                               | Running the bot — the guild registry                    |
+| `Admin-Roles.md`, `Admin-Panel.md`, `Global-Profile-Change.md`, `Auditing.md`, `Link-Role.md`      | Running the bot — administration                        |
+| `FAQ.md`, `Troubleshooting.md`                                                                     | Help                                                    |
+| `Architecture.md`, `Adding-a-Command.md`, `Contributing.md`, `Releasing.md`                        | Development                                             |
 
 ## Conventions
 

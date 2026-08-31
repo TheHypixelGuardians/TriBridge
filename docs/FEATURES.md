@@ -74,13 +74,13 @@ swallow far too much ordinary chat. `nw` and `networth` are reserved for the
 The bridged guilds live in `guildsConfig.json` in the project root — gitignored, created on demand — and are
 managed entirely from Discord with **`/guilds`**. You should not need to edit the file by hand.
 
-| Field            | Meaning                                                                                                  |
-|------------------|----------------------------------------------------------------------------------------------------------|
+| Field            | Meaning                                                                                                   |
+|------------------|-----------------------------------------------------------------------------------------------------------|
 | `key`            | Short internal id, e.g. `sb`. Lowercase letters, digits, `-` and `_`, up to 16 characters. **Immutable.** |
-| `name`           | Display name used in replies and logs                                                                    |
-| `tag`            | 2–8 characters. Typed as `!tag message`, and shown next to names on incoming chat                        |
+| `name`           | Display name used in replies and logs                                                                     |
+| `tag`            | 2–8 characters. Typed as `!tag message`, and shown next to names on incoming chat                         |
 | `account`        | Microsoft account email for this guild's Minecraft bot. **Immutable**, and no two guilds may share one    |
-| `color`          | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                             |
+| `color`          | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                              |
 | `logChannelId`   | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                               |
 | `auditChannelId` | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                        |
 | `enabled`        | `false` disconnects a guild without removing it                                                           |
@@ -262,14 +262,14 @@ command is refused.
 Six commands act on a Hypixel guild through its Minecraft account. Each takes an optional `guild` with
 autocomplete; leave it out and the default guild is used.
 
-| Command                              | Does                                                                    |
-|--------------------------------------|-------------------------------------------------------------------------|
-| `/invite <username> [guild]`         | `/g invite` in that guild                                               |
-| `/kick <username> [reason] [guild]`  | `/g kick` in that guild                                                 |
-| `/promote <username> [guild]`        | `/g promote` in that guild                                              |
-| `/demote <username> [guild]`         | `/g demote` in that guild                                               |
-| `/send <message> [guild]`            | Runs any command or message as that account and shows the server's reply |
-| `/login [guild]`                     | Connects the bot; with no guild, every *disconnected* guild             |
+| Command                             | Does                                                                     |
+|-------------------------------------|--------------------------------------------------------------------------|
+| `/invite <username> [guild]`        | `/g invite` in that guild                                                |
+| `/kick <username> [reason] [guild]` | `/g kick` in that guild                                                  |
+| `/promote <username> [guild]`       | `/g promote` in that guild                                               |
+| `/demote <username> [guild]`        | `/g demote` in that guild                                                |
+| `/send <message> [guild]`           | Runs any command or message as that account and shows the server's reply |
+| `/login [guild]`                    | Connects the bot; with no guild, every *disconnected* guild              |
 
 `/send` **never fans out** — it always targets exactly one guild, because it runs arbitrary commands as a
 Minecraft account. `/login` with no guild reconnects everything, since after an outage that is almost always

@@ -2,10 +2,10 @@
 
 TriBridge keeps **two** changelogs, and they are written for different people.
 
-| File                                                 | Reader                                   | Voice                                                       |
-|------------------------------------------------------|------------------------------------------|-------------------------------------------------------------|
-| [CHANGELOG.md](../CHANGELOG.md)                      | Whoever runs the bot, and future you     | Third person, complete, sub-bullets for the details         |
-| [DISCORD_CHANGELOG.md](../DISCORD_CHANGELOG.md)      | Guild members reading an announcement    | Second person, one line per change, nothing they can't see  |
+| File                                            | Reader                                | Voice                                                      |
+|-------------------------------------------------|---------------------------------------|------------------------------------------------------------|
+| [CHANGELOG.md](../CHANGELOG.md)                 | Whoever runs the bot, and future you  | Third person, complete, sub-bullets for the details        |
+| [DISCORD_CHANGELOG.md](../DISCORD_CHANGELOG.md) | Guild members reading an announcement | Second person, one line per change, nothing they can't see |
 
 Both are updated **in the same commit as the change itself**, so the changelog never lags behind the code.
 
@@ -23,22 +23,22 @@ bullets with indented `+` sub-bullets for the details.
 
 + Added **guild-to-guild bridging**: chat in one Hypixel guild can now be shared straight into the other
   bridged guilds.
-  + Off by default and turned on per guild with `/guilds edit guild:sb crossbridge:True`.
-  + The switch covers both directions: a guild that is not sharing its own chat does not receive anyone
-    else's either.
+    + Off by default and turned on per guild with `/guilds edit guild:sb crossbridge:True`.
+    + The switch covers both directions: a guild that is not sharing its own chat does not receive anyone
+      else's either.
 ```
 
 ### Categories
 
 Only these five, and only the ones that actually have entries — an empty category is left out entirely.
 
-| Category                | Holds                                                                        |
-|-------------------------|------------------------------------------------------------------------------|
-| `### New Features`      | Something the bot could not do before                                        |
-| `### Improvements`      | Something it already did, done better                                        |
-| `### Fixes`             | Something that was broken                                                    |
-| `### Technical Details` | Refactors, dependency bumps, tooling, documentation                          |
-| `### Removed Features`  | Something taken away                                                         |
+| Category                | Holds                                               |
+|-------------------------|-----------------------------------------------------|
+| `### New Features`      | Something the bot could not do before               |
+| `### Improvements`      | Something it already did, done better               |
+| `### Fixes`             | Something that was broken                           |
+| `### Technical Details` | Refactors, dependency bumps, tooling, documentation |
+| `### Removed Features`  | Something taken away                                |
 
 ### Feature areas
 

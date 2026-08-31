@@ -11,14 +11,14 @@ Every commit message must follow this syntax:
 
 ## Approved tags
 
-| Tag             | Usage                                                | Example                                        |
-|:----------------|:-----------------------------------------------------|:-----------------------------------------------|
-| **Feature**     | Adding brand-new functionality.                      | `Feature: Add cross guilds message sync`       |
-| **Fix**         | Repairing bugs, crashes, or logic errors.            | `Fix: Keep tag markers on reposted messages`   |
-| **Improvement** | Refining existing behaviour, wording, or performance. | `Improvement: Change bot refresh time`         |
-| **Internal**    | Documentation, comments, or repository maintenance.  | `Internal: Add CHANGELOG.md for recording changes` |
-| **Backend**     | Dependency or configuration updates.                 | `Backend: Update discord.js to 14.25.1`        |
-| **Update**      | Bot version bumps.                                   | `Update: 1.2.1 release`                        |
+| Tag             | Usage                                                 | Example                                            |
+|:----------------|:------------------------------------------------------|:---------------------------------------------------|
+| **Feature**     | Adding brand-new functionality.                       | `Feature: Add cross guilds message sync`           |
+| **Fix**         | Repairing bugs, crashes, or logic errors.             | `Fix: Keep tag markers on reposted messages`       |
+| **Improvement** | Refining existing behaviour, wording, or performance. | `Improvement: Change bot refresh time`             |
+| **Internal**    | Documentation, comments, or repository maintenance.   | `Internal: Add CHANGELOG.md for recording changes` |
+| **Backend**     | Dependency or configuration updates.                  | `Backend: Update discord.js to 14.25.1`            |
+| **Update**      | Bot version bumps.                                    | `Update: 1.2.1 release`                            |
 
 ## Best practices
 
