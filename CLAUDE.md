@@ -4,14 +4,15 @@ Guidance for Claude Code when working in this repository.
 
 ## After every change: keep docs and changelog in sync
 
-Before finishing any task that changes the bot, do both of the following:
+Before finishing any task that changes the bot, do all of the following:
 
 1. **Update the changelog** — add an entry for the change under `## Unreleased` in [CHANGELOG.md](CHANGELOG.md),
    in the same commit as the change itself so the changelog never lags behind.
    - Format is SkyHanni-style: `##` release section (`Unreleased` / `Version X.Y.Z`), then a `###` category
      (`New Features` / `Improvements` / `Fixes` / `Technical Details` / `Removed Features`), then a `####`
-     feature area (`Bridge`, `Account Linking`, `Management`, `Information`, `Core`, `Misc` — free-form,
-     `Misc` is the catch-all), then `+` bullets, one change per bullet, indented `+` sub-bullets for details.
+     feature area (`Bridge`, `Account Linking`, `Management`, `Information`, `Requests`, `Admin Panel`,
+     `Documentation`, `Core`, `Misc` — free-form, `Misc` is the catch-all), then `+` bullets, one change per
+     bullet, indented `+` sub-bullets for details.
    - Only include categories and feature areas that actually have entries — omit empty ones.
    - Write entries for the people running and using the bot, not for developers: "Added `/whois` to look up a
      link", not "Refactored linkedAccounts". Refactors, dependency bumps and tooling go under
@@ -30,9 +31,44 @@ Before finishing any task that changes the bot, do both of the following:
    - During development add entries under the same `## Unreleased` heading as the main changelog; rename it at
      release time in both files together.
 
-3. **Check the README** — if the change affects anything [README.md](README.md) mentions (commands,
+3. **Document the feature** — every user-visible feature is described in [docs/FEATURES.md](docs/FEATURES.md),
+   which is the canonical description the README and the wiki both point at. A new feature gets its own `##`
+   section there (what it does, how it is switched on and configured, any limitation); a change to an existing
+   feature updates that feature's section rather than appending a note to the end of it. Write for whoever runs
+   or uses the bot — implementation notes belong in the changelog's `### Technical Details` and in
+   [wiki/Architecture.md](wiki/Architecture.md).
+   - One exception worth keeping: where a rule exists because the obvious alternative was actively harmful (a
+     silent drop, a Hypixel mute, a permission escalation), say so. That sentence is what stops the rule being
+     "simplified" away later.
+
+4. **Update the wiki** — the GitHub wiki is published from [wiki/](wiki/) in this repository, and it is the
+   page somebody finds from a search engine, so it must never lag behind the bot.
+   - The wiki is **split by audience**: *Using the bridge* is for guild members in the Discord server, *Running
+     the bot* is for whoever hosts it and holds a bot-admin role. A page belongs to whichever reader can act on
+     it. Where a feature has both halves (the global profile change, auditing), the member-facing consequence
+     is a paragraph on the member page and the configuration lives on the staff page.
+   - A **new feature** gets its own `wiki/<Page-Name>.md`, plus a line in [wiki/_Sidebar.md](wiki/_Sidebar.md)
+     under the right section and a row in the feature table of [wiki/Home.md](wiki/Home.md).
+   - A **change to an existing feature** updates that feature's page, in the same task as the code.
+   - Three pages are **exhaustive lists**, so a missing entry is a visible gap: a new or changed command
+     touches [wiki/Commands.md](wiki/Commands.md), a new config file touches
+     [wiki/Config-Files.md](wiki/Config-Files.md), and a new permission or intent touches
+     [wiki/Permissions.md](wiki/Permissions.md).
+   - Page names are titles: renaming a file breaks every link to it. Links between pages are relative and
+     extension-less (`[Guild tags](Guild-Tags)`); links into this repository are absolute GitHub URLs. See
+     [docs/WIKI.md](docs/WIKI.md) for the conventions and how pages are published.
+   - Never put a real token, channel id, role id or account address in a page — the wiki is public.
+
+5. **Check the README** — if the change affects anything [README.md](README.md) mentions (commands,
    installation, `.env` variables, Discord permissions/intents, Node version, dependencies, how the relay
    behaves), update it in the same task. New or changed slash commands get a row in the command table.
+   [README.md](README.md) carries only a one-line summary per feature: add a bullet for a new feature, but keep
+   the details in [docs/FEATURES.md](docs/FEATURES.md).
+
+6. **Check the docs folder** — if the change affects a workflow documented in [docs/](docs/) (the release
+   process in [docs/RELEASING.md](docs/RELEASING.md), the commit convention in
+   [docs/COMMIT_STRUCTURE.md](docs/COMMIT_STRUCTURE.md), the wiki conventions in [docs/WIKI.md](docs/WIKI.md)),
+   update the affected doc in the same task.
 
 Releases: bump `version` in `package.json`, then in **both** [CHANGELOG.md](CHANGELOG.md) and
 [DISCORD_CHANGELOG.md](DISCORD_CHANGELOG.md) rename `## Unreleased` to `## Version X.Y.Z` and add a fresh
@@ -49,6 +85,13 @@ in-game.
 - CommonJS (`"type": "commonjs"`) — use `require`/`module.exports`, not ESM.
 - No build step, no test suite, no linter. `npm test` is a placeholder that exits 1.
 - Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`.
+- Documentation lives in two places: [docs/](docs/) holds the canonical reference
+  ([FEATURES.md](docs/FEATURES.md)) and the workflow docs, and [wiki/](wiki/) is the source of the GitHub
+  wiki, which restates the same material split by audience. [wiki/Architecture.md](wiki/Architecture.md) is
+  the long-form version of the Architecture section below — when one changes, check the other.
+- Commit messages follow the `<tag>: <message>` convention (`Feature:`, `Improvement:`, `Fix:`, `Internal:`,
+  `Backend:`, `Update:`) with one granular commit per logical change — see
+  [docs/COMMIT_STRUCTURE.md](docs/COMMIT_STRUCTURE.md).
 
 ## Running
 

@@ -142,6 +142,26 @@
   capped at one upstream request at a time, and rate limited per requester. Only the figures are kept: the
   multi-megabyte upstream response is discarded as soon as it is read.
 
+#### Documentation
+
++ Added a `docs/` folder holding the project's reference documentation.
+  + `docs/FEATURES.md` is the canonical description of every feature — what it does, how it is switched on,
+    and the limitations worth knowing before someone hits them.
+  + `docs/RELEASING.md` documents the two changelogs and the release and deploy process,
+    `docs/COMMIT_STRUCTURE.md` the commit convention, and `docs/WIKI.md` how the wiki is written and
+    published.
++ Added a `wiki/` folder holding the source of the GitHub wiki, published by pushing it to the wiki's own
+  repository.
+  + The pages are split by audience: **Using the bridge** for guild members in the Discord server, **Running
+    the bot** for whoever hosts it, plus help and development sections.
+  + `Commands`, `Config files` and `Permissions` are exhaustive lists, so a missing entry is a visible gap
+    rather than a thin page.
+  + `Architecture` is the long-form version of the architecture notes in `CLAUDE.md`.
++ The README now carries a one-line summary per feature and links out, instead of holding the whole manual;
+  everything it used to explain in full moved to `docs/FEATURES.md` and the wiki.
++ `CLAUDE.md`'s after-every-change checklist grew from three steps to six, covering `docs/FEATURES.md`, the
+  wiki and the `docs/` workflow files.
+
 ## Version 1.2.1
 
 ### New Features
