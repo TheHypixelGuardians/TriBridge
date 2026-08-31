@@ -194,15 +194,6 @@
   everything it used to explain in full moved to `docs/FEATURES.md` and the wiki.
 + `CLAUDE.md`'s after-every-change checklist grew from three steps to six, covering `docs/FEATURES.md`, the
   wiki and the `docs/` workflow files.
-+ The wiki's Updating page now describes how to run updates automatically on a schedule, for a host that runs
-  the bot unattended.
-    + The key rule is that an unchanged repository must not cost a restart: compare the local commit against
-      the remote first and stop there when they match, because a restart drops every Hypixel connection and
-      they come back one guild per ten seconds.
-    + Covers the two things that catch people out — cron's minimal `PATH` hiding an `nvm`-installed Node, and
-      git's `dubious ownership` refusal when cron runs as a different user than the checkout's owner.
-    + The script itself is host-local and gitignored, along with `logs/` and the pid and lock files it writes,
-      so a pull can never conflict with it.
 
 #### Misc
 
