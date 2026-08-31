@@ -28,7 +28,7 @@ module.exports = async (client, message) => {
   // Discord and never reach Hypixel, with no error anywhere. It is also the
   // consistent answer, since the disguise governs the two legs of the main
   // bridge and has no business relabelling anyone in officer chat.
-  if (guilds.getByOfficerChannel(message.channel.id)) return;
+  if (guilds.isOfficerChannel(message.channel.id)) return;
 
   if (!appliesTo(message.author.id, message.channel.id)) return;
   if (shouldSkip(message)) return;

@@ -14,6 +14,9 @@ speaker's name, so you can read one off a message you are replying to.
 With only **one** guild bridged, tags do nothing and are not shown anywhere — everything you type goes to the
 one guild whatever you put in front of it.
 
+Tags work the same way in an [officer channel](Officer-Chat) that more than one guild shares, with one
+difference noted under the rules below.
+
 ## The rules
 
 | You type    | What happens                                                                        |
@@ -37,6 +40,15 @@ one guild whatever you put in front of it.
 
 A broadcast that misses an offline guild gets **no** marker. The other guilds received it, and staff already
 have a notice about the one that is down.
+
+## In an officer channel
+
+Same rules, over a smaller set: only the guilds that use *that* channel. A tag for a guild that does not is
+unrecognised there, so it collects a ❓ and is delivered as typed — an officer channel is never a way to speak
+into a guild it was not pointed at.
+
+📡 is also stricter there. It appears whenever a reply reached nobody at all, tagged or not, because officer
+chat is where a message disappearing quietly matters most.
 
 ## Why `!` is not reserved
 

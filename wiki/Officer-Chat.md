@@ -1,7 +1,7 @@
 # Officer chat
 
-Hypixel's officer chat can have a Discord channel of its own. Officer chat arrives there, and anything typed
-there is spoken back into officer chat in-game.
+Hypixel's officer chat can have a Discord channel. Officer chat arrives there, and anything typed there is
+spoken back into officer chat in-game.
 
 It is separate from the main bridge in every way that matters: officer chat never appears in the bridge
 channel, and the bridge channel never reaches officer chat.
@@ -17,20 +17,33 @@ channel, and the bridge channel never reaches officer chat.
 Point a guild at a channel:
 
 ```
-/guilds edit guild:sb officerchannel:#sb-officer-chat
+/guilds edit guild:sb officerchannel:#officer-chat
 ```
 
-The bot checks it can post there before saving, and refuses a channel another guild already uses — a reply
-typed in a channel has to reach exactly one guild's officer chat, so two guilds cannot share one.
-
-Switch it off again with:
+The bot checks it can post there before saving. Switch it off again with:
 
 ```
 /guilds edit guild:sb clear:Officer channel
 ```
 
 Unlike the log and audit channels, there is no global fallback. A guild with no officer channel has the
-feature off, rather than quietly sending its officer chat somewhere shared with another guild.
+feature off, rather than quietly sending its officer chat somewhere it was never pointed at.
+
+### One channel for every guild
+
+Point several guilds at the same channel and they share it, exactly as they share the bridge channel:
+
+```
+/guilds edit guild:sb officerchannel:#officer-chat
+/guilds edit guild:main officerchannel:#officer-chat
+```
+
+Each guild's officer chat arrives there tagged and in that guild's colour, and replies are routed by
+[guild tag](Guild-Tags). One channel is usually what you want — officers tend to be officers in both guilds,
+and two channels means two places to watch.
+
+Separate channels still work. A guild pointed at a channel nobody else uses behaves exactly as it did when
+that was the only option: everything typed there reaches that one guild.
 
 ## The bot needs an officer rank
 
@@ -43,7 +56,8 @@ the bot's guild rank first.
 ## What it looks like
 
 Officer chat arriving in Discord is an embed in the guild's colour, marked as officer chat and carrying the
-guild's name, with the speaker's Minecraft head and tag on the author line.
+guild's name, with the speaker's Minecraft head and tag on the author line. The tag is always shown, even
+with one guild registered — on a shared channel "which guild is this?" is a live question.
 
 Going the other way, a message typed in the channel reaches officer chat as:
 
@@ -55,29 +69,44 @@ The name in front of the message is **your Minecraft name if your account is
 [linked](Account-Linking)**, and your Discord name if not. Linking is worth doing here — officer chat is a
 place where who said something usually matters.
 
+## Replying to one guild
+
+[Guild tags](Guild-Tags) work here just as they do in the bridge channel:
+
+```
+!sb we should demote him
+```
+
+reaches only the guild tagged `SB`. A message with no tag reaches **every** guild sharing the channel, which
+is what you usually want when the same officers run both.
+
+One difference from the bridge channel: the tag has to belong to a guild that actually uses this channel. A
+tag for some other guild counts as unrecognised — the message is still delivered to the guilds here, exactly
+as typed, and picks up a ❓. An officer channel is never a way to speak into a guild it was not pointed at.
+
+To start a message with a literal `!`, type it twice: `!!sb` comes out as `!sb`.
+
 ## The rules
 
 - **Off by default**, including for guilds registered before this existed.
-- **No tags and no routing.** [Guild tags](Guild-Tags) mean nothing in this channel. The channel you are
-  typing in *is* the guild.
-- **No fan-out from Discord.** A reply reaches that guild's officer chat only, even when officer sharing is
-  on below. That matches the main bridge, where a Discord message also only reaches the guilds it was
-  addressed to.
+- **No fan-out beyond the tag.** A reply reaches the guilds it was addressed to and no further, even when
+  officer sharing is on below. That matches the main bridge, where a Discord message also only reaches the
+  guilds it was addressed to.
 - **[Chat commands](Networth) are not answered.** `!nw Notch` typed here, or in officer chat in-game, is just
-  something an officer said.
+  something an officer said. It does look like a tag, so it collects a ❓ — `!!nw Notch` avoids that.
 - **Real names.** A running [global profile change](Global-Profile-Change) does not apply in the officer
   channel, in either direction. A channel that exists to record what officers said is the last place to
   relabel who said it.
 - **Nothing is deleted or reposted.** Unlike the bridge channel, your message stays exactly as you sent it,
   so the bot needs no **Manage Webhooks** or **Manage Messages** here.
-- **📡 means it did not arrive.** If the guild's bot is offline or disabled, your message gets a 📡 reaction
-  instead of reaching anybody. Unlike a broadcast in the bridge channel there is no second guild that might
-  have received it, so it is always worth saying.
+- **📡 means it did not arrive.** If every guild it was aimed at is offline or disabled, your message gets a
+  📡 reaction instead of reaching anybody. Stricter than the bridge channel, which only says so for a tagged
+  message: officer chat is where a message vanishing quietly matters most.
 
 ## Sharing officer chat between guilds
 
-Officer chat can also cross between guilds, into each other's officer chat, the same way
-[guild chat can](Guild-to-Guild-Bridging):
+Everything above is about Discord. Officer chat can *also* cross between the guilds in-game, into each
+other's officer chat, the same way [guild chat can](Guild-to-Guild-Bridging):
 
 ```
 /guilds edit guild:sb crossbridgeofficer:True
@@ -88,14 +117,23 @@ Forwarded lines arrive tagged with the guild they came from, `[SB] Notch: hello`
 [guild-to-guild bridging](Guild-to-Guild-Bridging) applies — symmetric, off by default, takes two guilds,
 lines older than ten seconds are dropped rather than queued.
 
-One extra condition: **`crossbridge` has to be on for the same guild.** Officer chat never starts crossing
-between guilds that are not already sharing their ordinary chat, so the more sensitive setting cannot be
-reached without the less sensitive one being on first. `/guilds edit` accepts the flag on its own, but tells
-you it is doing nothing yet.
+It is an **independent switch**: `crossbridge` does not have to be on. The two answer different questions,
+and a guild may well want its officers in touch with another guild's without pooling everybody's ordinary
+chat.
 
 `/guilds list` marks guilds sharing officer chat with 🛡️.
 
-### It roughly doubles what the account says
+### Sharing a channel is not the same thing
+
+Two guilds sharing one officer channel read each other **in Discord**. Nothing crosses in-game unless
+`crossbridgeofficer` is on as well. The two are worth keeping apart:
+
+- **Shared channel only** — officers watch one Discord channel; an officer in-game sees only their own
+  guild's officer chat.
+- **`crossbridgeofficer` only** — officers see each other in-game; Discord keeps a channel per guild.
+- **Both** — the usual choice when the same people run both guilds.
+
+### It adds to what the account says
 
 Every forwarded line costs a chat packet in each receiving guild, on the same per-account budget that
 ordinary forwarded chat uses. A guild with both kinds of sharing on has its account talking about twice as

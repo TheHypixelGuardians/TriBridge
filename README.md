@@ -20,8 +20,9 @@ all.
 - **Guild tags** — `!sb hey` reaches one guild; anything else reaches all of them. An unrecognised tag is
   delivered anyway and flagged, never dropped.
 - **Guild-to-guild bridging** — chat shared directly between the bridged guilds, in-game, opt-in per guild.
-- **Officer chat** — a two-way Discord channel per guild for Hypixel officer chat, optionally shared between
-  guilds. Off until a channel is named, and everyone who can post there speaks as an officer in-game.
+- **Officer chat** — a two-way Discord channel for Hypixel officer chat, shared between guilds with `!tag`
+  routing or one per guild, and optionally shared between the guilds in-game as well. Off until a channel is
+  named, and everyone who can post there speaks as an officer in-game.
 - **Account linking** — `/link` reposts your Discord messages with your Minecraft head and name, and attributes
   the guild-chat copy to your Minecraft name.
 - **Link role** — an optional Discord role handed out automatically to everyone who links, backfilled at every

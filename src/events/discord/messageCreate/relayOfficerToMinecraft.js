@@ -3,18 +3,56 @@ const guilds = require("../../../utils/guilds");
 const mcBots = require("../../../utils/mcBots");
 const { sendChat } = require("../../../utils/chatQueue");
 const { buildOfficerChatCommand } = require("../../../utils/sanitizeForChat");
+const { routeMessage } = require("../../../utils/chatRouting");
 const { getLink } = require("../../../utils/linkedAccounts");
 
 /**
- * The reply leg of the officer bridge: a message typed in a guild's officer
- * channel is spoken in that guild's Hypixel officer chat.
+ * Speaks a message in the officer chat of every guild it is addressed to.
  *
- * There is no `!tag` routing and no fan-out. The channel a message was typed in
- * *is* the guild, and a reply reaches that guild's officer chat only — even
- * when `crossBridgeOfficer` is on. That matches the main bridge: cross-bridging
- * is a Minecraft → Minecraft path, and the copy this bot is about to speak is
- * dropped by the `isOwnAccountName` guard in relayOfficerToGuilds.js before it
- * can be forwarded anywhere.
+ * The command is built once, not per guild, for the same reason the bridge
+ * channel does it: same display name and same body means identical truncation
+ * everywhere, so the 100-character budget stays deterministic and one guild
+ * never sees a differently-cut message.
+ *
+ * @param {object[]} targets Registry records to relay to.
+ * @param {string} displayName Name to attribute the message to in officer chat.
+ * @param {string} content Message body, with any routing prefix removed.
+ * @param {boolean} hasAttachments
+ * @returns {number} How many guilds it actually reached.
+ */
+function relayToOfficerChat(targets, displayName, content, hasAttachments) {
+  // Attachment-only messages have empty content; don't send a dangling colon.
+  const body = content || (hasAttachments ? "[attachment]" : "");
+  const command = buildOfficerChatCommand(displayName, body);
+  if (!command) return 0;
+
+  let delivered = 0;
+
+  for (const guild of targets) {
+    const record = mcBots.getRecord(guild.key);
+    if (!record?.connected || !record.bot) continue;
+
+    void sendChat(record, command);
+    delivered += 1;
+  }
+
+  return delivered;
+}
+
+/**
+ * The reply leg of the officer bridge: a message typed in an officer channel is
+ * spoken in Hypixel officer chat.
+ *
+ * Guilds may share one officer channel, so the channel names the *candidates*
+ * and a `!tag` picks between them, exactly as in the bridge channel. A tag
+ * belonging to a guild that does not use this channel is an unknown tag here —
+ * an officer channel must never be a way to speak into a guild it was not
+ * wired to.
+ *
+ * There is still no fan-out beyond those targets, even when
+ * `crossBridgeOfficer` is on: cross-bridging is a Minecraft → Minecraft path,
+ * and the copy this bot is about to speak is dropped by the `isOwnAccountName`
+ * guard in relayOfficerToGuilds.js before it can be forwarded anywhere.
  *
  * Access is governed entirely by the channel's own Discord permissions, exactly
  * as the main bridge channel is. There is deliberately no `isAdmin()` check
@@ -30,12 +68,16 @@ module.exports = async (client, message) => {
   if (!message.guildId || message.guildId !== bridge.discordServerId) return;
 
   // The off switch, and what keeps this handler inert in every other channel.
-  const guild = guilds.getByOfficerChannel(message.channel.id);
-  if (!guild) return;
+  // Disabled guilds are dropped here rather than in the registry lookup, so a
+  // disabled guild's tag reads as unknown instead of silently reaching nobody.
+  const candidates = guilds
+    .getAllByOfficerChannel(message.channel.id)
+    .filter((g) => g.enabled !== false);
+  if (candidates.length === 0) return;
 
-  // Attachment-only messages have empty content; don't send a dangling colon.
-  const body =
-    message.content || (message.attachments.size > 0 ? "[attachment]" : "");
+  const { targets, body, unknownTag } = routeMessage(message.content, {
+    candidates,
+  });
 
   // The account link, and nothing else. Deliberately not resolveIdentity():
   // that applies the global profile change, and a disguise that can rename
@@ -45,19 +87,27 @@ module.exports = async (client, message) => {
   const displayName =
     getLink(message.author.id)?.name ?? message.author.username;
 
-  const command = buildOfficerChatCommand(displayName, body);
-  if (!command) return;
+  const delivered = relayToOfficerChat(
+    targets,
+    displayName,
+    body,
+    message.attachments.size > 0,
+  );
 
-  const record = mcBots.getRecord(guild.key);
+  const markers = [];
 
-  // Unlike the bridge channel there is no second guild that might have received
-  // this, so staying silent would read as the bridge ignoring them.
-  if (!record?.connected || !record.bot) {
+  // A mistyped tag still gets delivered everywhere — this just makes the
+  // mistake visible.
+  if (unknownTag) markers.push("❓");
+
+  // Stricter than the bridge channel, which only says so for a targeted
+  // message: officer chat is where a message quietly reaching nobody matters
+  // most, so any total failure is reported.
+  if (delivered === 0) markers.push("📡");
+
+  for (const marker of markers) {
     // Needs Add Reactions; a missing permission is not worth reporting per
     // message, and there is nothing else to be done about it here.
-    await message.react("📡").catch(() => {});
-    return;
+    await message.react(marker).catch(() => {});
   }
-
-  void sendChat(record, command);
 };

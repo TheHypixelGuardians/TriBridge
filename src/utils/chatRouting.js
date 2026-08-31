@@ -26,16 +26,31 @@ const TAG_PREFIX = /^!([A-Za-z0-9]{2,8})\s+([\s\S]+)$/;
  * difference between "one guild was busy" and "the sender aimed at one guild
  * and hit nothing" — only the latter is worth telling them about.
  *
+ * `candidates` narrows every rule above to a subset of the registry, for a
+ * channel that serves only some guilds — an officer channel two guilds share.
+ * A tag outside the subset is an unknown tag there, not a way to reach a guild
+ * the channel was never wired to.
+ *
  * @param {string} content Raw Discord message content.
+ * @param {{candidates?: object[]}} [options]
  * @returns {{targets: object[], body: string, unknownTag: string|null, targeted: boolean}}
  */
-function routeMessage(content) {
+function routeMessage(content, options = {}) {
   const text = String(content ?? "");
+  const scope = options.candidates ?? guilds.getEnabled();
 
   const fallback = () => {
-    if (guilds.broadcastByDefault()) return guilds.getEnabled();
+    if (guilds.broadcastByDefault()) return scope;
     const preferred = guilds.getDefault();
-    return preferred ? [preferred] : [];
+    const named = preferred && scope.find((g) => g.key === preferred.key);
+    // The default guild may not serve this channel; fall back to something in
+    // scope rather than to nothing, so a message is never silently dropped.
+    return named ? [named] : scope.slice(0, 1);
+  };
+
+  const byTag = (tag) => {
+    const wanted = String(tag).toLowerCase();
+    return scope.find((g) => String(g.tag).toLowerCase() === wanted) ?? null;
   };
 
   if (text.startsWith("!!")) {
@@ -49,7 +64,7 @@ function routeMessage(content) {
 
   const match = text.match(TAG_PREFIX);
   if (match) {
-    const guild = guilds.getByTag(match[1]);
+    const guild = byTag(match[1]);
     if (guild && guild.enabled !== false) {
       return {
         targets: [guild],
