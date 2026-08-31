@@ -120,6 +120,21 @@ function getCrossBridged() {
 }
 
 /**
+ * Guilds taking part in the officer-chat leg of the guild-to-guild bridge.
+ *
+ * Gated on `crossBridge` as well as its own flag, and gated in this one place
+ * so no caller can reach the officer fan-out without the ordinary one being on
+ * too. Officer chat is the more sensitive of the two, so it never starts
+ * flowing between guilds that have not already agreed to share their ordinary
+ * chat.
+ *
+ * @returns {object[]}
+ */
+function getOfficerCrossBridged() {
+  return getCrossBridged().filter((g) => g.crossBridgeOfficer === true);
+}
+
+/**
  * @param {string} key
  * @returns {object|null}
  */
@@ -173,6 +188,29 @@ function getByTag(tag) {
   return copy(
     loadConfig().guilds.find((g) => String(g.tag).toLowerCase() === wanted) ??
       null,
+  );
+}
+
+/**
+ * The guild whose officer channel a Discord message was typed in.
+ *
+ * The officer bridge has no `!tag` routing — the channel a message was sent in
+ * *is* the guild — so this lookup is what makes the Discord → officer chat leg
+ * work at all.
+ *
+ * `/guilds edit` refuses a channel another guild already holds, so the first
+ * match is the only match. If a hand-edited config ever breaks that, one
+ * guild's officers would silently have their replies delivered to the other's
+ * guild instead.
+ *
+ * @param {string} channelId
+ * @returns {object|null}
+ */
+function getByOfficerChannel(channelId) {
+  if (!channelId) return null;
+  const wanted = String(channelId);
+  return copy(
+    loadConfig().guilds.find((g) => g.officerChannelId === wanted) ?? null,
   );
 }
 
@@ -289,8 +327,10 @@ function add(input) {
     logChannelId: null,
     auditChannelId: null,
     bridgeChannelId: null,
+    officerChannelId: null,
     enabled: true,
     crossBridge: false,
+    crossBridgeOfficer: false,
     mcName: null,
     mcUuid: null,
     addedBy: input.addedBy ?? null,
@@ -310,13 +350,19 @@ const PATCHABLE = new Set([
   "color",
   "logChannelId",
   "auditChannelId",
+  "officerChannelId",
   "enabled",
   "crossBridge",
+  "crossBridgeOfficer",
   "mcName",
   "mcUuid",
 ]);
 
-const BOOLEAN_FIELDS = new Set(["enabled", "crossBridge"]);
+const BOOLEAN_FIELDS = new Set([
+  "enabled",
+  "crossBridge",
+  "crossBridgeOfficer",
+]);
 
 /**
  * Updates a guild in place. `key` and `account` are immutable — changing either
@@ -455,9 +501,11 @@ module.exports = {
   getAll,
   getEnabled,
   getCrossBridged,
+  getOfficerCrossBridged,
   get,
   getDefault,
   getByTag,
+  getByOfficerChannel,
   resolveKey,
   count,
   isConfigured,

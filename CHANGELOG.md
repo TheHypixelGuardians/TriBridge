@@ -6,6 +6,29 @@
 
 #### Bridge
 
++ Added an **officer chat bridge**: a Hypixel guild's officer chat can be relayed into a Discord channel of
+  its own, and anything typed there is sent back into officer chat in-game.
+    + Off by default. Point a guild at a channel with `/guilds edit guild:sb officerchannel:#officer-chat`,
+      and switch it back off with `/guilds edit guild:sb clear:Officer channel`.
+    + ⚠️ The channel is **two-way**, so everyone who can post in it is speaking in officer chat in-game.
+      Restrict it with Discord's own channel permissions — the bot deliberately adds no second check on top,
+      because a message being silently swallowed is worse than one that was never allowed to be typed.
+    + The bot's Minecraft account needs a guild rank that can both read and send officer chat. Hypixel gives
+      no error for either, so without the rank the channel simply shows nothing, or silently drops replies.
+    + Linked accounts are used for the name officer chat sees; everyone else appears under their Discord
+      name. A global profile change never applies here — a channel that exists to record what officers said
+      is the last place to relabel who said it.
+    + Officer chat never touches the main bridge channel, and the bot's chat commands such as `!nw` are not
+      answered in it.
++ Officer chat can also be **shared between guilds**, into each other's officer chat, with
+  `/guilds edit guild:sb crossbridgeofficer:True`.
+    + Requires `crossbridge` to be on for the same guild: officer chat never starts crossing between guilds
+      that are not already sharing their ordinary chat.
+    + Symmetric like `crossbridge` — a guild that does not share its own officer chat does not receive
+      anyone else's.
+    + Forwarded lines arrive tagged with the guild they came from, `[SB] Notch: hello`, as guild chat does.
+    + Note this doubles roughly how much a guild's account says in-game. That rate is what keeps accounts out
+      of Hypixel's spam filter, so switch it on where the officer channels are actually busy, not everywhere.
 + Added **guild-to-guild bridging**: chat in one Hypixel guild can now be shared straight into the other
   bridged guilds, so members of different guilds can talk to each other in-game without anyone having to
   watch Discord.
@@ -49,6 +72,12 @@
   be recorded somewhere different. `/auditchannel show` lists the default and every override.
 + `/guilds edit` takes a `crossbridge` option to switch guild-to-guild bridging on or off for one guild,
   and warns when it is the only guild sharing so far. `/guilds list` marks the sharing guilds with 🔁.
++ `/guilds edit` takes `officerchannel` and `crossbridgeofficer` for the officer bridge.
+    + It refuses a channel another guild already uses as its officer channel, since a reply typed there has
+      to reach exactly one guild's officer chat.
+    + Setting `crossbridgeofficer` without `crossbridge` is saved but says so, rather than looking like it
+      worked.
+    + `/guilds list` shows each guild's officer channel and marks the ones sharing officer chat with 🛡️.
 
 #### Information
 

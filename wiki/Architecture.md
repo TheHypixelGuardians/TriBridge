@@ -140,9 +140,10 @@ whole point of it, which is why it is admin-gated.
 
 ## Parsing guild chat
 
-`utils/guildChat.js` holds `parseGuildChat()` and `parseGuildPresence()` — regex against Hypixel's **English**
-chat output, and inherently brittle. It lives in one place because two relays read the same lines. Keep the
-documented format comment next to any regex you add or change.
+`utils/guildChat.js` holds `parseGuildChat()`, `parseGuildPresence()` and `parseOfficerChat()` — regex against
+Hypixel's **English** chat output, and inherently brittle. It lives in one place because several relays read
+the same lines. Keep the documented format comment next to any regex you add or change, and keep the officer
+pattern separate — see [Officer chat](#officer-chat) for why.
 
 ## Relay loops
 
@@ -189,6 +190,39 @@ otherwise switching it off wouldn't stop that guild's chat being pushed everywhe
 Forwarded chat passes `maxAgeMs` to `sendChat`, so a spam burst in one guild is dropped rather than delivered
 minutes late into another — don't remove that without another backpressure story. Presence lines are not
 forwarded, and the global profile disguise deliberately does not apply.
+
+## Officer chat
+
+Officer chat has **its own rails at every layer** — `OFFICER_PATTERN` and `parseOfficerChat()`,
+`buildOfficerChatCommand()`, `officerCrossBridgeTargets()` and `relayOfficerAcrossGuilds()`, its own
+`crossBridgeOfficer` flag, and its own dedupe instances. Nowhere does it share a code path with ordinary
+guild chat.
+
+That duplication is the point, not an oversight. Each shared layer would be a place where one edit silently
+moves privileged chat: widening `CHAT_PATTERN` to `(?:Guild|Officer) > ` would immediately push officer chat
+into the bridge channel, the guild-to-guild relay *and* the chat-command dispatcher, and reusing
+`crossBridge` would mean switching ordinary sharing on also started broadcasting officer chat.
+
+Three handlers, all inert until a guild has an `officerChannelId`:
+
+| Handler in `src/events/`                           | Does                                        |
+|----------------------------------------------------|---------------------------------------------|
+| `minecraft/message/relayOfficerToDiscord.js`       | Officer chat → that guild's officer channel |
+| `minecraft/message/relayOfficerToGuilds.js`        | Officer chat → other guilds' officer chat   |
+| `discord/messageCreate/relayOfficerToMinecraft.js` | Officer channel → `/oc` in that guild       |
+
+- **`guilds.getOfficerCrossBridged()` is the gate**, and it filters `getCrossBridged()` rather than the whole
+  registry, so `crossBridgeOfficer` cannot be reached without `crossBridge`. Keep the gating in that one
+  function.
+- **`isOwnAccountName()` terminates both inbound paths.** Same reasoning as `relayToGuilds.js`, now covering
+  the copy this guild's own bot just spoke on behalf of the Discord officer channel.
+- **The Discord leg resolves its guild from the channel** with `guilds.getByOfficerChannel()`, so there is no
+  `!tag` routing and no fan-out. `/guilds edit` refuses a channel another guild holds, which is what makes
+  that lookup single-valued.
+- **It must not use `resolveIdentity()`.** That applies the global profile change; the officer leg reads the
+  account link directly. `000disguiseMessages.js` also skips officer channels outright — otherwise a running
+  disguise would repost the message as a webhook and the `message.author.bot` guard would drop it, losing the
+  line with no error anywhere.
 
 ## Reconnection
 
