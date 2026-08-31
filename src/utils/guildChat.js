@@ -4,9 +4,10 @@
 //   Guild > Notch joined.                        ← presence
 //   Guild > Notch left.
 //
-// Officer chat is the same shape behind a different prefix:
+// Officer chat is the same shape behind a different prefix — observed in-game
+// as:
 //
-//   Officer > [MVP++] Notch [Officer]: hello
+//   Officer > [MVP++] zVapor: test
 //
 // Both the Hypixel rank (`[MVP++]`) and the guild rank (`[Officer]`) are
 // optional, which is why each bracketed group is.
