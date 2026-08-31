@@ -18,10 +18,10 @@ repair a broken registry — which is why Discord comes up even when no Minecraf
 | `color`              | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                                    |
 | `logChannelId`       | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                                     |
 | `auditChannelId`     | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                              |
-| `officerChannelId`   | Optional two-way [officer chat](Officer-Chat) channel. No fallback — unset means off                            |
+| `officerChannelId`   | Optional two-way [officer chat](Officer-Chat) channel, shareable between guilds. No fallback — unset is off     |
 | `enabled`            | `false` disconnects the guild without removing it                                                               |
 | `crossBridge`        | `true` shares chat with the other cross-bridged guilds — see [Guild-to-guild bridging](Guild-to-Guild-Bridging) |
-| `crossBridgeOfficer` | `true` shares [officer chat](Officer-Chat) with them too. Needs `crossBridge` on as well                        |
+| `crossBridgeOfficer` | `true` shares [officer chat](Officer-Chat) in-game with the other guilds that have it on                        |
 
 > **`key` and `account` cannot be changed.** `account` is the key prismarine-auth hashes for its token cache,
 > so editing it later silently starts a fresh device-code flow against a different cache file. Renaming means
@@ -61,7 +61,7 @@ guild, because it runs arbitrary commands as a Minecraft account.
 ```
 /guilds edit guild:sb name:SkyBlock tag:SB color:#2ECC71
 /guilds edit guild:sb logchannel:#sb-log auditchannel:#sb-audit
-/guilds edit guild:sb officerchannel:#sb-officer-chat
+/guilds edit guild:sb officerchannel:#officer-chat
 /guilds edit guild:sb enabled:False
 /guilds edit guild:sb clear:Log and audit channels
 ```
@@ -72,6 +72,9 @@ one has no global fallback.
 
 > ⚠️ An officer channel is **two-way**: everyone who can post in it is speaking in officer chat in-game.
 > Restrict it with Discord's channel permissions before setting it — see [Officer chat](Officer-Chat).
+
+Several guilds may be pointed at the same officer channel, and usually should be: their officer chat then
+arrives in one place, tagged, and a reply picks a guild with `!tag`. Separate channels still work.
 
 `enabled:False` disconnects the guild and stops the reconnect poller trying it, without losing its settings or
 its cached token. It is the right way to take a guild offline for a while.
@@ -105,7 +108,7 @@ Repeats the device-code flow for a guild whose token has expired or been revoked
 
 Every registered guild with its connection status, its tag and colour, its channels, a 🔁 on the guilds taking
 part in [guild-to-guild bridging](Guild-to-Guild-Bridging) and a 🛡️ on those sharing
-[officer chat](Officer-Chat) as well. Account addresses are masked.
+[officer chat](Officer-Chat). Account addresses are masked.
 
 ## With only one guild
 

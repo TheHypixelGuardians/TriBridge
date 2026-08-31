@@ -44,7 +44,8 @@ instead.
 
 **Per-guild channel overrides live in `guildsConfig.json`**, not in `auditChannelConfig.json` — so removing a
 guild cannot leave an orphaned channel setting behind. `officerChannelId` and `crossBridgeOfficer` live there
-too, alongside `crossBridge`; see [Officer chat](Officer-Chat).
+too, alongside `crossBridge`; see [Officer chat](Officer-Chat). `officerChannelId` is the one channel field
+guilds may deliberately share — replies typed there are routed by [guild tag](Guild-Tags).
 
 **Each file is cached in memory** after its first read and written back whole on a change. Hand-editing a file
 while the bot is running will be overwritten by the next write; stop the process first.

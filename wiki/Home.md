@@ -26,7 +26,7 @@ watching Discord.
 | [The bridge](Using-the-Bridge)                     | One Discord channel and Hypixel guild chat, relayed both ways            |
 | [Guild tags](Guild-Tags)                           | `!sb hey` reaches one guild; anything else reaches all of them           |
 | [Guild-to-guild bridging](Guild-to-Guild-Bridging) | Chat shared between the bridged guilds, in-game, opt-in per guild        |
-| [Officer chat](Officer-Chat)                       | A two-way Discord channel for one guild's officer chat, opt-in           |
+| [Officer chat](Officer-Chat)                       | A two-way Discord channel for officer chat, shared or per guild, opt-in  |
 | [Account linking](Account-Linking)                 | Your messages wear your Minecraft head and name on both sides            |
 | [Networth](Networth)                               | `!nw <username>` in chat, or `/networth`, from either side of the bridge |
 | [Hypixel guilds](Hypixel-Guilds)                   | Register, edit and sign in guilds entirely from Discord with `/guilds`   |

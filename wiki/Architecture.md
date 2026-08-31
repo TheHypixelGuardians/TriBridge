@@ -201,28 +201,34 @@ guild chat.
 That duplication is the point, not an oversight. Each shared layer would be a place where one edit silently
 moves privileged chat: widening `CHAT_PATTERN` to `(?:Guild|Officer) > ` would immediately push officer chat
 into the bridge channel, the guild-to-guild relay *and* the chat-command dispatcher, and reusing
-`crossBridge` would mean switching ordinary sharing on also started broadcasting officer chat.
+`crossBridge` would mean switching ordinary sharing on also started broadcasting officer chat. The one thing
+it does share is `routeMessage()` from `utils/chatRouting.js`, and only because that function takes the
+candidate guilds as an argument — the officer leg passes the guilds on its channel, never the registry.
 
-Three handlers, all inert until a guild has an `officerChannelId`:
+Three handlers:
 
 | Handler in `src/events/`                           | Does                                        |
 |----------------------------------------------------|---------------------------------------------|
 | `minecraft/message/relayOfficerToDiscord.js`       | Officer chat → that guild's officer channel |
 | `minecraft/message/relayOfficerToGuilds.js`        | Officer chat → other guilds' officer chat   |
-| `discord/messageCreate/relayOfficerToMinecraft.js` | Officer channel → `/oc` in that guild       |
+| `discord/messageCreate/relayOfficerToMinecraft.js` | Officer channel → `/oc` in its guilds       |
 
-- **`guilds.getOfficerCrossBridged()` is the gate**, and it filters `getCrossBridged()` rather than the whole
-  registry, so `crossBridgeOfficer` cannot be reached without `crossBridge`. Keep the gating in that one
-  function.
+The two Discord-facing legs are inert until a guild has an `officerChannelId`; the guild-to-guild leg needs
+only `crossBridgeOfficer`.
+
 - **`isOwnAccountName()` terminates both inbound paths.** Same reasoning as `relayToGuilds.js`, now covering
   the copy this guild's own bot just spoke on behalf of the Discord officer channel.
-- **The Discord leg resolves its guild from the channel** with `guilds.getByOfficerChannel()`, so there is no
-  `!tag` routing and no fan-out. `/guilds edit` refuses a channel another guild holds, which is what makes
-  that lookup single-valued.
+- **The Discord leg routes with `!tag`, scoped to the channel.** Guilds may share one officer channel, so
+  `guilds.getAllByOfficerChannel()` is plural and its result is the `candidates` set handed to
+  `routeMessage()`. Scoping it is load-bearing: an unscoped tag lookup would turn any officer channel into a
+  way to speak into a guild it was never wired to. There is still no fan-out past the routed targets.
 - **It must not use `resolveIdentity()`.** That applies the global profile change; the officer leg reads the
   account link directly. `000disguiseMessages.js` also skips officer channels outright — otherwise a running
   disguise would repost the message as a webhook and the `message.author.bot` guard would drop it, losing the
   line with no error anywhere.
+- **`crossBridgeOfficer` stands alone.** `guilds.getOfficerCrossBridged()` filters the registry on that flag
+  and `enabled` only, deliberately not on `crossBridge`: sharing officer chat and sharing ordinary chat are
+  separate decisions. It stays symmetric, so a guild with the flag off neither sends nor receives.
 
 ## Reconnection
 

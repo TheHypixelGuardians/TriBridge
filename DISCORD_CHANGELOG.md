@@ -9,10 +9,12 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ### Officer chat
 
-- Officer chat can now have its own Discord channel, both ways — what you type there goes into officer chat
+- Officer chat can now have a Discord channel, both ways — what you type there goes into officer chat
   in-game, under your Minecraft name if you are linked.
-- Anyone who can post there is talking in officer chat, so it gets locked down the same way.
-- It can also be shared with the other guilds' officer chat, tagged like `[SB] Notch: hello`.
+- One channel carries every guild's officer chat, tagged and colour-coded. Tags work for replying:
+  `!sb message` reaches just that guild, no tag reaches all of them.
+- Anyone who can post there is talking in officer chat, so it is locked down the same way.
+- It can also be shared between the guilds in-game, tagged like `[SB] Notch: hello`.
 - Off until an admin sets it up with `/guilds edit`.
 
 ### Guild-to-guild chat
@@ -20,8 +22,7 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 - Guild chat can now be shared between the bridged guilds, so you can talk to them from in-game without
   watching Discord.
 - Messages from another guild arrive tagged on the name, like `[SB] Notch: hello`.
-- Joins and leaves are not shared — just the conversation.
-- Off until an admin turns it on per guild.
+- Joins and leaves are not shared. Off until an admin turns it on per guild.
 
 ### Multiple guilds
 
@@ -29,18 +30,17 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 - Start a message with a guild's tag to reach just that guild — `!sb hey` only goes to the SkyBlock guild.
   No tag still reaches every guild.
 - To start a message with a literal `!`, type it twice — `!!sb hi` comes out as `!sb hi`.
-- A tag nobody recognises gets a ❓ and is still delivered everywhere; a tagged guild that is offline gets a
-  📡. Nothing is ever silently dropped.
+- A tag nobody recognises gets a ❓ and is still delivered everywhere; a tagged guild that is offline gets
+  a 📡. Nothing is ever silently dropped.
 - Incoming guild chat is colour-coded and tagged, so you can tell which guild said what.
-- `/online` and `/ping` cover every guild at once, and `/online` takes a `guild` for just one. `/link` works
-  if you are in any of them.
+- `/online` and `/ping` cover every guild, and `/link` works if you are in any of them.
 
 ### SkyBlock networth
 
 - Type `!nw <username>` in guild chat or here and the bot tells you that player's networth.
 - It picks their richest profile and counts everything — cosmetics and soulbound included.
 - Someone with their inventory API off gets an `(API off)` note — the number will be too low.
-- `/networth` does the same here, and with no username it uses your linked account.
+- `/networth` does the same, and with no username it uses your linked account.
 
 ## Version 1.2.1
 

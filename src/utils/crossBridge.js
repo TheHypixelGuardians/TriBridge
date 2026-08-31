@@ -87,8 +87,11 @@ function relayAcrossGuilds(source, username, content) {
  * The guilds an *officer*-chat line spoken in `sourceKey` should be forwarded
  * to.
  *
- * Same symmetry rule as {@link crossBridgeTargets}, over the smaller set of
- * guilds that opted into sharing officer chat specifically.
+ * Same symmetry rule as {@link crossBridgeTargets}, over the independent set of
+ * guilds that opted into sharing officer chat specifically. Ordinary
+ * cross-bridging is not a precondition: the two are separate decisions, and a
+ * guild may want its officers talking to another guild's without pooling
+ * everybody's chat.
  *
  * @param {string} sourceKey The Hypixel guild the line came from.
  * @returns {object[]} Registry records, never including the source itself.

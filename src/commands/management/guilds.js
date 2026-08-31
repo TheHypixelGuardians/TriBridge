@@ -214,7 +214,7 @@ module.exports = {
         {
           name: "officerchannel",
           description:
-            "Two-way officer chat channel. Anyone who can post there speaks as an officer.",
+            "Two-way officer chat channel, shareable between guilds. Posting there speaks as an officer.",
           type: ApplicationCommandOptionType.Channel,
           channel_types: [ChannelType.GuildText],
           required: false,
@@ -235,7 +235,7 @@ module.exports = {
         {
           name: "crossbridgeofficer",
           description:
-            "Also share officer chat with them, both ways. Needs crossbridge on.",
+            "Share officer chat with the other officer-bridged guilds, both ways.",
           type: ApplicationCommandOptionType.Boolean,
           required: false,
         },
@@ -329,10 +329,7 @@ async function handleList(interaction) {
   const lines = all.map((guild) => {
     const marker = guild.key === defaultKey ? " ⭐" : "";
     const cross = guild.crossBridge === true ? " 🔁" : "";
-    const officerCross =
-      guild.crossBridge === true && guild.crossBridgeOfficer === true
-        ? " 🛡️"
-        : "";
+    const officerCross = guild.crossBridgeOfficer === true ? " 🛡️" : "";
     const ign = guild.mcName ? ` as \`${guild.mcName}\`` : "";
     return (
       `**${guild.name}** \`${guild.key}\` [${guild.tag}]${marker}${cross}${officerCross}\n` +
@@ -487,21 +484,6 @@ async function handleEdit(interaction) {
       });
     }
 
-    // An officer channel maps back to exactly one guild, because that lookup is
-    // how a reply typed there knows where to go. Sharing one between two guilds
-    // would silently deliver one guild's officers into the other's chat.
-    if (field === "officerChannelId") {
-      const owner = guilds.getByOfficerChannel(channel.id);
-      if (owner && owner.key !== key) {
-        return interaction.reply({
-          content:
-            `❌ <#${channel.id}> is already **${owner.name}**'s officer channel.\n` +
-            "> Each guild needs its own, so replies typed there reach the right officer chat.",
-          ephemeral: true,
-        });
-      }
-    }
-
     patch[field] = channel.id;
   }
 
@@ -536,22 +518,11 @@ async function handleEdit(interaction) {
       .getOfficerCrossBridged()
       .filter((g) => g.key !== guild.key);
 
-    // Stored but inert. Silence here looks exactly like a bug, because the
-    // setting was accepted and nothing happens.
-    if (guild.crossBridge !== true) {
-      notes.push(
-        "⚠️ Saved, but inert until `crossbridge` is on too — officer chat never " +
-          "crosses between guilds that are not already sharing ordinary chat.",
-      );
-    } else if (officerPartners.length === 0) {
-      notes.push(
-        "⚠️ No other guild shares officer chat yet, so nothing is shared until a second one does.",
-      );
-    } else {
-      notes.push(
-        `🛡️ Now sharing officer chat with **${officerPartners.map((g) => g.name).join("**, **")}**.`,
-      );
-    }
+    notes.push(
+      officerPartners.length === 0
+        ? "⚠️ No other guild shares officer chat yet, so nothing is shared until a second one does."
+        : `🛡️ Now sharing officer chat with **${officerPartners.map((g) => g.name).join("**, **")}**.`,
+    );
   }
 
   // The one moment an admin is guaranteed to read this. The security of the
@@ -562,6 +533,20 @@ async function handleEdit(interaction) {
         "is speaking in officer chat in-game, so restrict it accordingly.",
       "The bot's account also needs a guild rank that can read and send officer chat, or replies go nowhere.",
     );
+
+    // Sharing is allowed, but an admin who did it by accident would otherwise
+    // find out when one guild's officers started reading the other's chat.
+    const sharing = guilds
+      .getAllByOfficerChannel(patch.officerChannelId)
+      .filter((g) => g.key !== guild.key);
+
+    if (sharing.length > 0) {
+      notes.push(
+        `Shared with **${sharing.map((g) => g.name).join("**, **")}**. ` +
+          `Officer chat from each arrives there tagged, and \`!${guild.tag.toLowerCase()} message\` ` +
+          "picks one guild to reply to — untagged replies reach them all.",
+      );
+    }
   }
 
   return interaction.reply({

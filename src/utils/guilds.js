@@ -122,16 +122,18 @@ function getCrossBridged() {
 /**
  * Guilds taking part in the officer-chat leg of the guild-to-guild bridge.
  *
- * Gated on `crossBridge` as well as its own flag, and gated in this one place
- * so no caller can reach the officer fan-out without the ordinary one being on
- * too. Officer chat is the more sensitive of the two, so it never starts
- * flowing between guilds that have not already agreed to share their ordinary
- * chat.
+ * Its own flag and nothing else: officer chat is shared between the guilds that
+ * asked for it, whether or not those guilds also share their ordinary chat.
+ * Symmetric like `crossBridge` — a guild that does not send its officer chat
+ * does not receive anyone else's either — so switching the flag off really does
+ * stop that guild's officer chat leaving.
  *
  * @returns {object[]}
  */
 function getOfficerCrossBridged() {
-  return getCrossBridged().filter((g) => g.crossBridgeOfficer === true);
+  return loadConfig()
+    .guilds.filter((g) => g.enabled !== false && g.crossBridgeOfficer === true)
+    .map(copy);
 }
 
 /**
@@ -192,26 +194,36 @@ function getByTag(tag) {
 }
 
 /**
- * The guild whose officer channel a Discord message was typed in.
+ * Every guild whose officer channel a Discord message was typed in.
  *
- * The officer bridge has no `!tag` routing — the channel a message was sent in
- * *is* the guild — so this lookup is what makes the Discord → officer chat leg
- * work at all.
+ * Deliberately plural. Guilds are allowed to share one officer channel, so this
+ * is the candidate set the Discord → officer chat leg routes a `!tag` over,
+ * exactly as the bridge channel routes over the enabled guilds. Returning the
+ * first match instead would silently deliver one guild's officers into
+ * another's chat.
  *
- * `/guilds edit` refuses a channel another guild already holds, so the first
- * match is the only match. If a hand-edited config ever breaks that, one
- * guild's officers would silently have their replies delivered to the other's
- * guild instead.
+ * Disabled guilds are included; the caller filters, because
+ * `000disguiseMessages.js` cares that the channel is an officer channel at all.
  *
  * @param {string} channelId
- * @returns {object|null}
+ * @returns {object[]}
  */
-function getByOfficerChannel(channelId) {
-  if (!channelId) return null;
+function getAllByOfficerChannel(channelId) {
+  if (!channelId) return [];
   const wanted = String(channelId);
-  return copy(
-    loadConfig().guilds.find((g) => g.officerChannelId === wanted) ?? null,
-  );
+  return loadConfig()
+    .guilds.filter((g) => g.officerChannelId === wanted)
+    .map(copy);
+}
+
+/**
+ * @param {string} channelId
+ * @returns {boolean} Whether any guild relays its officer chat to this channel.
+ */
+function isOfficerChannel(channelId) {
+  if (!channelId) return false;
+  const wanted = String(channelId);
+  return loadConfig().guilds.some((g) => g.officerChannelId === wanted);
 }
 
 /**
@@ -505,7 +517,8 @@ module.exports = {
   get,
   getDefault,
   getByTag,
-  getByOfficerChannel,
+  getAllByOfficerChannel,
+  isOfficerChannel,
   resolveKey,
   count,
   isConfigured,

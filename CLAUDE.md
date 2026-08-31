@@ -253,17 +253,23 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   `officerCrossBridgeTargets()`/`relayOfficerAcrossGuilds()`, the `crossBridgeOfficer` flag, and
   its own dedupe instances. The duplication is the point — widening `CHAT_PATTERN` to
   `(?:Guild|Officer) > ` would push privileged chat into the bridge channel, the guild→guild
-  relay *and* the chat-command dispatcher in one edit, and reusing `crossBridge` would mean
-  switching ordinary sharing on also started broadcasting officer chat. Three handlers,
-  `relayOfficerToDiscord.js`, `relayOfficerToGuilds.js` and `relayOfficerToMinecraft.js`, all
-  inert until a guild has an `officerChannelId`. Four things must hold:
-    - **`guilds.getOfficerCrossBridged()` filters `getCrossBridged()`**, so `crossBridgeOfficer`
-      can never be reached with `crossBridge` off. Keep that gate in the one function.
+  relay *and* the chat-command dispatcher in one edit. The single exception is `routeMessage()`,
+  and only because it takes its candidate guilds as an argument. Three handlers,
+  `relayOfficerToDiscord.js`, `relayOfficerToGuilds.js` and `relayOfficerToMinecraft.js`; the two
+  Discord-facing ones are inert until a guild has an `officerChannelId`, while the guild→guild leg
+  needs only `crossBridgeOfficer`. Four things must hold:
     - **`isOwnAccountName()` terminates both inbound paths**, as it does for `relayToGuilds.js`
       — now also covering the copy this guild's own bot just spoke for the Discord channel.
-    - **The Discord leg resolves its guild from the channel** via `guilds.getByOfficerChannel()`;
-      there is no `!tag` routing and no fan-out. `/guilds edit` refuses a channel another guild
-      holds, which is what makes that lookup single-valued.
+    - **The Discord leg routes with `!tag` over the channel's own guilds.** Guilds may share one
+      officer channel, so `guilds.getAllByOfficerChannel()` is plural and its result is the
+      `candidates` passed to `routeMessage()`. That scoping is the load-bearing part: routing
+      against the whole registry would make any officer channel a way to speak into a guild it was
+      never wired to. There is still no fan-out past the routed targets — the copy the bot speaks
+      is dropped by `isOwnAccountName()` before the cross-bridge can see it.
+    - **`crossBridgeOfficer` stands alone.** `getOfficerCrossBridged()` filters the registry on
+      that flag and `enabled`, deliberately *not* on `crossBridge`: sharing officer chat and
+      sharing ordinary chat are separate decisions. Keep it symmetric, so a guild with the flag
+      off neither sends nor receives.
     - **Never `resolveIdentity()` there** — it applies the global profile change. The officer leg
       reads the account link directly, and `000disguiseMessages.js` skips officer channels
       outright: a disguise repost is authored by a webhook, and the leg's `message.author.bot`
@@ -274,7 +280,8 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   *and* send officer chat, and Hypixel reports neither failure.
 - **Routing Discord→Minecraft:** `routeMessage()` from `utils/chatRouting.js` decides which
   guilds a bridge message reaches (`!tag` for one, otherwise all). It is pure — test it there
-  rather than through the handler. Build the `/gc` command **once** and reuse it for every
+  rather than through the handler. Pass `{ candidates }` when the channel serves only some guilds,
+  as the officer leg does; the tag lookup and the fallback both narrow to that set. Build the `/gc` command **once** and reuse it for every
   target: identical name plus identical body means identical truncation, so the 100-character
   budget stays deterministic. Hypixel's duplicate-message filter is per account, so identical
   text from several accounts is fine — don't "fix" it by varying the text per guild. `body` is

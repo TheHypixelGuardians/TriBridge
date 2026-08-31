@@ -107,7 +107,7 @@ code can complete the sign-in with **their own** Microsoft account and bind the 
 ### The rest of `/guilds`
 
 `/guilds list` shows every guild with its connection status, marking cross-bridged guilds with 🔁 and those
-also sharing officer chat with 🛡️. `/guilds edit` changes the name, tag, colour, per-guild channels,
+sharing officer chat with 🛡️. `/guilds edit` changes the name, tag, colour, per-guild channels,
 `enabled`, `crossbridge` and `crossbridgeofficer`, and its `clear` option drops a per-guild channel so it
 falls back to the global one — or, for the officer channel, switches it off. `/guilds default` picks the guild that
 commands act on when none is given. `/guilds remove` unregisters a guild and disconnects its bot; removing the
@@ -148,15 +148,20 @@ speaker rather than as something they said.
 
 ## Officer chat
 
-Hypixel's officer chat is not part of the main bridge and never appears in the bridge channel. It gets a
-channel of its own, per guild, switched on by naming one:
+Hypixel's officer chat is not part of the main bridge and never appears in the bridge channel. It gets its own
+channel, switched on by naming one:
 
 ```
-/guilds edit guild:sb officerchannel:#sb-officer-chat
+/guilds edit guild:sb officerchannel:#officer-chat
 ```
 
 From then on officer chat in that guild is posted there, and anything typed there is spoken back into officer
 chat in-game. `/guilds edit guild:sb clear:Officer channel` switches it off again.
+
+**Several guilds may share one officer channel**, the same way they share the bridge channel — point them all
+at it. Each guild's officer chat arrives tagged and in that guild's colour, and replies are routed by the same
+`!tag` rules the bridge channel uses. Separate channels still work: a guild pointed at a channel nobody else
+uses behaves exactly as it did when that was the only option.
 
 - **Two-way, and that is the whole security model.** Everyone who can post in the channel is speaking in
   officer chat in-game. Access is governed by Discord's own channel permissions and nothing else: there is
@@ -169,14 +174,21 @@ chat in-game. `/guilds edit guild:sb clear:Officer channel` switches it off agai
   name, everyone else under their Discord name. A running [global profile change](#global-profile-change)
   never applies here: a channel that exists to record what officers said is the last place to relabel who
   said it.
-- **No routing and no fan-out.** The channel a message is typed in *is* the guild, so `!tag` prefixes mean
-  nothing here, and a reply reaches that guild's officer chat only — even with officer sharing on below. Two
-  guilds cannot share one officer channel, and `/guilds edit` refuses to set one that is already taken.
+- **Routed by tag, scoped to the channel.** `!sb message` replies to the guild tagged `SB`; an untagged
+  message reaches every guild that uses the channel. A tag belonging to a guild that does *not* use it counts
+  as unknown — it earns a ❓ and is delivered as typed, rather than turning an officer channel into a way to
+  speak into a guild it was never wired to. `!!` sends a literal `!`, as in the bridge channel.
+- **📡 when nothing arrived.** Stricter than the bridge channel, which only says so for a tagged message: any
+  reply that reached no guild at all is marked, because a privileged message disappearing quietly is the
+  failure worth interrupting for.
+- **No fan-out from Discord.** A reply reaches the guilds it was addressed to and no further, even with
+  officer sharing on below — cross-bridging is a Minecraft to Minecraft path, and the copy the bot speaks is
+  dropped by its own loop guard before it can be forwarded.
 - **Chat commands are not answered.** `!nw` typed in officer chat or in the officer channel is just something
-  an officer said.
-- **One channel per guild, no global fallback.** Unlike the log and audit channels, a guild with no officer
-  channel set has the feature off rather than pointing somewhere shared — officer chat from two guilds
-  landing in one channel by default is not a sensible thing to do quietly.
+  an officer said. It does look like a tag, so it collects a ❓; `!!nw` avoids that.
+- **No global fallback.** Unlike the log and audit channels, a guild with no officer channel set has the
+  feature off rather than pointing somewhere shared — sharing a channel has to be asked for, because officer
+  chat arriving somewhere nobody chose is exactly the mistake worth refusing to make quietly.
 
 ### Sharing officer chat between guilds
 
@@ -188,14 +200,16 @@ Officer chat can also cross between guilds, into each other's officer chat:
 ```
 
 It follows the same rules as [guild-to-guild bridging](#guild-to-guild-bridging) — symmetric, off by default,
-takes two guilds, tags the source guild onto the name, drops lines older than ten seconds — with one extra
-condition: **`crossbridge` has to be on for the same guild.** Officer chat never starts crossing between
-guilds that are not already sharing their ordinary chat, so the more sensitive setting can never be reached
-without the less sensitive one. `/guilds edit` accepts the flag on its own but says that it is inert.
+takes two guilds, tags the source guild onto the name, drops lines older than ten seconds — and it is an
+independent switch: `crossbridge` does not have to be on. The two answer different questions, and a guild may
+well want its officers in touch with another guild's without pooling everybody's ordinary chat.
 
-Turning it on roughly doubles how much a guild's Minecraft account says in-game, and that rate is the thing
-keeping accounts out of Hypixel's spam filter. It is worth switching on where officer channels are actually
-busy rather than everywhere by default.
+Turning it on adds to how much a guild's Minecraft account says in-game — roughly doubling it where ordinary
+sharing is on as well — and that rate is the thing keeping accounts out of Hypixel's spam filter. It is worth
+switching on where officer channels are actually busy rather than everywhere by default.
+
+Note this is separate from sharing a Discord channel. Two guilds can share one officer channel without
+`crossbridgeofficer`: their officers then read each other in Discord, but nothing crosses in-game.
 
 ## Chat commands
 

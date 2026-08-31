@@ -41,9 +41,9 @@ permission does not spam the channel. The bridge falls back to ordinary relaying
 | [Officer channel](Officer-Chat)                                           | View Channel, Send Messages, Embed Links, Add Reactions |
 | Every channel a [global profile change](Global-Profile-Change) applies to | View Channel, Manage Webhooks, Manage Messages          |
 
-An officer channel needs **Add Reactions** only for the 📡 marker that says a reply did not reach a guild
-that is offline; without it the reply is still attempted. It deliberately needs **neither Manage Webhooks nor
-Manage Messages**, because nothing there is ever reposted or deleted.
+An officer channel needs **Add Reactions** only for the routing markers — 📡 when a reply reached no guild,
+❓ on an unrecognised [guild tag](Guild-Tags); without it the reply is still attempted. It deliberately needs
+**neither Manage Webhooks nor Manage Messages**, because nothing there is ever reposted or deleted.
 
 > ⚠️ An officer channel is **two-way**. Every member who can post in it is speaking in Hypixel officer chat,
 > and the channel's own Discord permissions are the only thing controlling that.

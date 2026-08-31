@@ -86,8 +86,9 @@ what was meant.
 remove the default guild.
 
 `officerchannel` opens a **two-way** [officer chat](Officer-Chat) channel: everyone who can post in it is
-speaking in officer chat in-game. `crossbridgeofficer` additionally shares officer chat with the other guilds,
-and needs `crossbridge` on for the same guild.
+speaking in officer chat in-game. Several guilds may point at the same channel and share it, with `!tag`
+picking which one a reply reaches. `crossbridgeofficer` separately shares officer chat between the guilds
+in-game; it is independent of `crossbridge`.
 
 ## Requests
 
