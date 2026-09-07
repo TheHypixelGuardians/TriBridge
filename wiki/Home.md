@@ -31,12 +31,13 @@ watching Discord.
 | [Networth](Networth)                               | `!nw <username>` in chat, or `/networth`, from either side of the bridge |
 | [Hypixel guilds](Hypixel-Guilds)                   | Register, edit and sign in guilds entirely from Discord with `/guilds`   |
 | [Reconnection](Reconnection)                       | Dropped accounts come back on their own, one at a time                   |
-| [Admin roles](Admin-Roles)                         | A flat list of Discord roles that hold bot-admin                         |
-| [Admin panel](Admin-Panel)                         | `/adminpanel` — a button per admin function                              |
+| [Admin roles](Admin-Roles)                         | A flat list of Discord roles that hold bot-admin, shared with the community bot |
 | [Global profile change](Global-Profile-Change)     | Everyone wears one member's name and face, for a while                   |
 | [Auditing](Auditing)                               | Every disguised message recorded with a jump link                        |
-| [Link role](Link-Role)                             | A role handed out automatically to everyone who links                    |
-| [Feature requests](Feature-Requests)               | `/request` opens a form; admins move it through a status                 |
+
+> **TriBridge is only the bridge.** Member profiles, account linking, the admin panel, feature requests and
+> the rest of community life belong to the sibling [THG community bot](https://github.com/TheHypixelGuardians/thg-community). The two share one
+> database so they agree about who is linked and who is staff.
 
 ## Quick reference
 

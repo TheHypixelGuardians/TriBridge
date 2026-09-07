@@ -71,7 +71,7 @@ in them — see below.
 
 - **Bugs and ideas from outside the server:**
   [Issues](https://github.com/Trilleo/TriBridge/issues).
-- **From inside the server:** `/request` — see [Feature requests](Feature-Requests).
+- **From inside the server:** `/request` on the THG community bot.
 
 ## Next
 

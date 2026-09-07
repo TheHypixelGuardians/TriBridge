@@ -82,7 +82,7 @@ managed entirely from Discord with **`/guilds`**. You should not need to edit th
 | `account`        | Microsoft account email for this guild's Minecraft bot. **Immutable**, and no two guilds may share one    |
 | `color`          | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                              |
 | `logChannelId`   | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                               |
-| `auditChannelId` | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                        |
+| `auditChannelId` | Optional per-guild audit channel. Falls back to the one set with `/auditchannel` on the community bot     |
 | `enabled`        | `false` disconnects a guild without removing it                                                           |
 | `crossBridge`    | `true` shares guild chat with the other cross-bridged guilds — see [below](#guild-to-guild-bridging)      |
 
@@ -261,56 +261,44 @@ to the Hypixel API later is a sibling file and one changed `require`.
 
 ## Account linking
 
-`/link <username>` binds a Discord user to a Minecraft account.
+Members link a Minecraft account with **`/link` on the [THG community bot](https://github.com/TheHypixelGuardians/thg-community)**,
+which owns `/link`, `/unlink`, `/links`, `/whois` and the link role. TriBridge reads the link and nothing else
+— see [The shared database](SHARED_DATABASE.md).
 
-Linked users get a visibly better bridge. Their Discord message is **reposted through a webhook** wearing
+Linked members get a visibly better bridge. Their Discord message is **reposted through a webhook** wearing
 their Minecraft head and name, the original is deleted, and the guild-chat copy is attributed to their
 Minecraft name rather than their Discord one — so a guild member reading either side sees the same person.
+Officer chat uses the link too, for the name it speaks under, and takes no repost.
 
-- **One link per Discord user, and one Discord user per Minecraft account.** Both directions are enforced.
+- **One link per Discord user, and one Discord user per Minecraft account.** Both directions are enforced by
+  the community bot.
 - **Links are not scoped to a Hypixel guild.** One link, whatever guild you are in.
 - **The UUID is stored alongside the name**, and avatar URLs use it, so a link survives a Minecraft name
   change.
-- `/unlink` removes your own link; an admin can pass `user:` to remove anyone's. `/links` lists every link and
-  `/whois` looks one up by Discord user or by Minecraft username — both admin-only.
-
-`/link` verifies the name exists via Mojang, then checks the live `/guild list` roster of **every connected
-guild** and accepts membership of any one of them. It **fails open only when the result is inconclusive** — no
-bot connected, a timeout, output that never looked like a roster — and never when a roster parsed cleanly and
-the name was absent. Across guilds that means: found if any roster has them, absent only if every roster
-parsed cleanly and none did, inconclusive otherwise. Note the check necessarily weakens as guilds are added,
-since one flaky roster makes the whole thing inconclusive.
+- **An unreachable database reads as "not linked".** The message still relays, under the Discord name — a
+  degraded bridge beats a stopped one.
+- **A new link is honoured within about fifteen seconds.** This side caches lookups because they sit on the
+  message path, and cannot see the community bot's writes to invalidate them.
 
 The repost path needs **Manage Webhooks** and **Manage Messages** in the bridge channel. Without them the bot
 falls back to the ordinary relay and reports the problem once to the log channel — latched, so it does not
 spam. The repost is also sent with mentions restricted to users, because a webhook post is not subject to the
 author's own permissions and an unrestricted one would let any linked user ping `@everyone`.
 
-## Link role
-
-`/linkrole set <role>` names a Discord role that everyone with a link should have. `/link` grants it, `/unlink`
-takes it back, setting the role backfills it onto everyone already linked, and every startup re-checks the
-stored links so a link made while the bot was offline still gets it. The links are the source of truth; the
-roles are derived from them.
-
-- **The role never gates the link.** A missing role, or a lost **Manage Roles**, is a configuration problem —
-  it is reported and the link goes ahead regardless.
-- **The sync only ever adds.** The role may be handed out for unrelated reasons, so it is never stripped from
-  someone merely because they have no link. Changing or clearing the configured role likewise leaves the old
-  one in place.
-
-The bot needs **Manage Roles**, and its own highest role must rank above the link role.
-
 ## Admin roles
 
 TriBridge has two separate permission systems.
 
-**Discord permissions** are enforced generically before a command runs. Only `/adminrole` uses one: it requires
-the Discord **Administrator** permission, because it is the command that decides who else is an admin.
+**Discord permissions** are enforced generically before a command runs.
 
-**Bot-admin** is a flat list of Discord role ids in `adminRolesConfig.json`, managed with `/adminrole
-add|remove <role>`, and checked inside each admin command. Everything under Management, plus `/whois`,
-`/unlink user:`, `/linkrole`, `/auditchannel`, `/requestchannel` and `/requeststatus`, is gated this way.
+**Bot-admin** is a flat list of Discord role ids, configured on the **THG community bot** with `/adminrole
+add|remove <role>` and read from the shared database, then checked inside each admin command. Everything under
+Management is gated this way. One list serves both bots, so a role that opens the community bot's admin panel
+also runs `/send` here.
+
+**The check fails closed.** A member with no matching role, an unresolved Discord server or an unreachable
+database is not an admin. `/send` runs arbitrary commands as a Minecraft account, so handing it out during a
+database outage would be worse than the outage. Set `DATABASE_URL`, or nothing admin-gated works at all.
 
 ### One Discord server
 
@@ -319,9 +307,8 @@ refuses an interaction that did not come from it — the server resolved at star
 named explicitly with `DISCORD_GUILD_ID`.
 
 This is not tidiness. Without the check, an administrator of *any other* server the bot happens to be in could
-`/adminrole add` a role they control and inherit bot-admin over the real server, including `/send`, which runs
-arbitrary commands as a Minecraft account. The check fails closed: if the server cannot be resolved, every
-command is refused.
+reach commands scoped to the real server, including `/send`, which runs arbitrary commands as a Minecraft
+account. The check fails closed: if the server cannot be resolved, every command is refused.
 
 ## Management commands
 
@@ -357,43 +344,39 @@ which is the only thing stopping two concurrent commands from eating each other'
   The buttons stop working after five minutes.
 - **`/networth [username]`** — see [SkyBlock networth](#skyblock-networth).
 
-## Admin panel
-
-`/adminpanel` opens an ephemeral panel with a button per admin function. Today there is one: **Global profile
-change**. The panel also carries a **Stop effect** button and a **Refresh**, and shows the running state —
-who, since when, how much longer, and which bridge legs are switched on.
-
-A half-filled form lives in memory between clicks rather than in the button ids, so restarting the bot mid-set-up
-costs the admin one re-pick.
-
 ## Global profile change
 
-Pick a member and a duration, and for that long everybody's messages are reposted wearing that member's name
-and avatar — in Discord, in the guild-chat copy, and on guild chat coming back the other way.
+Started, stopped and scoped from **`/adminpanel` on the THG community bot**: pick a member and a duration, and
+for that long everybody's messages are reposted wearing that member's name and avatar. The community bot does
+the reposting in ordinary channels; TriBridge applies the same effect to the three places it owns.
 
-- **Each bridge direction has its own switch.** *Discord → Minecraft* governs the name guild chat is told;
-  *Minecraft → Discord* governs the name on incoming guild chat embeds. Switching the first off stops the
-  disguise at the bridge rather than turning it off outright — the Discord repost still wears the target's
-  face.
-- **Durations** run from five minutes to a day, or until stopped, or a custom value: `90m`, `2h30m`, `1d12h`,
-  or a bare number read as minutes. `0`, `none`, `never`, `forever`, `permanent` and `indefinite` all mean
-  "until somebody stops it".
-- **Test mode** applies the disguise only to listed testers, and only in listed channels, so it can be tried
-  before it goes server-wide. On the guild-chat side a tester is recognised by their
-  [account link](#account-linking) — without that, testing would silently relabel guild members who never
-  agreed to take part.
-- **Channels can be excluded** from a live effect, and [officer channels](#officer-chat) are excluded from it
-  always. A channel that exists to record what officers said is the last place to relabel who said it, and
-  reposting there would break the reply leg outright — the repost is authored by a webhook, and the officer
-  bridge ignores anything a bot posted.
-- **The target is never disguised as themselves**, and a lapsed effect is cleared the next time anything asks
-  whether it is running, so a timer lost to a restart or a clock jump can never leave the disguise stuck on.
+- **The bridge channel repost.** Handled here rather than by the community bot, because `relayToMinecraft.js`
+  has to repost there anyway to attribute a linked member's Minecraft name — two bots deleting the same
+  message would race.
+- **Discord → Minecraft.** The name guild chat is told. Switching this leg off stops the disguise at the
+  bridge rather than turning it off outright: the Discord repost still wears the target's face, and guild chat
+  is told who really spoke.
+- **Minecraft → Discord.** The name on incoming guild chat embeds.
 
-It works by reposting through a webhook and deleting the original, so it needs **Manage Webhooks** and
-**Manage Messages** in *every* channel it applies to. Channels missing either are skipped and left alone, with
-one warning to the log channel.
+Each leg has its own switch on the panel, and the two switches are settings rather than part of a run — they
+survive an effect ending and apply to the next one.
 
-Because a repost is a new message:
+**Test mode** applies the disguise only to listed testers, and only in listed channels. On the guild-chat side
+a tester is recognised by their [account link](#account-linking) — without that, testing would silently
+relabel guild members who never agreed to take part.
+
+**Officer channels are never disguised.** A channel that exists to record what officers said is the last place
+to relabel who said it, and reposting there would break the reply leg outright — the repost is authored by a
+webhook, and the officer bridge ignores anything a bot posted. TriBridge publishes its officer channels and its
+bridge channel to the shared database precisely so the community bot skips them too.
+
+**The target is never disguised as themselves**, and an effect that has run out reads as "not running" on this
+side even before the community bot clears the row, so a timer lost to a restart or a clock jump cannot leave
+the disguise stuck on. An unreachable database also reads as "not running": a blip must not start relabelling
+guild members.
+
+The bridge-channel repost needs **Manage Webhooks** and **Manage Messages**, the same as
+[account linking](#account-linking). Because a repost is a new message:
 
 - a disguised message cannot afterwards be edited or deleted by the person who wrote it;
 - replies keep a jump link instead of Discord's reply header;
@@ -405,30 +388,17 @@ Reposts within a channel are chained, so a burst arrives in the order it was sen
 ## Auditing
 
 Reposting deletes the original, so the real author is no longer visible on the message. Every disguised message
-is therefore recorded in the channel set with `/auditchannel set`, with a jump link to the repost, plus an
-entry whenever a global profile change starts or ends.
+is therefore recorded in the audit channel, with a jump link to the repost — by the community bot for its own
+reposts, and by TriBridge for the bridge channel and for guild chat relabelled on the way in.
 
-A Hypixel guild can be given its own audit channel with `/auditchannel set channel:#x guild:sb`; per-guild
-overrides live in `guildsConfig.json` rather than in the audit config, so removing a guild cannot leave an
-orphaned channel setting behind. `/auditchannel show` lists the default and every override, and `/auditchannel
-clear` drops one.
+The channel itself is set with **`/auditchannel` on the THG community bot** and read from the shared database,
+so both bots record into one place. A Hypixel guild can still be given its own audit channel with `/guilds
+edit`; per-guild overrides live in `guildsConfig.json` rather than in the database, so removing a guild cannot
+leave an orphaned channel setting behind.
 
-The bot needs **View Channel**, **Send Messages** and **Embed Links** in every channel used.
-
-## Feature requests
-
-`/request` opens a short form — a name and a description. The submission is posted as an embed with an
-incrementing id to the channel set by `/requestchannel set`, and the id is assigned and persisted *before* the
-send, so two concurrent submissions cannot share one.
-
-Admins move a request through its lifecycle with `/requeststatus <id> <status>` — **accepted**, **denied**,
-**planned** or **duplicate** — which recolours and updates the original embed in place. A new request starts
-as ⏳ Pending.
-
-The request body is arbitrary member-supplied text posted by the bot, so mentions in it are suppressed; an
-`@everyone` in a request does not ping. If the post fails the request is still saved, and the reply says so.
-
-The bot needs **View Channel**, **Send Messages** and **Embed Links** in the request channel.
+The bot needs **View Channel**, **Send Messages** and **Embed Links** in every channel used. A failed audit
+write is logged and otherwise ignored: the entry accompanies work that has already happened, and a
+misconfigured channel must not take that work down with it.
 
 ## Reconnection
 

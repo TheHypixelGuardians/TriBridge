@@ -32,19 +32,22 @@ Also typed rather than slashed: **[guild tags](Guild-Tags)**. `!sb hey` sends to
 `/ping` has no `guild` option on purpose: it is a status readout, so it always covers everything the bot is
 responsible for. `/help`'s buttons stop working after five minutes — run it again.
 
-## Linking
+## On the community bot
 
-| Command                   | Does                                                           |
-|---------------------------|----------------------------------------------------------------|
-| `/link <username>`        | Bind your Minecraft account to your Discord account            |
-| `/unlink [user]`          | Remove a link — your own, or 🔒 anyone's                       |
-| `/links`                  | 🔒 List every linked Minecraft account                         |
-| `/whois <user\|username>` | 🔒 Look up a link by Discord user or Minecraft username        |
-| `/linkrole set <role>`    | 🔒 Set the role given to users with a linked account           |
-| `/linkrole show`          | 🔒 Show the configured role                                    |
-| `/linkrole clear`         | 🔒 Stop giving out a role on link. Does not take it off anyone |
+These are not TriBridge commands — they live on the sibling [THG community bot](https://github.com/TheHypixelGuardians/thg-community), and the bridge
+reads what they configure. They are listed here because the bridge behaves differently once they have been
+used.
 
-See [Account linking](Account-Linking) and [Link role](Link-Role).
+| Command                     | Does                                                       | Affects the bridge |
+|-----------------------------|------------------------------------------------------------|--------------------|
+| `/link <username>`          | Bind your Minecraft account to your Discord account        | [Account linking](Account-Linking) |
+| `/unlink [user]`            | Remove a link — your own, or 🔒 anyone's                   | [Account linking](Account-Linking) |
+| `/links`, `/whois`          | 🔒 List or look up links                                   | —                  |
+| `/linkrole set\|show\|clear` | 🔒 The role given to linked members                        | —                  |
+| `/adminrole add\|remove\|show` | ⛔ The bot-admin role list, shared by both bots           | [Admin roles](Admin-Roles) |
+| `/adminpanel`               | 🔒 Start and stop the global profile change                | [Global profile change](Global-Profile-Change) |
+| `/auditchannel set\|show\|clear` | 🔒 Where disguised messages are recorded             | [Auditing](Auditing) |
+| `/request`, `/requestchannel`, `/requeststatus` | Feature requests                       | —                  |
 
 ## Management
 
@@ -59,11 +62,9 @@ Every command in this section is 🔒 bot-admin only. The six that act on a Hypi
 | `/demote <username> [guild]`          | Demote a member                                                        |
 | `/send <message> [guild]`             | Run any command or message as that guild's account, and show the reply |
 | `/login [guild]`                      | Connect the bot. With no guild, every *disconnected* guild             |
-| `/adminpanel`                         | Open the [admin panel](Admin-Panel)                                    |
-| `/adminrole add\|remove <role>`       | ⛔ Configure the bot-admin roles                                        |
-| `/auditchannel set <channel> [guild]` | Set where [audit](Auditing) entries go                                 |
-| `/auditchannel show`                  | Show the default audit channel and every per-guild override            |
-| `/auditchannel clear [guild]`         | Stop recording, or drop one guild's override                           |
+
+A Hypixel guild's own [audit channel](Auditing) is set with `/guilds edit guild:sb auditchannel:#x`; the
+server-wide default lives on the community bot.
 
 `/send` never fans out — it always targets exactly one guild, because it runs arbitrary commands as a
 Minecraft account. `/login` with no guild reconnects everything, since after an outage that is almost always
@@ -89,17 +90,6 @@ remove the default guild.
 speaking in officer chat in-game. Several guilds may point at the same channel and share it, with `!tag`
 picking which one a reply reaches. `crossbridgeofficer` separately shares officer chat between the guilds
 in-game; it is independent of `crossbridge`.
-
-## Requests
-
-| Command                         | Does                                                     |
-|---------------------------------|----------------------------------------------------------|
-| `/request`                      | Submit a feature request through a short form            |
-| `/requestchannel set <channel>` | 🔒 Set the channel requests are posted to                |
-| `/requestchannel show`          | 🔒 Show where requests are posted                        |
-| `/requeststatus <id> <status>`  | 🔒 Mark a request accepted, denied, planned or duplicate |
-
-See [Feature requests](Feature-Requests).
 
 ## Notes
 

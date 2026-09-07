@@ -42,6 +42,15 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 - Someone with their inventory API off gets an `(API off)` note — the number will be too low.
 - `/networth` does the same, and with no username it uses your linked account.
 
+### Commands have moved to the community bot
+
+- `/link`, `/unlink`, `/links`, `/whois` and `/linkrole` are now on the **THG community bot**. Linking works
+  exactly the same, and the bridge still shows your Minecraft head and name once you have linked.
+- `/request` is there too, along with `/adminrole`, `/adminpanel` and `/auditchannel` for staff.
+- Nothing about the bridge itself changes. Guild chat, guild tags, officer chat, `!nw` and `/online` all stay
+  here.
+- If you have already linked, you do not need to link again.
+
 ## Version 1.2.1
 
 ### Global profile change

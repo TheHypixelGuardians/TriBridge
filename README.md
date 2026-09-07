@@ -23,26 +23,30 @@ all.
 - **Officer chat** — a two-way Discord channel for Hypixel officer chat, shared between guilds with `!tag`
   routing or one per guild, and optionally shared between the guilds in-game as well. Off until a channel is
   named, and everyone who can post there speaks as an officer in-game.
-- **Account linking** — `/link` reposts your Discord messages with your Minecraft head and name, and attributes
-  the guild-chat copy to your Minecraft name.
-- **Link role** — an optional Discord role handed out automatically to everyone who links, backfilled at every
-  startup.
+- **Account linking** — members link with `/link` on the **THG community bot**; this bot reads the link to
+  repost their Discord messages with their Minecraft head and name, and to attribute the guild-chat copy to
+  their Minecraft name.
 - **SkyBlock networth** — `!nw <username>` from either side of the bridge, or `/networth`, on a player's
   richest profile.
 - **Hypixel guild registry** — `/guilds` registers, edits and signs guilds in entirely from Discord; the
   Microsoft device code arrives in a private reply, never the console.
 - **Auto-reconnect** — dropped accounts come back on their own, one guild per ten-second tick so a Hypixel
   restart can't throttle them all at once.
-- **Admin roles** — a flat list of Discord roles that hold bot-admin, separate from Discord's own permissions.
-- **Admin panel** — `/adminpanel`, a button per admin function, with the running state on the embed.
-- **Global profile change** — everybody's messages reposted wearing one member's name and face, for a set
-  duration, with a switch per bridge direction and a test mode.
-- **Auditing** — every disguised message recorded with a jump link, so the real author is never lost.
-- **Feature requests** — `/request` opens a form; admins move each request through a status and the embed
-  updates in place.
+- **Admin roles** — a flat list of Discord roles that hold bot-admin, configured on the **THG community bot**
+  with `/adminrole` and read by both bots, so one list decides who is staff.
+- **Global profile change** — run from the community bot's `/adminpanel`; this bot applies it to the two legs
+  it owns, the name guild chat is told and the name on incoming guild chat, plus the repost in the bridge
+  channel. Each direction has its own switch.
+- **Auditing** — every disguised message recorded with a jump link, so the real author is never lost. The
+  channel is set on the community bot; a Hypixel guild can still override it here.
 - **Guild management** — `/invite`, `/kick`, `/promote`, `/demote`, `/send` and `/login`, each targeting one
   guild or the default.
 - **Information** — `/online`, `/ping`, `/help` and `/networth`.
+
+**Community features live in the sibling [THG community bot](https://github.com/TheHypixelGuardians/thg-community).**
+Account links, bot-admin roles, the admin panel, the audit channel and feature requests are configured there
+and shared with this bot through one PostgreSQL database — see
+[The shared database](docs/SHARED_DATABASE.md).
 
 *See [Features](docs/FEATURES.md) for what each one does in full, the [wiki](https://github.com/Trilleo/TriBridge/wiki)
 for the same material split by audience, and the [change log](CHANGELOG.md) for what's new in each release.*
@@ -55,6 +59,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
 | **npm**               | Included with Node.js                                                                                                                                |
 | **Discord bot**       | An application at the [Discord Developer Portal](https://discord.com/developers/applications) with the **Message Content** privileged intent enabled |
 | **Minecraft account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net`                                   |
+| **PostgreSQL**        | The database the [THG community bot](https://github.com/TheHypixelGuardians/thg-community) owns. This bot reads account links, bot-admin roles and the global profile change from it |
 
 ## Installation
 
@@ -82,6 +87,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
    DISCORD_CHANNEL_ID=your_bridge_channel_id
    LOG_CHANNEL=your_log_channel_id
    MINECRAFT_USERNAME=you@example.com
+   DATABASE_URL=postgres://user:password@host:5432/thg
    ```
 
    | Variable             | Description                                                                                          |
@@ -90,6 +96,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
    | `DISCORD_CHANNEL_ID` | The bridge channel — the one channel wired to guild chat                                             |
    | `LOG_CHANNEL`        | Where connection notices and warnings go. A Hypixel guild can override it with its own channel        |
    | `MINECRAFT_USERNAME` | Microsoft account email for the first Hypixel guild. **Ignored once `guildsConfig.json` exists**       |
+   | `DATABASE_URL`       | The community bot's PostgreSQL database. Account links, bot-admin roles, the global profile change and the audit channel are read from it |
    | `DISCORD_GUILD_ID`   | *Optional.* The only Discord server the bot accepts commands from. Defaults to the bridge channel's server |
 
    > **TriBridge serves a single Discord server**, however many Hypixel guilds it bridges. Commands are
@@ -109,7 +116,9 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
    Microsoft device-code flow opens in the console. Tokens are cached in `.minecraft-auth/`, one entry per
    account.
 
-6. **Set the admin roles** — `/adminrole add role:@Staff`. Until then, nothing admin-gated works.
+6. **Set the admin roles on the community bot** — `/adminrole add role:@Staff` there. Both bots read that one
+   list, so until it has an entry nothing admin-gated works on either side. Without `DATABASE_URL`, `isAdmin`
+   fails closed and every admin command here refuses.
 
 Full walkthrough: [Installation](https://github.com/Trilleo/TriBridge/wiki/Installation).
 
@@ -124,21 +133,10 @@ Full walkthrough: [Installation](https://github.com/Trilleo/TriBridge/wiki/Insta
 | `/send <message> [guild]`                   | Management  | Run a command as the Minecraft account and show the reply (admin only)    |
 | `/login [guild]`                            | Management  | Connect the bots; all disconnected guilds by default (admin only)         |
 | `/guilds add/remove/list/edit/default/auth` | Management  | Manage the bridged Hypixel guilds and sign their accounts in (admin only) |
-| `/adminrole add/remove <role>`              | Management  | Configure the bot-admin roles (server admin only)                         |
-| `/adminpanel`                               | Management  | Open the admin panel (admin only)                                         |
-| `/auditchannel set/show/clear [guild]`      | Management  | Choose where admin panel actions are recorded (admin only)                |
-| `/link <username>`                          | Linking     | Bind your Minecraft account to your Discord account                       |
-| `/unlink [user]`                            | Linking     | Remove a link — your own, or anyone's (admin only)                        |
-| `/links`                                    | Linking     | List every linked Minecraft account (admin only)                          |
-| `/whois <user\|username>`                   | Linking     | Look up a link in either direction (admin only)                           |
-| `/linkrole set/show/clear <role>`           | Linking     | Choose the role given to linked users (admin only)                        |
 | `/networth [username]`                      | Information | A player's SkyBlock networth on their richest profile                     |
 | `/online [guild]`                           | Information | Who is online in every guild, or one                                      |
 | `/ping`                                     | Information | Discord latency and each guild's Minecraft connection status              |
 | `/help`                                     | Information | Browse all commands by category                                           |
-| `/request`                                  | Requests    | Submit a feature request through a short form                             |
-| `/requestchannel set/show <channel>`        | Requests    | Choose where feature requests are posted (admin only)                     |
-| `/requeststatus <id> <status>`              | Requests    | Mark a request accepted, denied, planned or duplicate (admin only)        |
 
 Plus the chat commands typed in guild chat or the bridge channel: `!nw <username>` for a networth lookup, and
 `!tag message` to aim at one guild. Full reference:
@@ -158,8 +156,10 @@ Everything past the first Hypixel guild is configured from Discord rather than f
 ```bash
 /guilds add key:sb name:SkyBlock Guild tag:SB account:you@example.com
 /guilds edit guild:sb crossbridge:True
-/adminrole add role:@Staff
 ```
+
+Bot-admin roles are configured on the [THG community bot](https://github.com/TheHypixelGuardians/thg-community)
+with `/adminrole`, and both bots read that one list.
 
 Config files are written next to the repository and are all gitignored, so they survive a `git pull` — see
 [Config files](https://github.com/Trilleo/TriBridge/wiki/Config-Files).

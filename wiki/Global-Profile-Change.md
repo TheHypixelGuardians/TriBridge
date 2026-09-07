@@ -1,101 +1,56 @@
 # Global profile change
 
-Pick a member and a duration, and for that long **everybody's messages are reposted wearing that member's name
-and avatar** — in Discord, in the guild-chat copy, and on guild chat coming back the other way.
+For a set duration, everybody's messages are reposted wearing one member's name and avatar — in Discord, in
+the copy guild chat is told, and on guild chat coming back the other way.
 
-It is a joke feature with real teeth: it deletes people's messages and reposts them under someone else's face.
-Read [Auditing](Auditing) before running one live.
+## Running it
 
-Set it up from [`/adminpanel`](Admin-Panel) → **Global Profile**.
+Open **`/adminpanel` on the THG community bot** and use the **Global Profile** button: pick the member, pick a
+duration, then start it in test mode or live. The panel also carries **Stop effect** and **Refresh**, and shows
+who is being worn, since when, how much longer, and which bridge legs are switched on.
 
-## Setting one up
+TriBridge has no `/adminpanel`. It reads the running effect and applies it to the three places it owns.
 
-1. **Pick the member** everybody will appear as. If they have a [linked account](Account-Linking), their
-   Minecraft name is used on the guild-chat side too.
-2. **Pick a duration** — 5 minutes to 24 hours, **Until stopped**, or **Custom…**.
-3. **Choose the bridge directions** (below).
-4. **Start in test mode** or **Start live**.
+## What TriBridge does with it
 
-**Testers & channels** opens the scope view: who the testers are, which channels test mode applies in, and
-which channels a live effect should skip.
+| Leg | What it covers |
+|---|---|
+| **The bridge channel** | The repost there is TriBridge's, because it has to repost anyway to attribute a linked member's Minecraft name |
+| **Discord → Minecraft** | The name guild chat is told |
+| **Minecraft → Discord** | The name on incoming guild chat embeds |
 
-### Custom durations
+Each direction has its own switch on the panel. Switching *Discord → Minecraft* off stops the disguise at the
+bridge rather than turning it off outright — the Discord repost still wears the target's face, but guild chat
+is told who really spoke.
 
-`90m`, `2h30m`, `1d12h`, or a bare number read as minutes. `0`, `none`, `never`, `forever`, `permanent` and
-`indefinite` all mean "until somebody stops it". Trailing junk is rejected outright rather than quietly
-ignored — `2h then stop` is not two hours, it is an error.
-
-## The two switches
-
-The effect has three legs, and two of them have their own switch on the panel:
-
-| Leg                 | Switch                          | Governs                                |
-|---------------------|---------------------------------|----------------------------------------|
-| Discord repost      | *always on*                     | The message in the bridge channel      |
-| Discord → Minecraft | **Discord → Minecraft: on/off** | The name guild chat is told            |
-| Minecraft → Discord | **Minecraft → Discord: on/off** | The name on incoming guild-chat embeds |
-
-Switching *Discord → Minecraft* off stops the disguise **at the bridge** rather than turning it off outright —
-Discord still shows the target's face, guild chat gets real names. That is the setting for running a joke in
-Discord without confusing people in-game.
-
-Neither switch affects [guild-to-guild bridging](Guild-to-Guild-Bridging). Forwarded chat always uses real
-names.
+Everywhere else in the server is the community bot's own repost.
 
 ## Test mode
 
-Test mode applies the effect **only to listed testers, and only in listed channels**. Everything else in the
-server is untouched. Use it before going live.
+Test mode applies the disguise only to listed testers, in listed channels. Over the bridge a tester is
+recognised by their [account link](Account-Linking) — without that, testing would silently relabel guild
+members who never agreed to take part.
 
-On the guild-chat side, a tester is recognised by their [account link](Account-Linking) — the bot has no
-Discord author to check when a line arrives from Minecraft, so it matches the Minecraft name back to a link
-and checks that. **A tester with no link will not see their guild chat rewritten**, and without that rule
-testing would silently relabel guild members who never agreed to take part.
+## What is never disguised
 
-## Live mode
+- **Officer channels**, always. A channel that exists to record what officers said is the last place to
+  relabel who said it, and a webhook repost there would be dropped by the officer relay, losing the message
+  outright. TriBridge publishes its officer channels to the shared database so the community bot skips them
+  too.
+- **Join and leave lines** from guild chat. They announce a real player arriving or leaving.
+- **The target themselves.** They already wear that face.
+- **A chat command** such as `!nw Notch`, which is answered rather than relayed.
 
-Applies server-wide, except:
+## When it stops
 
-- **channels you excluded** in the scope view,
-- **channels where the bot lacks Manage Webhooks or Manage Messages** — those are skipped and left completely
-  alone, with one warning to the log channel. They are never partially disguised, and
-- **[officer channels](Officer-Chat)**, always. A channel that exists to record what officers said is the last
-  place to relabel who said it, and reposting there would break the reply leg outright — the repost is
-  authored by a webhook, and the officer bridge ignores anything a bot posted.
+At the chosen time, or when an admin presses **Stop effect**. An effect that has run out reads as "not
+running" on the bridge side immediately, so a timer lost to a restart cannot leave the disguise stuck on. An
+unreachable database also reads as "not running": a blip must not start relabelling guild members.
 
-The target is never disguised as themselves; reposting would cost a send and a delete to produce exactly the
-same message.
+Both the start and the end are announced in the [audit channel](Auditing).
 
-## Stopping it
-
-**Stop effect** on the panel, at any time. An effect with an expiry also ends on its own.
-
-A lapsed effect is cleared the next time anything asks whether it is running, not only by its timer — so a
-timer lost to a restart or a clock jump can never leave the disguise stuck on. The state is in a file, so a
-restart does not end a running effect either.
-
-## What it costs
-
-A repost is a **new message**, and the original is deleted. So, while an effect is running:
-
-- **the author cannot edit or delete their own message afterwards** — Discord considers it the bot's;
-- **replies keep a jump link** instead of Discord's reply header;
-- **messages carrying stickers, polls, forwards or voice notes are left undisguised** rather than reposted
-  without them;
-- **the real author is no longer visible on the message** — which is exactly why every disguised message is
-  [audited](Auditing).
-
-Reposts within a channel are chained so a burst arrives in the order it was sent.
-
-## Before you run one live
-
-- Set an [audit channel](Auditing). Without one, a disguised message has no record of who actually wrote it.
-- Check the bot has **Manage Webhooks** and **Manage Messages** everywhere you mean it to apply.
-- Exclude channels where deleted-and-reposted messages would be a problem — anything people rely on editing.
-- Consider telling the server first. People notice.
-
-## Next
+## See also
 
 - [Auditing](Auditing)
-- [Admin panel](Admin-Panel)
-- [Permissions](Permissions)
+- [Account linking](Account-Linking)
+- [Officer chat](Officer-Chat)

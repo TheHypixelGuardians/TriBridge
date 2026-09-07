@@ -37,9 +37,7 @@ permission does not spam the channel. The bridge falls back to ordinary relaying
 |---------------------------------------------------------------------------|---------------------------------------------------------|
 | Log channel (`LOG_CHANNEL`, and per-guild)                                | View Channel, Send Messages, Embed Links                |
 | [Audit channel](Auditing)                                                 | View Channel, Send Messages, Embed Links                |
-| [Request channel](Feature-Requests)                                       | View Channel, Send Messages, Embed Links                |
 | [Officer channel](Officer-Chat)                                           | View Channel, Send Messages, Embed Links, Add Reactions |
-| Every channel a [global profile change](Global-Profile-Change) applies to | View Channel, Manage Webhooks, Manage Messages          |
 
 An officer channel needs **Add Reactions** only for the routing markers — 📡 when a reply reached no guild,
 ❓ on an unrecognised [guild tag](Guild-Tags); without it the reply is still attempted. It deliberately needs
@@ -55,20 +53,16 @@ Officer channels are skipped by it whatever the permissions are — see [Officer
 A missing or broken log channel never takes down the work it was reporting on — the failure is printed to the
 console and swallowed. A log line always describes something that has already happened.
 
-## Server-wide permissions
-
-| Permission       | Needed for                                                                             |
-|------------------|----------------------------------------------------------------------------------------|
-| **Manage Roles** | Granting the [link role](Link-Role). The bot's own highest role must rank **above** it |
-
-A link role that cannot be granted is reported and the link goes ahead anyway. The role never gates the link:
-a missing role is a configuration problem, not a reason to refuse someone's `/link`.
+A [global profile change](Global-Profile-Change) reaches ordinary channels through the THG community bot, so
+those channels' **Manage Webhooks** and **Manage Messages** are that bot's problem, not TriBridge's. TriBridge
+needs them only in the bridge channel.
 
 ## Permissions the bot demands of people
 
 Two separate systems, deliberately.
 
-- **Discord permissions**, checked generically before a command runs. Only `/adminrole` uses one — it needs
+- **Discord permissions**, checked generically before a command runs. No TriBridge command uses one today;
+  `/adminrole`, on the community bot, needs
   **Administrator**, because it is the command that decides who else is an admin.
 - **[Bot-admin roles](Admin-Roles)**, checked inside the command. Everything else admin-gated uses this.
 

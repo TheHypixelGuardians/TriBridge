@@ -47,7 +47,7 @@ Normally the server is resolved at startup from `DISCORD_CHANNEL_ID`, so you can
 explicitly if the bridge channel is somewhere the bot cannot resolve at startup.
 
 > **This check is load-bearing.** Without it, an administrator of *any other* server the bot was added to
-> could `/adminrole add` a role they control and inherit bot-admin over your server — including `/send`, which
+> could reach commands scoped to your server — including `/send`, which
 > runs arbitrary commands as a Minecraft account. It fails closed: if the server cannot be resolved, every
 > command is refused.
 
@@ -57,10 +57,8 @@ explicitly if the bridge channel is somewhere the bot cannot resolve at startup.
 |-----------------------------------|-----------------------------------|----------------------------------------------------|
 | Which Hypixel guilds are bridged  | `/guilds`                         | [Hypixel guilds](Hypixel-Guilds)                   |
 | Guild-to-guild chat sharing       | `/guilds edit … crossbridge:True` | [Guild-to-guild bridging](Guild-to-Guild-Bridging) |
-| Who counts as a bot admin         | `/adminrole`                      | [Admin roles](Admin-Roles)                         |
-| The role given to linked users    | `/linkrole`                       | [Link role](Link-Role)                             |
-| Where audit entries go            | `/auditchannel`                   | [Auditing](Auditing)                               |
-| Where feature requests are posted | `/requestchannel`                 | [Feature requests](Feature-Requests)               |
+| Who counts as a bot admin         | `/adminrole` on the community bot | [Admin roles](Admin-Roles)                         |
+| Where audit entries go            | `/auditchannel` on the community bot, or `/guilds edit` for one guild | [Auditing](Auditing) |
 | Per-guild log and audit channels  | `/guilds edit`                    | [Hypixel guilds](Hypixel-Guilds)                   |
 
 ## Restarting
