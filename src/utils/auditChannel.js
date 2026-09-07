@@ -1,53 +1,57 @@
-const fs = require("fs");
-const path = require("path");
 const bridge = require("../bridge");
+const db = require("./db");
 
-const CONFIG_PATH = path.join(__dirname, "..", "..", "auditChannelConfig.json");
+/**
+ * The channel disguised messages are recorded in.
+ *
+ * The default is configured on the THG community bot with `/auditchannel` and
+ * read from its database, so both bots record into one place — the community
+ * side records its own reposts, this side records the guild-chat legs. A Hypixel
+ * guild may still override the destination for its own entries; those overrides
+ * live in `guildsConfig.json` rather than in the shared database, so removing a
+ * guild cannot leave an orphaned channel setting behind.
+ */
+const TTL_MS = 30_000;
 
-let cachedConfig = null;
+let cache = null;
 
-function loadConfig() {
-  if (cachedConfig) return cachedConfig;
-  try {
-    const data = fs.readFileSync(CONFIG_PATH, "utf-8");
-    cachedConfig = JSON.parse(data);
-  } catch {
-    cachedConfig = { channelId: null };
-  }
-  return cachedConfig;
-}
+/**
+ * @returns {Promise<string|null>} The server-wide audit channel, or null when
+ *   none is configured or the database cannot be reached.
+ */
+async function getDefaultAuditChannelId() {
+  if (cache && Date.now() - cache.readAt < TTL_MS) return cache.channelId;
 
-function saveConfig(config) {
-  cachedConfig = config;
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
+  const guildId = bridge.discordServerId;
+  if (!guildId) return null;
+
+  const rows = await db.query(
+    `SELECT "auditChannelId" FROM "Setup" WHERE "guildId" = $1 LIMIT 1`,
+    [guildId],
+  );
+
+  if (rows === null) return cache?.channelId ?? null;
+
+  const channelId = rows[0]?.auditChannelId || null;
+  cache = { channelId, readAt: Date.now() };
+  return channelId;
 }
 
 /**
- * The channel admin actions are recorded in.
- *
- * A Hypixel guild may override the destination for its own entries. Those
- * overrides live in `guildsConfig.json` rather than here, so removing a guild
- * cannot leave an orphaned channel setting behind.
- *
  * @param {string} [guildKey] Scope the lookup to one Hypixel guild.
- * @returns {string|null} Null when nothing is configured at either level.
+ * @returns {Promise<string|null>} Null when nothing is configured at either
+ *   level.
  */
-function getAuditChannelId(guildKey) {
+async function getAuditChannelId(guildKey) {
   if (guildKey) {
-    // Required lazily: guilds.js is loaded by modules that this one is
-    // loaded by, and a top-level require would close the cycle.
+    // Required lazily: guilds.js is loaded by modules that this one is loaded
+    // by, and a top-level require would close the cycle.
     const guilds = require("./guilds");
     const scoped = guilds.get(guildKey)?.auditChannelId;
     if (scoped) return scoped;
   }
-  return loadConfig().channelId ?? null;
-}
 
-/**
- * @param {string|null} channelId Pass null to stop recording.
- */
-function setAuditChannelId(channelId) {
-  saveConfig({ channelId: channelId ?? null });
+  return getDefaultAuditChannelId();
 }
 
 /**
@@ -59,11 +63,11 @@ function setAuditChannelId(channelId) {
  *
  * @param {string|import('discord.js').MessageCreateOptions} payload
  * @param {{guildKey?: string}} [options] Route to one Hypixel guild's audit
- *   channel when it has its own; otherwise the global one, as before.
+ *   channel when it has its own; otherwise the shared one.
  * @returns {Promise<boolean>} Whether the line landed.
  */
 async function logAudit(payload, { guildKey } = {}) {
-  const channelId = getAuditChannelId(guildKey);
+  const channelId = await getAuditChannelId(guildKey);
   if (!channelId || !bridge.discordClient) return false;
 
   const options = typeof payload === "string" ? { content: payload } : payload;
@@ -79,4 +83,4 @@ async function logAudit(payload, { guildKey } = {}) {
   }
 }
 
-module.exports = { getAuditChannelId, setAuditChannelId, logAudit };
+module.exports = { getAuditChannelId, logAudit };

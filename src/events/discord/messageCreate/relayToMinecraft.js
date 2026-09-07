@@ -104,7 +104,7 @@ module.exports = async (client, message) => {
 
   // A global profile change outranks an account link, which outranks the
   // plain author — see utils/disguise.js.
-  const identity = resolveIdentity(message);
+  const identity = await resolveIdentity(message);
 
   // There is one Discord message however many guilds it reaches, so the
   // repost and its audit entry happen exactly once, outside the fan-out.

@@ -30,13 +30,13 @@ const isDuplicate = createRelayDedupe();
  *
  * @param {string} username The Minecraft name that spoke.
  * @param {object} guild The Hypixel guild registry record.
- * @returns {{author: {name: string, iconURL: string|undefined}, disguised: boolean}}
+ * @returns {Promise<{author: {name: string, iconURL: string|undefined}, disguised: boolean}>}
  */
-function resolveAuthor(username, guild) {
+async function resolveAuthor(username, guild) {
   const suffix = guilds.shouldShowTags() ? ` [${guild.tag}]` : "";
 
-  if (appliesToGuildChat(username, bridge.discordChannelId)) {
-    const target = getTarget();
+  if (await appliesToGuildChat(username, bridge.discordChannelId)) {
+    const target = await getTarget();
     return {
       author: {
         name: `${target.name}${suffix}`,
@@ -86,7 +86,7 @@ module.exports = async (client, jsonMsg) => {
 
     if (isDuplicate(guild.key, username, content)) return;
 
-    const { author, disguised } = resolveAuthor(username, guild);
+    const { author, disguised } = await resolveAuthor(username, guild);
 
     try {
       const channel = await bridge.discordClient.channels.fetch(

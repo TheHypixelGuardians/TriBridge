@@ -85,7 +85,7 @@ module.exports = async (client, message) => {
   // must not have. No webhook repost either, so this channel needs neither
   // Manage Webhooks nor Manage Messages.
   const displayName =
-    getLink(message.author.id)?.name ?? message.author.username;
+    (await getLink(message.author.id))?.name ?? message.author.username;
 
   const delivered = relayToOfficerChat(
     targets,
