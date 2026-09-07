@@ -82,7 +82,7 @@ managed entirely from Discord with **`/guilds`**. You should not need to edit th
 | `account`        | Microsoft account email for this guild's Minecraft bot. **Immutable**, and no two guilds may share one    |
 | `color`          | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                              |
 | `logChannelId`   | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                               |
-| `auditChannelId` | Optional per-guild audit channel. Falls back to the one set with `/auditchannel` on the community bot     |
+| `auditChannelId` | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                        |
 | `enabled`        | `false` disconnects a guild without removing it                                                           |
 | `crossBridge`    | `true` shares guild chat with the other cross-bridged guilds — see [below](#guild-to-guild-bridging)      |
 
@@ -293,8 +293,8 @@ TriBridge has two separate permission systems.
 
 **Bot-admin** is a flat list of Discord role ids, configured on the **THG community bot** with `/adminrole
 add|remove <role>` and read from the shared database, then checked inside each admin command. Everything under
-Management is gated this way. One list serves both bots, so a role that opens the community bot's admin panel
-also runs `/send` here.
+Management is gated this way, including `/adminpanel` and `/auditchannel`. One list serves both bots, so a
+role that counts as staff there counts as staff here.
 
 **The check fails closed.** A member with no matching role, an unresolved Discord server or an unreachable
 database is not an admin. `/send` runs arbitrary commands as a Minecraft account, so handing it out during a
@@ -344,39 +344,43 @@ which is the only thing stopping two concurrent commands from eating each other'
   The buttons stop working after five minutes.
 - **`/networth [username]`** — see [SkyBlock networth](#skyblock-networth).
 
+## Admin panel
+
+`/adminpanel` opens an ephemeral panel with a button per admin function. Today there is one: **Global profile
+change**. The panel also carries a **Stop effect** button and a **Refresh**, and shows the running state —
+who, since when, how much longer, and which bridge legs are switched on.
+
+A half-filled form lives in memory between clicks rather than in the button ids, so restarting the bot mid-set-up
+costs the admin one re-pick.
+
 ## Global profile change
 
-Started, stopped and scoped from **`/adminpanel` on the THG community bot**: pick a member and a duration, and
-for that long everybody's messages are reposted wearing that member's name and avatar. The community bot does
-the reposting in ordinary channels; TriBridge applies the same effect to the three places it owns.
+Pick a member and a duration, and for that long everybody's messages are reposted wearing that member's name
+and avatar — in Discord, in the guild-chat copy, and on guild chat coming back the other way.
 
-- **The bridge channel repost.** Handled here rather than by the community bot, because `relayToMinecraft.js`
-  has to repost there anyway to attribute a linked member's Minecraft name — two bots deleting the same
-  message would race.
-- **Discord → Minecraft.** The name guild chat is told. Switching this leg off stops the disguise at the
-  bridge rather than turning it off outright: the Discord repost still wears the target's face, and guild chat
-  is told who really spoke.
-- **Minecraft → Discord.** The name on incoming guild chat embeds.
+- **Each bridge direction has its own switch.** *Discord → Minecraft* governs the name guild chat is told;
+  *Minecraft → Discord* governs the name on incoming guild chat embeds. Switching the first off stops the
+  disguise at the bridge rather than turning it off outright — the Discord repost still wears the target's
+  face.
+- **Durations** run from five minutes to a day, or until stopped, or a custom value: `90m`, `2h30m`, `1d12h`,
+  or a bare number read as minutes. `0`, `none`, `never`, `forever`, `permanent` and `indefinite` all mean
+  "until somebody stops it".
+- **Test mode** applies the disguise only to listed testers, and only in listed channels, so it can be tried
+  before it goes server-wide. On the guild-chat side a tester is recognised by their
+  [account link](#account-linking) — without that, testing would silently relabel guild members who never
+  agreed to take part.
+- **Channels can be excluded** from a live effect, and [officer channels](#officer-chat) are excluded from it
+  always. A channel that exists to record what officers said is the last place to relabel who said it, and
+  reposting there would break the reply leg outright — the repost is authored by a webhook, and the officer
+  bridge ignores anything a bot posted.
+- **The target is never disguised as themselves**, and a lapsed effect is cleared the next time anything asks
+  whether it is running, so a timer lost to a restart or a clock jump can never leave the disguise stuck on.
 
-Each leg has its own switch on the panel, and the two switches are settings rather than part of a run — they
-survive an effect ending and apply to the next one.
+It works by reposting through a webhook and deleting the original, so it needs **Manage Webhooks** and
+**Manage Messages** in *every* channel it applies to. Channels missing either are skipped and left alone, with
+one warning to the log channel.
 
-**Test mode** applies the disguise only to listed testers, and only in listed channels. On the guild-chat side
-a tester is recognised by their [account link](#account-linking) — without that, testing would silently
-relabel guild members who never agreed to take part.
-
-**Officer channels are never disguised.** A channel that exists to record what officers said is the last place
-to relabel who said it, and reposting there would break the reply leg outright — the repost is authored by a
-webhook, and the officer bridge ignores anything a bot posted. TriBridge publishes its officer channels and its
-bridge channel to the shared database precisely so the community bot skips them too.
-
-**The target is never disguised as themselves**, and an effect that has run out reads as "not running" on this
-side even before the community bot clears the row, so a timer lost to a restart or a clock jump cannot leave
-the disguise stuck on. An unreachable database also reads as "not running": a blip must not start relabelling
-guild members.
-
-The bridge-channel repost needs **Manage Webhooks** and **Manage Messages**, the same as
-[account linking](#account-linking). Because a repost is a new message:
+Because a repost is a new message:
 
 - a disguised message cannot afterwards be edited or deleted by the person who wrote it;
 - replies keep a jump link instead of Discord's reply header;
@@ -388,17 +392,15 @@ Reposts within a channel are chained, so a burst arrives in the order it was sen
 ## Auditing
 
 Reposting deletes the original, so the real author is no longer visible on the message. Every disguised message
-is therefore recorded in the audit channel, with a jump link to the repost — by the community bot for its own
-reposts, and by TriBridge for the bridge channel and for guild chat relabelled on the way in.
+is therefore recorded in the channel set with `/auditchannel set`, with a jump link to the repost, plus an
+entry whenever a global profile change starts or ends.
 
-The channel itself is set with **`/auditchannel` on the THG community bot** and read from the shared database,
-so both bots record into one place. A Hypixel guild can still be given its own audit channel with `/guilds
-edit`; per-guild overrides live in `guildsConfig.json` rather than in the database, so removing a guild cannot
-leave an orphaned channel setting behind.
+A Hypixel guild can be given its own audit channel with `/auditchannel set channel:#x guild:sb`; per-guild
+overrides live in `guildsConfig.json` rather than in the audit config, so removing a guild cannot leave an
+orphaned channel setting behind. `/auditchannel show` lists the default and every override, and `/auditchannel
+clear` drops one.
 
-The bot needs **View Channel**, **Send Messages** and **Embed Links** in every channel used. A failed audit
-write is logged and otherwise ignored: the entry accompanies work that has already happened, and a
-misconfigured channel must not take that work down with it.
+The bot needs **View Channel**, **Send Messages** and **Embed Links** in every channel used.
 
 ## Reconnection
 

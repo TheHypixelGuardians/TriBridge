@@ -15,15 +15,17 @@ produces is not.
 | `.env`                       | Token, bridge channel, log channel, first account   | Editing it — see [Configuration](Configuration)  |
 | `.minecraft-auth/`           | Cached Microsoft tokens, one entry per account      | The bot                                          |
 | `guildsConfig.json`          | The Hypixel guild registry                          | [`/guilds`](Hypixel-Guilds)                      |
+| `auditChannelConfig.json`    | The default audit channel                           | [`/auditchannel`](Auditing)                      |
+| `globalProfileConfig.json`   | The running global profile change, and its scope    | [`/adminpanel`](Global-Profile-Change)           |
 
 ## Not in a file any more
 
-Bot-admin roles, account links, the link role, the audit channel and the global profile change used to have a
-config file each. They now live in the [THG community bot](https://github.com/TheHypixelGuardians/thg-community)'s PostgreSQL database, which both bots
-read, and TriBridge reaches it with `DATABASE_URL`. An install upgrading past that change has to move the
-contents of the old `adminRolesConfig.json`, `linkedAccountsConfig.json`, `linkRoleConfig.json`,
-`auditChannelConfig.json`, `globalProfileConfig.json` and `featureRequestsConfig.json` across by hand; the
-files are then dead and can be deleted.
+Bot-admin roles, account links and the link role used to have a config file each. They now live in the
+[THG community bot](https://github.com/TheHypixelGuardians/thg-community)'s PostgreSQL
+database, which both bots read, and TriBridge reaches it with `DATABASE_URL`. An install upgrading past that
+change has to move the contents of the old
+`adminRolesConfig.json`, `linkedAccountsConfig.json`, `linkRoleConfig.json` and `featureRequestsConfig.json`
+across by hand; those files are then dead and can be deleted.
 
 ## Back these up
 

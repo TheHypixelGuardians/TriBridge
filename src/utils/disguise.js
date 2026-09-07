@@ -1,6 +1,11 @@
-const { MessageFlags, PermissionFlagsBits } = require("discord.js");
+const {
+  EmbedBuilder,
+  MessageFlags,
+  PermissionFlagsBits,
+} = require("discord.js");
 const { logAudit } = require("./auditChannel");
 const { logGlobal } = require("./guildLog");
+const { formatDuration } = require("./duration");
 const {
   appliesTo,
   getTarget,
@@ -125,8 +130,10 @@ function canRepostIn(channel) {
  * @returns {Promise<{name: string, avatarURL: string|null, chatName: string, repost: boolean, disguised: boolean}>}
  */
 async function resolveIdentity(message) {
-  if (await appliesTo(message.author.id, message.channel.id)) {
-    const target = await getTarget();
+  if (appliesTo(message.author.id, message.channel.id)) {
+    const target = getTarget();
+    // The link is the one input here that lives in the community bot's
+    // database; everything else is a cached local read.
     const link = await getLink(message.author.id);
 
     return {
@@ -135,7 +142,7 @@ async function resolveIdentity(message) {
       // The Discord → Minecraft leg can be switched off on its own: the
       // repost still wears the target's face in Discord, but guild chat
       // is told who really spoke.
-      chatName: (await disguisesToMinecraft())
+      chatName: disguisesToMinecraft()
         ? target.mcName || target.name
         : link?.name || message.author.username,
       repost: true,
@@ -313,6 +320,89 @@ async function auditGuildChatDisguise(username, shownAs, guildKey) {
   );
 }
 
+/**
+ * Names the bridge legs the disguise has been switched off for, so an effect
+ * that only covers part of the bridge says so rather than looking broken.
+ *
+ * @param {object} state
+ * @returns {string[]}
+ */
+function switchedOffLegs(state) {
+  const legs = [];
+  if (state.disguiseToMinecraft === false) legs.push("Discord → Minecraft");
+  if (state.disguiseToDiscord === false) legs.push("Minecraft → Discord");
+  return legs;
+}
+
+/**
+ * @param {object} state The state {@link module:utils/globalProfile.start} returned.
+ * @param {string} startedBy Discord ID of the admin who started it.
+ */
+async function announceStarted(state, startedBy) {
+  const ends =
+    state.expiresAt === null
+      ? "when somebody stops it"
+      : `<t:${Math.floor(state.expiresAt / 1000)}:R>`;
+
+  const off = switchedOffLegs(state);
+
+  const embed = new EmbedBuilder()
+    .setTitle("🎭 Global profile change started")
+    .setDescription(
+      state.mode === "test"
+        ? "Running in **test mode** — only listed testers, in listed channels, are affected."
+        : "Running **live** — everybody in the server is affected.",
+    )
+    .addFields(
+      {
+        name: "Everyone appears as",
+        value: `<@${state.target.userId}>`,
+        inline: true,
+      },
+      { name: "Started by", value: `<@${startedBy}>`, inline: true },
+      { name: "Ends", value: ends, inline: true },
+    )
+    .setColor(0xe67e22)
+    .setTimestamp();
+
+  if (off.length > 0) {
+    embed.addFields({
+      name: "Not disguised across",
+      value: off.map((leg) => `\`${leg}\``).join(", "),
+    });
+  }
+
+  await logAudit({ embeds: [embed] });
+}
+
+/**
+ * @param {object} previous What {@link module:utils/globalProfile.stop} returned.
+ * @param {string} reason Short phrase describing why it ended.
+ */
+async function announceEnded(previous, reason) {
+  const ran = previous.startedAt
+    ? formatDuration(Date.now() - previous.startedAt)
+    : "unknown";
+
+  const embed = new EmbedBuilder()
+    .setTitle("🎭 Global profile change ended")
+    .setDescription(
+      `Everybody is back to their own name and avatar — ${reason}.`,
+    )
+    .addFields(
+      {
+        name: "Was appearing as",
+        value: previous.target ? `<@${previous.target.userId}>` : "unknown",
+        inline: true,
+      },
+      { name: "Ran for", value: ran, inline: true },
+    )
+    .setColor(0x2ecc71)
+    .setTimestamp();
+
+  await logAudit({ embeds: [embed] });
+}
+
 module.exports = {
   resolveIdentity,
   repostAs,
@@ -321,4 +411,6 @@ module.exports = {
   sanitizeWebhookName,
   auditDisguise,
   auditGuildChatDisguise,
+  announceStarted,
+  announceEnded,
 };

@@ -45,8 +45,6 @@ used.
 | `/links`, `/whois`          | 🔒 List or look up links                                   | —                  |
 | `/linkrole set\|show\|clear` | 🔒 The role given to linked members                        | —                  |
 | `/adminrole add\|remove\|show` | ⛔ The bot-admin role list, shared by both bots           | [Admin roles](Admin-Roles) |
-| `/adminpanel`               | 🔒 Start and stop the global profile change                | [Global profile change](Global-Profile-Change) |
-| `/auditchannel set\|show\|clear` | 🔒 Where disguised messages are recorded             | [Auditing](Auditing) |
 | `/request`, `/requestchannel`, `/requeststatus` | Feature requests                       | —                  |
 
 ## Management
@@ -62,9 +60,10 @@ Every command in this section is 🔒 bot-admin only. The six that act on a Hypi
 | `/demote <username> [guild]`          | Demote a member                                                        |
 | `/send <message> [guild]`             | Run any command or message as that guild's account, and show the reply |
 | `/login [guild]`                      | Connect the bot. With no guild, every *disconnected* guild             |
-
-A Hypixel guild's own [audit channel](Auditing) is set with `/guilds edit guild:sb auditchannel:#x`; the
-server-wide default lives on the community bot.
+| `/adminpanel`                         | Open the [admin panel](Admin-Panel)                                    |
+| `/auditchannel set <channel> [guild]` | Set where [audit](Auditing) entries go                                 |
+| `/auditchannel show`                  | Show the default audit channel and every per-guild override            |
+| `/auditchannel clear [guild]`         | Stop recording, or drop one guild's override                           |
 
 `/send` never fans out — it always targets exactly one guild, because it runs arbitrary commands as a
 Minecraft account. `/login` with no guild reconnects everything, since after an outage that is almost always

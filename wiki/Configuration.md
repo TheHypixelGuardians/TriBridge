@@ -58,7 +58,7 @@ explicitly if the bridge channel is somewhere the bot cannot resolve at startup.
 | Which Hypixel guilds are bridged  | `/guilds`                         | [Hypixel guilds](Hypixel-Guilds)                   |
 | Guild-to-guild chat sharing       | `/guilds edit … crossbridge:True` | [Guild-to-guild bridging](Guild-to-Guild-Bridging) |
 | Who counts as a bot admin         | `/adminrole` on the community bot | [Admin roles](Admin-Roles)                         |
-| Where audit entries go            | `/auditchannel` on the community bot, or `/guilds edit` for one guild | [Auditing](Auditing) |
+| Where audit entries go            | `/auditchannel`, or `/guilds edit` for one guild | [Auditing](Auditing)                |
 | Per-guild log and audit channels  | `/guilds edit`                    | [Hypixel guilds](Hypixel-Guilds)                   |
 
 ## Restarting

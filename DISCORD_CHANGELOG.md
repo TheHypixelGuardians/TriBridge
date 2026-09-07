@@ -46,8 +46,8 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 - `/link`, `/unlink`, `/links`, `/whois` and `/linkrole` are now on the **THG community bot**. Linking works
   exactly the same, and the bridge still shows your Minecraft head and name once you have linked.
-- `/request` is there too, along with `/adminrole`, `/adminpanel` and `/auditchannel` for staff.
-- Nothing about the bridge itself changes. Guild chat, guild tags, officer chat, `!nw` and `/online` all stay
+- `/request` is there too, along with `/adminrole` for staff.
+- Nothing else changes. Guild chat, guild tags, officer chat, `!nw`, `/online` and the admin panel all stay
   here.
 - If you have already linked, you do not need to link again.
 

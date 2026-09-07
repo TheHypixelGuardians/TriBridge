@@ -38,6 +38,7 @@ permission does not spam the channel. The bridge falls back to ordinary relaying
 | Log channel (`LOG_CHANNEL`, and per-guild)                                | View Channel, Send Messages, Embed Links                |
 | [Audit channel](Auditing)                                                 | View Channel, Send Messages, Embed Links                |
 | [Officer channel](Officer-Chat)                                           | View Channel, Send Messages, Embed Links, Add Reactions |
+| Every channel a [global profile change](Global-Profile-Change) applies to | View Channel, Manage Webhooks, Manage Messages          |
 
 An officer channel needs **Add Reactions** only for the routing markers — 📡 when a reply reached no guild,
 ❓ on an unrecognised [guild tag](Guild-Tags); without it the reply is still attempted. It deliberately needs
@@ -52,10 +53,6 @@ Officer channels are skipped by it whatever the permissions are — see [Officer
 
 A missing or broken log channel never takes down the work it was reporting on — the failure is printed to the
 console and swallowed. A log line always describes something that has already happened.
-
-A [global profile change](Global-Profile-Change) reaches ordinary channels through the THG community bot, so
-those channels' **Manage Webhooks** and **Manage Messages** are that bot's problem, not TriBridge's. TriBridge
-needs them only in the bridge channel.
 
 ## Permissions the bot demands of people
 

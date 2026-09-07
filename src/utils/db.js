@@ -3,16 +3,15 @@ const { Pool } = require("pg");
 /**
  * Read-only access to the THG community bot's Postgres database.
  *
- * The community bot owns account links, bot-admin roles, the global profile
- * change and the audit channel; this bot reads them so the two agree, and never
- * writes them. The one exception is `publishBridgeChannels`, which publishes
- * *this* bot's own channel ids so the community bot knows not to repost in them
- * — a fact only the bridge has, rather than a second copy of somebody else's.
+ * The community bot owns account links and the bot-admin role list; this bot
+ * reads both so the two agree about who is who and who is staff, and never
+ * writes either. Everything else the bridge needs is still local — the global
+ * profile change and the audit channel live in this repository's own config
+ * files.
  *
  * `DATABASE_URL` is the same connection string the community bot uses. Without
  * it every read here fails, and each caller decides what that means: link
- * lookups behave as "not linked", the disguise behaves as "not running", and
- * `isAdmin` refuses.
+ * lookups behave as "not linked", and `isAdmin` refuses.
  */
 
 let pool = null;

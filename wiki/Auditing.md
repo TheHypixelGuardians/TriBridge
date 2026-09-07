@@ -1,43 +1,50 @@
 # Auditing
 
-A disguised message is a *new* message posted by a webhook, and the original is deleted — so the real author is
-no longer visible anywhere on it. The audit channel is the record of who actually said what.
+A [global profile change](Global-Profile-Change) deletes the original message and reposts it under somebody
+else's name, so **the real author is no longer visible on it**. The audit channel is where that information
+goes instead.
+
+```
+/auditchannel set channel:#audit-log
+```
 
 ## What is recorded
 
-- Every disguised message, with the real author, the name it was shown under, the channel, and a jump link to
-  the repost.
-- Every guild-chat line that reached Discord under somebody else's name.
-- The start and the end of a [global profile change](Global-Profile-Change), including which bridge legs were
-  switched off.
+- **Every disguised message** — who actually wrote it, what it said, and a jump link to the repost.
+- **Every effect starting and ending** — who started it, who everybody is appearing as, and for how long.
 
-The community bot records its own reposts; TriBridge records the bridge channel and the guild-chat legs. Both
-write to the same channel.
+That makes the audit channel the answer to "who actually said that?", which is the question a disguise
+creates.
 
-## Configuring it
-
-Set the channel with **`/auditchannel set`** on the **THG community bot**; `/auditchannel show` and
-`/auditchannel clear` are there too. Both bots read that one setting.
-
-A Hypixel guild can be given its own audit channel here instead:
+## Where it goes
 
 ```
-/guilds edit guild:sb auditchannel:#sb-audit
+/auditchannel set channel:#audit-log              — the default, for everything
+/auditchannel set channel:#sb-audit guild:sb      — one Hypixel guild's entries, elsewhere
+/auditchannel show                                — the default and every override
+/auditchannel clear                               — stop recording
+/auditchannel clear guild:sb                      — drop one guild's override
 ```
 
-Per-guild overrides live in `guildsConfig.json` rather than in the shared database, so removing a guild cannot
-leave an orphaned channel setting behind.
+Per-guild overrides live in `guildsConfig.json` rather than in the audit config, so removing a Hypixel guild
+cannot leave an orphaned channel setting behind. `/guilds edit guild:sb auditchannel:#x` sets the same thing
+from the other direction, and `/guilds edit guild:sb clear:Audit` drops it.
 
-## Permissions
+The bot needs **View Channel**, **Send Messages** and **Embed Links** in every channel used.
 
-The bot needs **View Channel**, **Send Messages** and **Embed Links** in every channel used. A failed audit
-write is logged and otherwise ignored — the entry accompanies work that has already happened, and a
-misconfigured channel must not take that work down with it.
+## Pick the channel carefully
 
-**Without an audit channel the disguise still runs**, and nothing records who really sent each message. Set one
-before running a global profile change.
+The audit channel undoes the disguise. Anyone who can read it can see who wrote every reposted message, which
+is the whole point — and is also why it should not be a channel the members being disguised can read, if you
+want the joke to land.
 
-## See also
+## Not an operational log
+
+The audit channel is a record for people. Connection notices, failures and permission warnings go to
+`LOG_CHANNEL` instead — see [Configuration](Configuration). Keep them separate: an audit channel full of
+reconnect notices is one nobody reads.
+
+## Next
 
 - [Global profile change](Global-Profile-Change)
-- [Permissions](Permissions)
+- [Admin panel](Admin-Panel)

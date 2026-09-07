@@ -88,14 +88,13 @@ TriBridge is a Node.js bot that bridges a Discord channel and a Hypixel guild ch
 messages both ways; slash commands let Discord admins run guild management commands
 in-game.
 
-It is **only** the bridge. Community features — member profiles, account linking, bot-admin
-roles, the admin panel, feature requests, tickets — belong to the sibling **THG community
-bot** (`../thg-community`), a TypeScript/discordx bot on PostgreSQL. Anything that does not
-need a Minecraft account is a community feature, not one for this repo. The two bots share
-one database, and that contract is written down in
-[docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md) — read it before touching
-`utils/db.js`, `utils/linkedAccounts.js`, `utils/adminRoles.js`, `utils/globalProfile.js` or
-`utils/auditChannel.js`.
+Member profiles, account linking, bot-admin roles, feature requests and tickets belong to the
+sibling **THG community bot** (`../thg-community`), a TypeScript/discordx bot on PostgreSQL.
+The bridge, the admin panel and the global profile change stay here, because all three need
+the Minecraft side. The two bots share one database for the two things both must agree
+about — who is linked, and who is staff — and that contract is written down in
+[docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md). Read it before touching `utils/db.js`,
+`utils/linkedAccounts.js` or `utils/adminRoles.js`.
 
 - CommonJS (`"type": "commonjs"`) — use `require`/`module.exports`, not ESM.
 - No build step, no test suite, no linter — there is no `test` script, so `npm test` reports a missing one.
@@ -352,39 +351,37 @@ The repost path needs **Manage Webhooks** and **Manage Messages**. Neither is en
 `messageCreate`), so failure is handled at runtime: fall back to the old relay behaviour and
 report once to the log channel, latched so it doesn't spam.
 
-Four modules read the shared database, and all four are on message paths, so all four are
-**async and never throw** — `utils/db.js` returns `null` for a failed query rather than
-rejecting. Each has a defined answer for "database down", and they are not the same answer:
+Two modules read the shared database, both on message paths, so both are **async and never
+throw** — `utils/db.js` returns `null` for a failed query rather than rejecting. Their answers
+to "database down" are deliberately different:
 
-| Module                    | Reads                                    | Behaviour when the read fails |
-|---------------------------|------------------------------------------|-------------------------------|
-| `utils/linkedAccounts.js` | `MinecraftLink` + `User`                 | Not linked — relay under the Discord name |
-| `utils/adminRoles.js`     | `AdminRole`                              | **Fails closed** — refuses    |
-| `utils/globalProfile.js`  | `GlobalProfileEffect`                    | Not running, serving the last good state while merely stale |
-| `utils/auditChannel.js`   | `Setup.auditChannelId`                   | Last known channel, else nothing recorded |
+| Module                    | Reads                    | Behaviour when the read fails             |
+|---------------------------|--------------------------|-------------------------------------------|
+| `utils/linkedAccounts.js` | `MinecraftLink` + `User` | Not linked — relay under the Discord name |
+| `utils/adminRoles.js`     | `AdminRole`              | **Fails closed** — refuses                |
 
-Each caches for 10–30 seconds. It cannot invalidate on write — the writer is another process —
+Both cache for 15 seconds. They cannot invalidate on write — the writer is another process —
 so the TTL *is* the worst-case lag between an admin doing something on the community bot and
-this side honouring it. Don't raise them without reading
-[docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md): 15s on links is what keeps a member's very
-first message after `/link` attributed correctly.
+this side honouring it. Don't raise it without reading
+[docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md): 15s is what keeps a member's very first
+message after `/link` attributed correctly.
 
-`events/discord/clientReady/005publishBridgeChannels.js` is the **one** thing this bot writes
-there — the bridge channel and every officer channel, so the community bot's disguise skips
-them. It skips the bridge channel because `relayToMinecraft.js` reposts there itself and two
-bots deleting one message race; it skips officer channels because a webhook repost is authored
-by a bot and `relayOfficerToMinecraft.js` drops those, losing the message with no error
-anywhere. Publishing beats a second copy of the ids in the community bot's config, which would
-go stale the moment `/guilds edit` changed an officer channel.
+Everything else stays in this repository's own config files, including the global profile
+change and the audit channel.
 
 ## The global profile change
 
-Started and stopped from the community bot's `/adminpanel`; `utils/globalProfile.js` here is
-read-only. This bot owns three legs of it — the bridge-channel repost, the name guild chat is
-told (`disguiseToMinecraft`), and the name on incoming guild chat (`disguiseToDiscord`) — and
-`utils/disguise.js` applies them. `resolveIdentity()` is **async**: a global profile change
-outranks an account link, which outranks the plain Discord author, and all three inputs are
-database reads now.
+`/adminpanel` starts and stops it, `utils/globalProfile.js` holds the state in
+`globalProfileConfig.json`, and `utils/disguise.js` applies it to three legs: the Discord
+repost, the name guild chat is told (`disguiseToMinecraft`), and the name on incoming guild
+chat (`disguiseToDiscord`). `resolveIdentity()` is **async** — a global profile change
+outranks an account link, which outranks the plain Discord author, and the link is a database
+read now.
+
+`appliesToGuildChat()` is async for the same reason: test mode matches an incoming Minecraft
+name back to an account link, because guild chat carries no Discord author to check. A tester
+who has not linked will not see their guild chat rewritten, and that is the point — without
+it, testing would silently relabel guild members who never agreed to take part.
 
 Never `resolveIdentity()` in the officer leg — see the officer-chat convention above.
 
@@ -419,14 +416,14 @@ whoever holds the code can complete the sign-in with *their own* Microsoft accou
 
 ## Files to leave alone
 
-`.env`, `.minecraft-auth/`, `guildsConfig.json`, `.idea/` — local/secret state. Never print
-or commit token, auth-cache, database-URL or account-address contents.
+`.env`, `.minecraft-auth/`, `guildsConfig.json`, `globalProfileConfig.json`,
+`auditChannelConfig.json`, `.idea/` — local/secret state. Never print or commit token,
+auth-cache, database-URL or account-address contents.
 
 The config files the migrated features used — `adminRolesConfig.json`,
-`linkedAccountsConfig.json`, `linkRoleConfig.json`, `globalProfileConfig.json`,
-`auditChannelConfig.json`, `featureRequestsConfig.json` — are gone. Their data lives in the
-community bot's database; an install upgrading past this needs it moved by hand, and the old
-files can then be deleted.
+`linkedAccountsConfig.json`, `linkRoleConfig.json`, `featureRequestsConfig.json` — are gone.
+Their data lives in the community bot's database; an install upgrading past this needs it
+moved by hand, and the old files can then be deleted.
 
 `src/events/minecraft/message/test.js` is a no-op debug scratch file with commented-out
 logging; it is intentionally inert.

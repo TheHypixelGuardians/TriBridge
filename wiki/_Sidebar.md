@@ -28,6 +28,7 @@
 **Administration**
 
 - [Admin roles](Admin-Roles)
+- [Admin panel](Admin-Panel)
 - [Global profile change](Global-Profile-Change)
 - [Auditing](Auditing)
 

@@ -178,33 +178,25 @@
 + Lookups are cached for ten minutes, coalesced so concurrent asks about one player make a single request,
   capped at one upstream request at a time, and rate limited per requester. Only the figures are kept: the
   multi-megabyte upstream response is discarded as soon as it is read.
-+ Added `pg` and a `DATABASE_URL` environment variable. TriBridge now reads account links, bot-admin roles,
-  the global profile change and the audit channel from the community bot's PostgreSQL database with plain
-  SQL — there is no ORM and no schema on this side. See
-  [docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md).
-+ Every one of those reads is async and never throws, because they sit on the message path. Each has its own
-  answer for an unreachable database: a link reads as *not linked* so the message still relays under the
-  Discord name, the global profile change reads as *not running* so a blip cannot start relabelling guild
-  members, and **`isAdmin` fails closed** — `/send` runs arbitrary commands as a Minecraft account, so
-  handing it out during an outage would be worse than the outage.
-+ Each read is cached for 10–30 seconds. The writer is another process, so the cache cannot be invalidated on
-  write and the TTL is the worst-case lag between an admin acting on the community bot and this side
-  honouring it. 15s on links is what keeps a member's first message after `/link` attributed correctly.
-+ Added `events/discord/clientReady/005publishBridgeChannels.js`, the one thing this bot writes to that
-  database: the bridge channel and every officer channel, so the community bot's disguise skips them.
-  Reposting in the bridge channel would race TriBridge's own repost, and a webhook repost in an officer
-  channel would be dropped by the officer relay — losing the message with no error anywhere. Publishing the
-  ids beats a second copy in the community bot's configuration, which would go stale the moment
-  `/guilds edit` changed an officer channel.
-+ Deleted `000disguiseMessages.js`. Ordinary channels belong to the community bot now; the bridge channel is
-  still handled by `relayToMinecraft.js`, which has to repost there anyway to attribute a linked member.
-+ Deleted `utils/featureRequests.js`, `utils/adminPanel.js`, `utils/linkRole.js`, `utils/syncLinkRoles.js`
-  and `utils/duration.js`, plus the panel-button, request-modal, link-role-sync and global-profile-restore
-  handlers.
-+ `adminRolesConfig.json`, `linkedAccountsConfig.json`, `linkRoleConfig.json`, `globalProfileConfig.json`,
-  `auditChannelConfig.json` and `featureRequestsConfig.json` are no longer read or written. An install
-  upgrading past this has to move their contents into the shared database by hand; the files can then be
-  deleted.
++ Added `pg` and a `DATABASE_URL` environment variable. TriBridge now reads account links and the bot-admin
+  role list from the community bot's PostgreSQL database with plain SQL — there is no ORM and no schema on
+  this side, and nothing is ever written. See [docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md).
++ Both reads are async and never throw, because they sit on the message path, and their answers to an
+  unreachable database differ on purpose: a link reads as *not linked* so the message still relays under the
+  Discord name, while **`isAdmin` fails closed** — `/send` runs arbitrary commands as a Minecraft account
+  and `/adminpanel` can impersonate everybody in the server, so handing either out during an outage would be
+  worse than the outage.
++ Both cache for 15 seconds. The writer is another process, so the cache cannot be invalidated on write and
+  the TTL is the worst-case lag between an admin acting on the community bot and this side honouring it. It
+  is what keeps a member's first message after `/link` attributed correctly.
++ `resolveIdentity()` and `appliesToGuildChat()` are async as a consequence, since both consult a link.
++ Deleted `utils/featureRequests.js`, `utils/linkRole.js` and `utils/syncLinkRoles.js`, plus the
+  request-modal and link-role-sync handlers. `resolveMember` moved to `utils/serverMember.js`, which is all
+  the admin panel needed from `linkRole.js`.
++ `adminRolesConfig.json`, `linkedAccountsConfig.json`, `linkRoleConfig.json` and
+  `featureRequestsConfig.json` are no longer read or written. An install upgrading past this has to move
+  their contents into the shared database by hand; the files can then be deleted.
+  `globalProfileConfig.json`, `auditChannelConfig.json` and `guildsConfig.json` are unaffected.
 
 #### Documentation
 
@@ -231,9 +223,8 @@
   wiki and the `docs/` workflow files.
 + Added [docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md), the contract between the two bots: what is read,
   what is written, what happens when Postgres is unreachable, and why each cache has the TTL it has.
-+ Rewrote the account linking, admin roles, global profile change and auditing sections of
-  [FEATURES.md](docs/FEATURES.md) and their wiki pages around the split, and removed the admin panel, link
-  role and feature request pages.
++ Rewrote the account linking and admin roles sections of [FEATURES.md](docs/FEATURES.md) and their wiki
+  pages around the split, and removed the link role and feature request pages.
 
 #### Misc
 
@@ -258,22 +249,20 @@
 
 #### Community
 
-+ Moved every community feature to the sibling **THG community bot**, leaving TriBridge as the bridge and
-  nothing else. The features themselves are not gone — they are run from the other bot, and the two share one
-  database so they still agree about who is linked and who is staff.
++ Moved the features that need no Minecraft account to the sibling **THG community bot**. They are not gone —
+  they are run from the other bot, and the two share one database so they still agree about who is linked and
+  who is staff. The admin panel, the global profile change and auditing stay here, because all three reach
+  into guild chat.
     + `/link`, `/unlink`, `/links`, `/whois` and `/linkrole` moved. Members link on the community bot; the
       bridge reads the link and keeps reposting linked members with their Minecraft head and name exactly as
       before.
-    + `/adminrole` moved. Both bots read the one list, so a role that opens the community bot's admin panel
-      still runs `/send` here. **Set `DATABASE_URL` before upgrading**: without it the admin check fails
-      closed and nothing admin-gated works.
-    + `/adminpanel` and the global profile change moved. The bridge still applies the effect to the three
-      legs it owns — the bridge-channel repost, the name guild chat is told, and the name on incoming guild
-      chat — and both direction switches still work from the panel.
-    + `/auditchannel` moved. Both bots record into the one channel, and a Hypixel guild can still be given
-      its own with `/guilds edit guild:sb auditchannel:#x`.
+    + `/adminrole` moved. Both bots read the one list, so a role that counts as staff there counts as staff
+      here. **Set `DATABASE_URL` before upgrading**: without it the admin check fails closed and nothing
+      admin-gated works, `/adminpanel` included.
     + `/request`, `/requestchannel` and `/requeststatus` moved outright; nothing about them touched the
       bridge.
+    + `/adminpanel`, the global profile change and `/auditchannel` **stay here**, unchanged. Test mode still
+      recognises a tester by their account link, which now means the link they made on the community bot.
 
 ## Version 1.2.1
 
