@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 32" fill="none">
+  <rect x="0" y="4" width="24" height="24" rx="6" fill="#7289DA"/>
+  <path d="M6 12h12v1.5H6V12zm0 4h9v1.5H6V16zm0 4h7.5v1.5H6V20z" fill="#fff"/>
+  <text x="32" y="22" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#F9FAFB">TriBridge</text>
+</svg>

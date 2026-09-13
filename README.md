@@ -44,8 +44,9 @@ all.
   guild or the default.
 - **Information** — `/online`, `/ping`, `/help` and `/networth`.
 
-*See [Features](docs/FEATURES.md) for what each one does in full, the [wiki](https://github.com/Trilleo/TriBridge/wiki)
-for the same material split by audience, and the [change log](CHANGELOG.md) for what's new in each release.*
+*See [Features](docs/FEATURES.md) for what each one does in full, the [docs site](site/) (or
+[wiki](https://github.com/TheHypixelGuardians/TriBridge/wiki) until cutover) for the same material split by
+audience, and the [change log](CHANGELOG.md) for what's new in each release.*
 
 ## Prerequisites
 
@@ -97,7 +98,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
    > any other server the bot was added to could add themselves to the bot's admin roles.
 
 4. **Invite the bot** with the permissions listed
-   in [Permissions](https://github.com/Trilleo/TriBridge/wiki/Permissions).
+   in [Permissions](site/permissions.mdx).
 
 5. **Start it**
 
@@ -111,7 +112,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
 
 6. **Set the admin roles** — `/adminrole add role:@Staff`. Until then, nothing admin-gated works.
 
-Full walkthrough: [Installation](https://github.com/Trilleo/TriBridge/wiki/Installation).
+Full walkthrough: [Installation](site/installation.mdx).
 
 ## Commands
 
@@ -142,7 +143,7 @@ Full walkthrough: [Installation](https://github.com/Trilleo/TriBridge/wiki/Insta
 
 Plus the chat commands typed in guild chat or the bridge channel: `!nw <username>` for a networth lookup, and
 `!tag message` to aim at one guild. Full reference:
-[Commands](https://github.com/Trilleo/TriBridge/wiki/Commands).
+[Commands](site/commands.mdx).
 
 ## Usage
 
@@ -162,7 +163,7 @@ Everything past the first Hypixel guild is configured from Discord rather than f
 ```
 
 Config files are written next to the repository and are all gitignored, so they survive a `git pull` — see
-[Config files](https://github.com/Trilleo/TriBridge/wiki/Config-Files).
+[Config files](site/config-files.mdx).
 
 ## Updating
 
@@ -172,11 +173,13 @@ npm install
 ```
 
 Then restart the bot. New or changed slash commands take up to an hour to propagate on Discord's side. See
-[Updating](https://github.com/Trilleo/TriBridge/wiki/Updating).
+[Updating](site/updating.mdx).
 
 ## Documentation
 
-- [Wiki](https://github.com/Trilleo/TriBridge/wiki) — split by audience: using the bridge, and running the bot
+- **[Docs site](site/)** — Mintlify source for TriBridge's public documentation (preview with `cd site && npx mint
+  dev`). The [GitHub wiki](https://github.com/TheHypixelGuardians/TriBridge/wiki) still exists until Mintlify is
+  connected in the dashboard and the cutover is complete — see [site/README.md](site/README.md).
 - [Features](docs/FEATURES.md) — the canonical description of everything the bot does
 - [Change log](CHANGELOG.md), and the [Discord change log](DISCORD_CHANGELOG.md) for the announcement channel
 - [Writing the changelog & releasing](docs/RELEASING.md)

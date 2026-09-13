@@ -1,0 +1,113 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "TriBridge",
+  "description": "Documentation for TriBridge — the Discord ↔ Hypixel guild chat bridge.",
+  "colors": {
+    "primary": "#5865F2",
+    "light": "#7289DA",
+    "dark": "#4752C4"
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/TheHypixelGuardians/TriBridge"
+      },
+      {
+        "label": "Changelog",
+        "href": "https://github.com/TheHypixelGuardians/TriBridge/blob/master/CHANGELOG.md"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/TheHypixelGuardians/TriBridge"
+    },
+    "links": [
+      {
+        "header": "TriBridge",
+        "items": [
+          {
+            "label": "Repository",
+            "href": "https://github.com/TheHypixelGuardians/TriBridge"
+          },
+          {
+            "label": "Changelog",
+            "href": "https://github.com/TheHypixelGuardians/TriBridge/blob/master/CHANGELOG.md"
+          },
+          {
+            "label": "Issues",
+            "href": "https://github.com/TheHypixelGuardians/TriBridge/issues"
+          }
+        ]
+      }
+    ]
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "TriBridge",
+        "pages": ["index"]
+      },
+      {
+        "group": "Using the bridge",
+        "pages": [
+          "using-the-bridge",
+          "guild-tags",
+          "account-linking",
+          "networth",
+          "feature-requests",
+          "commands"
+        ]
+      },
+      {
+        "group": "Running the bot",
+        "pages": [
+          "installation",
+          "configuration",
+          "config-files",
+          "permissions",
+          "updating"
+        ]
+      },
+      {
+        "group": "Hypixel guilds",
+        "pages": [
+          "hypixel-guilds",
+          "guild-to-guild-bridging",
+          "officer-chat",
+          "reconnection"
+        ]
+      },
+      {
+        "group": "Administration",
+        "pages": [
+          "admin-roles",
+          "admin-panel",
+          "global-profile-change",
+          "auditing",
+          "link-role"
+        ]
+      },
+      {
+        "group": "Help",
+        "pages": ["faq", "troubleshooting"]
+      },
+      {
+        "group": "Development",
+        "pages": [
+          "architecture",
+          "adding-a-command",
+          "releasing",
+          "contributing"
+        ]
+      }
+    ]
+  }
+}
