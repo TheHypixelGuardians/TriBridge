@@ -2,7 +2,7 @@
 
 Everything TriBridge does, and how to use it. This is the reference the README's feature list points at — see
 the [change log](../CHANGELOG.md) for what changed in each release, and the
-[wiki](https://github.com/Trilleo/TriBridge/wiki) for the same material split by audience.
+[docs site](https://thehypixelguardians.mintlify.site/tribridge) for the same material split by audience.
 
 Two words are used precisely throughout, because they mean different things:
 
@@ -434,14 +434,14 @@ that work down with it — the failure is printed to the console and swallowed.
 
 ## Adding a feature to this file
 
-Every user-visible feature is described here, and this file is the canonical version — the wiki restates it
-for a different reader, and the changelog says when it changed.
+Every user-visible feature is described here, and this file is the canonical in-repo version — the Mintlify
+site restates it for a different reader, and the changelog says when it changed.
 
 A new feature gets its own `##` section: what it does, how it is switched on and configured, and any
 limitation worth knowing before someone hits it. A change to an existing feature edits that section rather
 than appending a note to the end of it.
 
 Write for whoever runs or uses the bot. Implementation notes belong in the changelog's `### Technical Details`
-and in [wiki/Architecture.md](../wiki/Architecture.md), not here — with one exception worth keeping: when a
+and in [site/tribridge/architecture.mdx](../site/tribridge/architecture.mdx), not here — with one exception worth keeping: when a
 rule exists because the obvious alternative was actively harmful (a silent drop, a mute, a permission
 escalation), say so. That sentence is what stops the rule being "simplified" away later.

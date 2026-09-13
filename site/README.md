@@ -7,7 +7,7 @@ This folder is the **Mintlify** source for the org-wide docs site at
 | Path | Product | Source repo |
 |------|---------|-------------|
 | `site/index.mdx` | Org landing — links to both products | This repo |
-| `site/tribridge/` | TriBridge (Discord ↔ Hypixel guild chat bridge) | [TriBridge](https://github.com/TheHypixelGuardians/TriBridge) — mirrors [`wiki/`](../wiki) until cutover |
+| `site/tribridge/` | TriBridge (Discord ↔ Hypixel guild chat bridge) | [TriBridge](https://github.com/TheHypixelGuardians/TriBridge) |
 | `site/community/` | THG Community bot (profiles, linking, requests) | [thg-community](https://github.com/TheHypixelGuardians/thg-community) — converted from that repo's public markdown |
 
 Navigation is defined in [`docs.json`](docs.json) via `navigation.products`. The org landing at `/` sits in a
@@ -39,18 +39,12 @@ The live site is connected in the [Mintlify dashboard](https://dashboard.mintlif
 2. **Content root** `site/` (where `docs.json` lives).
 3. Deploy from `master`. PR preview deployments run automatically once connected.
 
-The [wiki sync workflow](../.github/workflows/wiki.yml) is unchanged — TriBridge wiki pages still publish to
-GitHub until cutover.
+## Legacy wiki migration
 
-## Regenerating TriBridge pages from the wiki
-
-If you bulk-update `wiki/` and need to refresh TriBridge MDX:
-
-```bash
-node scripts/migrate-wiki-to-mintlify.js
-```
-
-Output lands in `site/tribridge/`. Review the diff — manual edits in `site/tribridge/` may need re-applying.
+The pre-Mintlify GitHub wiki source in [`wiki/`](../wiki/) is frozen. The one-off migration script
+[`scripts/migrate-wiki-to-mintlify.js`](../scripts/migrate-wiki-to-mintlify.js) can bulk-refresh
+`site/tribridge/` from that folder if needed — review the diff carefully; routine edits belong in
+`site/tribridge/` only.
 
 ## Community docs
 

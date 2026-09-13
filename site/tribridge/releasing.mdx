@@ -74,13 +74,11 @@ npm install
 Then restart. Config files live outside the repository and survive the pull — see [Updating](/tribridge/updating) for
 what to check afterwards, including the up-to-an-hour delay before new slash commands appear.
 
-## The wiki
+## Public docs (Mintlify)
 
-These pages publish themselves. A push to `master` touching `wiki/` runs
-[`.github/workflows/wiki.yml`](https://github.com/TheHypixelGuardians/TriBridge/blob/master/.github/workflows/wiki.yml),
-which copies the folder into the wiki's own repository — so there is no publish step at release time, and a
-page merged with the code is live with it. See
-[docs/WIKI.md](https://github.com/TheHypixelGuardians/TriBridge/blob/master/docs/WIKI.md).
+User-facing documentation deploys from [`site/`](https://github.com/TheHypixelGuardians/TriBridge/tree/master/site)
+on every push to `master` — there is no separate publish step at release time. Preview locally with
+`cd site && npx mint dev`. See [site/README.md](https://github.com/TheHypixelGuardians/TriBridge/blob/master/site/README.md).
 
 ## Next
 
