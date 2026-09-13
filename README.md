@@ -42,13 +42,10 @@ all.
   guild or the default.
 - **Information** — `/online`, `/ping`, `/help` and `/networth`.
 
-**Account linking, feature requests and member profiles live in the sibling
-[THG community bot](https://github.com/TheHypixelGuardians/thg-community).** Account links and the bot-admin role list are
-configured there and shared with this bot through one PostgreSQL database — see
-[The shared database](docs/SHARED_DATABASE.md).
-
-*See [Features](docs/FEATURES.md) for what each one does in full, the [wiki](https://github.com/Trilleo/TriBridge/wiki)
-for the same material split by audience, and the [change log](CHANGELOG.md) for what's new in each release.*
+*See [Features](docs/FEATURES.md) for what each one does in full, the
+[docs site](https://thehypixelguardians.mintlify.site) (TriBridge product, or the
+[wiki](https://github.com/TheHypixelGuardians/TriBridge/wiki) until cutover) for the same material split by
+audience, and the [change log](CHANGELOG.md) for what's new in each release.*
 
 ## Prerequisites
 
@@ -65,7 +62,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/Trilleo/TriBridge.git
+   git clone https://github.com/TheHypixelGuardians/TriBridge.git
    cd TriBridge
    ```
 
@@ -103,7 +100,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
    > any other server the bot was added to could add themselves to the bot's admin roles.
 
 4. **Invite the bot** with the permissions listed
-   in [Permissions](https://github.com/Trilleo/TriBridge/wiki/Permissions).
+   in [Permissions](https://thehypixelguardians.mintlify.site/tribridge/permissions).
 
 5. **Start it**
 
@@ -119,7 +116,7 @@ for the same material split by audience, and the [change log](CHANGELOG.md) for 
    list, so until it has an entry nothing admin-gated works on either side. Without `DATABASE_URL`, `isAdmin`
    fails closed and every admin command here refuses.
 
-Full walkthrough: [Installation](https://github.com/Trilleo/TriBridge/wiki/Installation).
+Full walkthrough: [Installation](https://thehypixelguardians.mintlify.site/tribridge/installation).
 
 ## Commands
 
@@ -141,7 +138,7 @@ Full walkthrough: [Installation](https://github.com/Trilleo/TriBridge/wiki/Insta
 
 Plus the chat commands typed in guild chat or the bridge channel: `!nw <username>` for a networth lookup, and
 `!tag message` to aim at one guild. Full reference:
-[Commands](https://github.com/Trilleo/TriBridge/wiki/Commands).
+[Commands](https://thehypixelguardians.mintlify.site/tribridge/commands).
 
 ## Usage
 
@@ -163,7 +160,7 @@ Bot-admin roles are configured on the [THG community bot](https://github.com/The
 with `/adminrole`, and both bots read that one list.
 
 Config files are written next to the repository and are all gitignored, so they survive a `git pull` — see
-[Config files](https://github.com/Trilleo/TriBridge/wiki/Config-Files).
+[Config files](https://thehypixelguardians.mintlify.site/tribridge/config-files).
 
 ## Updating
 
@@ -173,11 +170,14 @@ npm install
 ```
 
 Then restart the bot. New or changed slash commands take up to an hour to propagate on Discord's side. See
-[Updating](https://github.com/Trilleo/TriBridge/wiki/Updating).
+[Updating](https://thehypixelguardians.mintlify.site/tribridge/updating).
 
 ## Documentation
 
-- [Wiki](https://github.com/Trilleo/TriBridge/wiki) — split by audience: using the bridge, and running the bot
+- **[Docs site](https://thehypixelguardians.mintlify.site)** — org-wide Mintlify site (TriBridge + THG Community
+  products; source in [`site/`](site/), preview with `cd site && npx mint dev`). The
+  [GitHub wiki](https://github.com/TheHypixelGuardians/TriBridge/wiki) still exists until cutover — see
+  [site/README.md](site/README.md).
 - [Features](docs/FEATURES.md) — the canonical description of everything the bot does
 - [Change log](CHANGELOG.md), and the [Discord change log](DISCORD_CHANGELOG.md) for the announcement channel
 - [Writing the changelog & releasing](docs/RELEASING.md)

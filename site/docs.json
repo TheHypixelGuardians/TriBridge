@@ -1,0 +1,149 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "The Hypixel Guardians",
+  "description": "Documentation for THG Discord bots — TriBridge and the THG Community bot.",
+  "colors": {
+    "primary": "#5865F2",
+    "light": "#7289DA",
+    "dark": "#4752C4"
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/TheHypixelGuardians"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/TheHypixelGuardians"
+    },
+    "links": [
+      {
+        "header": "Repositories",
+        "items": [
+          {
+            "label": "TriBridge",
+            "href": "https://github.com/TheHypixelGuardians/TriBridge"
+          },
+          {
+            "label": "THG Community",
+            "href": "https://github.com/TheHypixelGuardians/thg-community"
+          },
+          {
+            "label": "TriBridge changelog",
+            "href": "https://github.com/TheHypixelGuardians/TriBridge/blob/master/CHANGELOG.md"
+          }
+        ]
+      }
+    ]
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Documentation",
+        "pages": ["index"]
+      }
+    ],
+    "products": [
+      {
+        "product": "TriBridge",
+        "description": "Discord ↔ Hypixel guild chat bridge",
+        "icon": "bridge",
+        "groups": [
+          {
+            "group": "TriBridge",
+            "pages": ["tribridge/index"]
+          },
+          {
+            "group": "Using the bridge",
+            "pages": [
+              "tribridge/using-the-bridge",
+              "tribridge/guild-tags",
+              "tribridge/account-linking",
+              "tribridge/networth",
+              "tribridge/feature-requests",
+              "tribridge/commands"
+            ]
+          },
+          {
+            "group": "Running the bot",
+            "pages": [
+              "tribridge/installation",
+              "tribridge/configuration",
+              "tribridge/config-files",
+              "tribridge/permissions",
+              "tribridge/updating"
+            ]
+          },
+          {
+            "group": "Hypixel guilds",
+            "pages": [
+              "tribridge/hypixel-guilds",
+              "tribridge/guild-to-guild-bridging",
+              "tribridge/officer-chat",
+              "tribridge/reconnection"
+            ]
+          },
+          {
+            "group": "Administration",
+            "pages": [
+              "tribridge/admin-roles",
+              "tribridge/admin-panel",
+              "tribridge/global-profile-change",
+              "tribridge/auditing",
+              "tribridge/link-role"
+            ]
+          },
+          {
+            "group": "Help",
+            "pages": ["tribridge/faq", "tribridge/troubleshooting"]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "tribridge/architecture",
+              "tribridge/adding-a-command",
+              "tribridge/releasing",
+              "tribridge/contributing"
+            ]
+          }
+        ]
+      },
+      {
+        "product": "THG Community",
+        "description": "Discord community bot — profiles, linking, requests",
+        "icon": "users",
+        "groups": [
+          {
+            "group": "THG Community",
+            "pages": ["community/index"]
+          },
+          {
+            "group": "Using the bot",
+            "pages": [
+              "community/commands",
+              "community/account-linking",
+              "community/user-management",
+              "community/features"
+            ]
+          },
+          {
+            "group": "Running the bot",
+            "pages": [
+              "community/installation",
+              "community/shared-database"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

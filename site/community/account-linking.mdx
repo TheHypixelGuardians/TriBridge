@@ -1,0 +1,72 @@
+---
+title: "Account linking"
+description: "Bind a Discord user to a Minecraft account — shared with TriBridge for guild-chat attribution."
+---
+
+Binds a Discord user to a Minecraft account. The link is what lets the community bot and
+[TriBridge](/tribridge) show the same person on both sides of the guild-chat bridge.
+
+## Commands
+
+| Command | Who | Does |
+|---------|-----|------|
+| `/link <username>` | anyone | Bind your Minecraft account |
+| `/unlink [user]` | anyone / bot-admin for `user:` | Remove your link, or somebody else's |
+| `/whois <user\|username>` | bot-admin | Look one up in either direction |
+| `/links` | bot-admin | List every link |
+| `/linkrole set\|show\|clear` | bot-admin | The role handed to linked members |
+
+## What is stored
+
+`MinecraftLink`, one row per member, related to `User.id` rather than to the Discord id. It holds the
+canonical name Mojang returned and the account's UUID.
+
+**The UUID is why a link survives a rename**: avatar URLs are built from it, so a member who changes their
+Minecraft name keeps their head and only the stored name goes stale.
+
+**Both directions are enforced.** One link per Discord user (`userId` is unique) and one Discord user per
+Minecraft account (`uuid` is unique, and `setLink` refuses a name already claimed by somebody else). Silently
+reassigning an account would let anybody wear a guild member's identity across the bridge.
+
+Links are deliberately **not** scoped to a Hypixel guild: one link per member, whatever guild they are in.
+
+## Verification
+
+`/link` verifies with Mojang that the account exists, and nothing more. It does **not** check Hypixel guild
+membership — that check lives on TriBridge's `/link`, which needs a connected Minecraft bot. Anyone can
+therefore link any real Minecraft name here; an admin undoes a wrong one with `/unlink user:@them`.
+
+A Mojang lookup distinguishes three outcomes, and the reply differs for each: no such account, Mojang
+unreachable, and success. Collapsing the middle case into the first would tell a member they typed their own
+name wrong when the truth was an outage.
+
+## The link role
+
+`/linkrole set <role>` names a role every linked member should have. `/link` grants it, `/unlink` takes it
+back, setting the role backfills it onto everybody already linked, and `clientReady` re-syncs from the stored
+links at every startup.
+
+Two rules hold it together:
+
+- **The role never gates the link.** `applyLinkRole` returns a result instead of throwing; every caller
+  reports the failure and carries on. A missing role or a lost **Manage Roles** is a configuration problem,
+  not a reason to refuse someone's `/link`.
+- **The sync only ever adds.** The role may be handed out for unrelated reasons, so it is never stripped from
+  someone merely because they have no link. Changing or clearing the configured role likewise leaves the old
+  one on whoever has it.
+
+Members are fetched **one id at a time**, not with a bulk roster fetch.
+
+The bot needs **Manage Roles**, and its own highest role must rank above the link role. `/linkrole set`
+refuses up front when either is untrue.
+
+## What TriBridge does with a link
+
+TriBridge reads `MinecraftLink` and never writes it. A linked member's bridge-channel message is reposted
+through a webhook wearing their Minecraft head and name, the original deleted, and the guild-chat copy
+attributed to their Minecraft name.
+
+The bridge caches link lookups for about fifteen seconds and cannot see this bot's writes, so `/link` says the
+member's *next* message will be attributed rather than promising an instant change.
+
+See [Shared database](/community/shared-database) for the full contract.
