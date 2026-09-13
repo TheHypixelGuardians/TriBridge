@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Technical Details
+
+#### Documentation
+
++ Updated `CLAUDE.md` agent guidance for the Mintlify docs migration: public docs now live under `site/` alongside
+  `wiki/` until cutover, with both kept in sync for user-visible changes.
+
 ### New Features
 
 #### Bridge

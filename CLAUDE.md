@@ -32,35 +32,44 @@ Before finishing any task that changes the bot, do all of the following:
       release time in both files together.
 
 3. **Document the feature** — every user-visible feature is described in [docs/FEATURES.md](docs/FEATURES.md),
-   which is the canonical description the README and the wiki both point at. A new feature gets its own `##`
-   section there (what it does, how it is switched on and configured, any limitation); a change to an existing
-   feature updates that feature's section rather than appending a note to the end of it. Write for whoever runs
-   or uses the bot — implementation notes belong in the changelog's `### Technical Details` and in
-   [wiki/Architecture.md](wiki/Architecture.md).
+   which is the canonical description the README, the Mintlify site and the wiki all point at. A new feature
+   gets its own `##` section there (what it does, how it is switched on and configured, any limitation); a
+   change to an existing feature updates that feature's section rather than appending a note to the end of it.
+   Write for whoever runs or uses the bot — implementation notes belong in the changelog's
+   `### Technical Details` and in [site/architecture.mdx](site/architecture.mdx) (or
+   [wiki/Architecture.md](wiki/Architecture.md) until cutover).
     - One exception worth keeping: where a rule exists because the obvious alternative was actively harmful (a
       silent drop, a Hypixel mute, a permission escalation), say so. That sentence is what stops the rule being
       "simplified" away later.
 
-4. **Update the wiki** — the GitHub wiki is published from [wiki/](wiki/) in this repository, and it is the
-   page somebody finds from a search engine, so it must never lag behind the bot. Publishing is automatic —
-   [.github/workflows/wiki.yml](.github/workflows/wiki.yml) syncs the folder to the wiki repository on every
-   push to `master` that touches it — so the only job here is keeping `wiki/` correct. Never publish by hand
-   and never edit a page through GitHub's wiki editor: the next push overwrites it.
-    - The wiki is **split by audience**: *Using the bridge* is for guild members in the Discord server, *Running
-      the bot* is for whoever hosts it and holds a bot-admin role. A page belongs to whichever reader can act on
-      it. Where a feature has both halves (the global profile change, auditing), the member-facing consequence
-      is a paragraph on the member page and the configuration lives on the staff page.
-    - A **new feature** gets its own `wiki/<Page-Name>.md`, plus a line in [wiki/_Sidebar.md](wiki/_Sidebar.md)
-      under the right section and a row in the feature table of [wiki/Home.md](wiki/Home.md).
-    - A **change to an existing feature** updates that feature's page, in the same task as the code.
-    - Three pages are **exhaustive lists**, so a missing entry is a visible gap: a new or changed command
-      touches [wiki/Commands.md](wiki/Commands.md), a new config file touches
-      [wiki/Config-Files.md](wiki/Config-Files.md), and a new permission or intent touches
-      [wiki/Permissions.md](wiki/Permissions.md).
-    - Page names are titles: renaming a file breaks every link to it. Links between pages are relative and
-      extension-less (`[Guild tags](Guild-Tags)`); links into this repository are absolute GitHub URLs. See
-      [docs/WIKI.md](docs/WIKI.md) for the conventions and how pages are published.
-    - Never put a real token, channel id, role id or account address in a page — the wiki is public.
+4. **Update the public docs** — user-facing documentation is migrating from the GitHub wiki to Mintlify under
+   [site/](site/). Until cutover, **both** must stay in sync for anything user-visible — the wiki still
+   publishes automatically via [.github/workflows/wiki.yml](.github/workflows/wiki.yml), and the Mintlify site
+   is the destination once the dashboard is connected (content root `site/`; preview with `mint dev` — see
+   [site/README.md](site/README.md)).
+    - **Prefer Mintlify for new work** — edit the matching `site/*.mdx` page and [site/docs.json](site/docs.json)
+      navigation where needed. Keep the parallel `wiki/<Page-Name>.md` (and sidebar/home entries) updated in
+      the same task until the wiki sync is retired.
+    - The audience split still applies in both places: *Using the bridge* is for guild members in the Discord
+      server, *Running the bot* is for whoever hosts it and holds a bot-admin role. A page belongs to whichever
+      reader can act on it. Where a feature has both halves (the global profile change, auditing), the
+      member-facing consequence is a paragraph on the member page and the configuration lives on the staff page.
+      Mintlify mirrors this in `docs.json` navigation groups.
+    - A **new feature** gets its own page in both trees — `site/<slug>.mdx` with a line in `docs.json`, and
+      `wiki/<Page-Name>.md` with a line in [wiki/_Sidebar.md](wiki/_Sidebar.md) and a row in the feature table
+      of [wiki/Home.md](wiki/Home.md) / [site/index.mdx](site/index.mdx).
+    - A **change to an existing feature** updates that feature's page in both places, in the same task as the
+      code.
+    - Three pages are **exhaustive lists**, so a missing entry is a visible gap in **both** places until
+      cutover: a new or changed command touches [site/commands.mdx](site/commands.mdx) and
+      [wiki/Commands.md](wiki/Commands.md); a new config file touches [site/config-files.mdx](site/config-files.mdx)
+      and [wiki/Config-Files.md](wiki/Config-Files.md); a new permission or intent touches
+      [site/permissions.mdx](site/permissions.mdx) and [wiki/Permissions.md](wiki/Permissions.md).
+    - **Link conventions differ.** Wiki pages use extension-less relative links (`[Guild tags](Guild-Tags)`).
+      Mintlify MDX uses route paths (`[Guild tags](/guild-tags)`). Links into this repository are absolute
+      GitHub URLs in both. See [docs/WIKI.md](docs/WIKI.md) for wiki publishing; never publish the wiki by hand
+      or edit through GitHub's wiki editor — the next push overwrites it.
+    - Never put a real token, channel id, role id or account address in a page — public docs are public.
 
 5. **Check the README** — if the change affects anything [README.md](README.md) mentions (commands,
    installation, `.env` variables, Discord permissions/intents, Node version, dependencies, how the relay
@@ -92,10 +101,12 @@ in-game.
 - No build step, no test suite, no linter — there is no `test` script, so `npm test` reports a missing one.
 - Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`. `nodemon` is the only
   dev dependency, used by `npm run dev` and needed by nothing that runs the bot.
-- Documentation lives in two places: [docs/](docs/) holds the canonical reference
-  ([FEATURES.md](docs/FEATURES.md)) and the workflow docs, and [wiki/](wiki/) is the source of the GitHub
-  wiki, which restates the same material split by audience. [wiki/Architecture.md](wiki/Architecture.md) is
-  the long-form version of the Architecture section below — when one changes, check the other.
+- Documentation lives in three places: [docs/](docs/) holds the canonical reference
+  ([FEATURES.md](docs/FEATURES.md)) and maintainer workflow docs; [site/](site/) is the Mintlify public docs
+  (MDX + `docs.json`), replacing the GitHub wiki once connected and cut over; and [wiki/](wiki/) still
+  publishes to the GitHub wiki until then — keep it in sync with `site/` for user-visible changes.
+  [site/architecture.mdx](site/architecture.mdx) (and [wiki/Architecture.md](wiki/Architecture.md) until
+  cutover) is the long-form version of the Architecture section below — when one changes, check the other.
 - Commit messages follow the `<tag>: <message>` convention (`Feature:`, `Improvement:`, `Fix:`, `Internal:`,
   `Backend:`, `Update:`) with one granular commit per logical change — see
   [docs/COMMIT_STRUCTURE.md](docs/COMMIT_STRUCTURE.md).
