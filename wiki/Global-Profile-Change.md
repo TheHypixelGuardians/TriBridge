@@ -50,7 +50,8 @@ server is untouched. Use it before going live.
 On the guild-chat side, a tester is recognised by their [account link](Account-Linking) — the bot has no
 Discord author to check when a line arrives from Minecraft, so it matches the Minecraft name back to a link
 and checks that. **A tester with no link will not see their guild chat rewritten**, and without that rule
-testing would silently relabel guild members who never agreed to take part.
+testing would silently relabel guild members who never agreed to take part. Linking happens on the THG
+community bot, so a tester has to run `/link` there first.
 
 ## Live mode
 

@@ -6,7 +6,7 @@ module.exports = {
   description: "Open the admin panel to run and configure admin functions.",
 
   callback: async (client, interaction) => {
-    if (!isAdmin(interaction.member)) {
+    if (!(await isAdmin(interaction.member))) {
       return interaction.reply({
         content: "❌ You do not have permission to use this command.",
         ephemeral: true,

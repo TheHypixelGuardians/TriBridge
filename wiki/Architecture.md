@@ -116,7 +116,8 @@ The diff compares `autocomplete` and recurses into subcommand options, so nested
 
 And the guard that is neither: `handleCommands.js` refuses any interaction whose `guildId` is not
 `bridge.discordServerId`. Commands are registered globally but the bot serves one Discord server, and without
-that check an administrator of any *other* server the bot is in could `/adminrole add` a role they control and
+that check an administrator of any *other* server the bot is in could reach commands scoped to the real server
+and
 inherit bot-admin — `isAdmin` matches role ids and has no server dimension. It fails closed. **Do not add a
 command dispatch path that skips it.**
 

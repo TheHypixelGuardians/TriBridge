@@ -159,9 +159,10 @@ function disguisesToMinecraft() {
  *
  * @param {string} mcName The Minecraft name that spoke in guild chat.
  * @param {string} channelId The bridge channel the message is headed for.
- * @returns {boolean}
+ * @returns {Promise<boolean>} Async only because the link lookup it needs in
+ *   test mode reads the community bot's database.
  */
-function appliesToGuildChat(mcName, channelId) {
+async function appliesToGuildChat(mcName, channelId) {
   if (!isActive()) return false;
 
   const config = loadConfig();
@@ -174,7 +175,7 @@ function appliesToGuildChat(mcName, channelId) {
 
   if (config.mode === "test") {
     if (!config.testChannelIds.includes(channelId)) return false;
-    const link = getLinkByName(mcName);
+    const link = await getLinkByName(mcName);
     return Boolean(link) && config.testerIds.includes(link.discordId);
   }
 

@@ -1,103 +1,100 @@
-const fs = require("fs");
-const path = require("path");
+const db = require("./db");
 
-const CONFIG_PATH = path.join(
-  __dirname,
-  "..",
-  "..",
-  "linkedAccountsConfig.json",
-);
+/**
+ * Minecraft account links, read from the THG community bot's database.
+ *
+ * The community bot owns `/link`, `/unlink` and `/whois`; this bot only reads
+ * the result, because guild chat has to be attributed to the same Minecraft name
+ * the community side shows. There is deliberately no write path here — two bots
+ * writing one link table is how the two would start disagreeing about who is
+ * who.
+ *
+ * The rows relate to `User.id` rather than to the Discord id (the community
+ * bot's schema convention), so every lookup joins through `"User"`.
+ *
+ * Lookups sit on the message path, so they are cached — but briefly. A member
+ * who has just run `/link` expects their very next message to be attributed
+ * correctly, and a long cache would spend that first minute still showing their
+ * Discord name.
+ */
+const TTL_MS = 15_000;
 
-let cachedConfig = null;
+const byDiscordId = new Map();
+const byName = new Map();
 
-function loadConfig() {
-  if (cachedConfig) return cachedConfig;
-  try {
-    const data = fs.readFileSync(CONFIG_PATH, "utf-8");
-    cachedConfig = JSON.parse(data);
-    if (!cachedConfig.links) cachedConfig.links = {};
-  } catch {
-    cachedConfig = { links: {} };
+function readCache(cache, key) {
+  const entry = cache.get(key);
+  if (!entry) return undefined;
+
+  if (Date.now() - entry.readAt >= TTL_MS) {
+    cache.delete(key);
+    return undefined;
   }
-  return cachedConfig;
+
+  return entry.value;
 }
 
-function saveConfig(config) {
-  cachedConfig = config;
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
+function writeCache(cache, key, value) {
+  cache.set(key, { value, readAt: Date.now() });
+  return value;
 }
 
 /**
  * @param {string} discordId
- * @returns {{uuid: string, name: string}|null}
+ * @returns {Promise<{uuid: string, name: string, discordId: string}|null>} null
+ *   when the user has no link, and also when the database cannot be reached —
+ *   an unreachable database must relay under the Discord name rather than take
+ *   the bridge down.
  */
-function getLink(discordId) {
-  return loadConfig().links[discordId] ?? null;
+async function getLink(discordId) {
+  const cached = readCache(byDiscordId, discordId);
+  if (cached !== undefined) return cached;
+
+  const rows = await db.query(
+    `SELECT l."uuid", l."name"
+       FROM "MinecraftLink" l
+       JOIN "User" u ON u."id" = l."userId"
+      WHERE u."discordId" = $1
+      LIMIT 1`,
+    [discordId],
+  );
+
+  if (rows === null) return null;
+
+  const link = rows[0] ? { discordId, uuid: rows[0].uuid, name: rows[0].name } : null;
+  return writeCache(byDiscordId, discordId, link);
 }
 
 /**
- * Reverse lookup by Minecraft name, case-insensitive.
+ * Reverse lookup by Minecraft name, case-insensitively — Hypixel spells a name
+ * however the player typed it.
  *
  * @param {string} mcName
- * @returns {{discordId: string, uuid: string, name: string}|null}
+ * @returns {Promise<{discordId: string, uuid: string, name: string}|null>}
  */
-function getLinkByName(mcName) {
-  const target = String(mcName ?? "").toLowerCase();
-  const links = loadConfig().links;
+async function getLinkByName(mcName) {
+  const target = String(mcName ?? "").trim();
+  if (!target) return null;
 
-  for (const [discordId, link] of Object.entries(links)) {
-    if (link.name.toLowerCase() === target) {
-      return { discordId, ...link };
-    }
-  }
-  return null;
+  const key = target.toLowerCase();
+  const cached = readCache(byName, key);
+  if (cached !== undefined) return cached;
+
+  const rows = await db.query(
+    `SELECT l."uuid", l."name", u."discordId"
+       FROM "MinecraftLink" l
+       JOIN "User" u ON u."id" = l."userId"
+      WHERE lower(l."name") = $1
+      LIMIT 1`,
+    [key],
+  );
+
+  if (rows === null) return null;
+
+  const link = rows[0]
+    ? { discordId: rows[0].discordId, uuid: rows[0].uuid, name: rows[0].name }
+    : null;
+  return writeCache(byName, key, link);
 }
 
-/**
- * Binds a Minecraft account to a Discord user.
- *
- * One Minecraft account maps to at most one Discord user, so this refuses when
- * the account is already claimed by somebody else.
- *
- * @param {string} discordId
- * @param {{uuid: string, name: string}} profile
- * @returns {{ok: true}|{ok: false, reason: 'taken', discordId: string}}
- */
-function setLink(discordId, profile) {
-  const existing = getLinkByName(profile.name);
-  if (existing && existing.discordId !== discordId) {
-    return { ok: false, reason: "taken", discordId: existing.discordId };
-  }
-
-  const config = loadConfig();
-  config.links[discordId] = { uuid: profile.uuid, name: profile.name };
-  saveConfig(config);
-  return { ok: true };
-}
-
-/**
- * @param {string} discordId
- * @returns {{uuid: string, name: string}|null} The removed link, or null if
- *   the user had none.
- */
-function removeLink(discordId) {
-  const config = loadConfig();
-  const existing = config.links[discordId];
-  if (!existing) return null;
-
-  delete config.links[discordId];
-  saveConfig(config);
-  return existing;
-}
-
-/**
- * @returns {Array<{discordId: string, uuid: string, name: string}>}
- */
-function getAllLinks() {
-  return Object.entries(loadConfig().links).map(([discordId, link]) => ({
-    discordId,
-    ...link,
-  }));
-}
-
-module.exports = { getLink, getLinkByName, setLink, removeLink, getAllLinks };
+module.exports = { getLink, getLinkByName };

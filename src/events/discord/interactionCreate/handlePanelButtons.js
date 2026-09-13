@@ -29,7 +29,7 @@ const {
 } = require("../../../utils/globalProfile");
 const { isAllowedServer } = require("../../../utils/serverGuard");
 const { getLink } = require("../../../utils/linkedAccounts");
-const { resolveMember } = require("../../../utils/linkRole");
+const { resolveMember } = require("../../../utils/serverMember");
 
 /**
  * Begins a global profile change from the panel's draft.
@@ -64,7 +64,7 @@ async function startEffect(interaction, mode, invokerId) {
 
   // Snapshotted here rather than looked up per message: the gate runs on
   // every message in the server and must not make API calls.
-  const link = getLink(member.id);
+  const link = await getLink(member.id);
   const state = start({
     target: {
       userId: member.id,
@@ -217,7 +217,7 @@ module.exports = async (client, interaction) => {
 
   // Re-checked on every click, not just when the panel was opened — an admin
   // role can be taken away while the panel sits there.
-  if (!isAdmin(interaction.member)) {
+  if (!(await isAdmin(interaction.member))) {
     return interaction.reply({
       content: "❌ You do not have permission to use the admin panel.",
       ephemeral: true,

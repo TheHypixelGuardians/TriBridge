@@ -187,6 +187,25 @@
 + Lookups are cached for ten minutes, coalesced so concurrent asks about one player make a single request,
   capped at one upstream request at a time, and rate limited per requester. Only the figures are kept: the
   multi-megabyte upstream response is discarded as soon as it is read.
++ Added `pg` and a `DATABASE_URL` environment variable. TriBridge now reads account links and the bot-admin
+  role list from the community bot's PostgreSQL database with plain SQL — there is no ORM and no schema on
+  this side, and nothing is ever written. See [docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md).
++ Both reads are async and never throw, because they sit on the message path, and their answers to an
+  unreachable database differ on purpose: a link reads as *not linked* so the message still relays under the
+  Discord name, while **`isAdmin` fails closed** — `/send` runs arbitrary commands as a Minecraft account
+  and `/adminpanel` can impersonate everybody in the server, so handing either out during an outage would be
+  worse than the outage.
++ Both cache for 15 seconds. The writer is another process, so the cache cannot be invalidated on write and
+  the TTL is the worst-case lag between an admin acting on the community bot and this side honouring it. It
+  is what keeps a member's first message after `/link` attributed correctly.
++ `resolveIdentity()` and `appliesToGuildChat()` are async as a consequence, since both consult a link.
++ Deleted `utils/featureRequests.js`, `utils/linkRole.js` and `utils/syncLinkRoles.js`, plus the
+  request-modal and link-role-sync handlers. `resolveMember` moved to `utils/serverMember.js`, which is all
+  the admin panel needed from `linkRole.js`.
++ `adminRolesConfig.json`, `linkedAccountsConfig.json`, `linkRoleConfig.json` and
+  `featureRequestsConfig.json` are no longer read or written. An install upgrading past this has to move
+  their contents into the shared database by hand; the files can then be deleted.
+  `globalProfileConfig.json`, `auditChannelConfig.json` and `guildsConfig.json` are unaffected.
 
 #### Documentation
 
@@ -211,6 +230,10 @@
   everything it used to explain in full moved to `docs/FEATURES.md` and the wiki.
 + `CLAUDE.md`'s after-every-change checklist grew from three steps to six, covering `docs/FEATURES.md`, the
   wiki and the `docs/` workflow files.
++ Added [docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md), the contract between the two bots: what is read,
+  what is written, what happens when Postgres is unreachable, and why each cache has the TTL it has.
++ Rewrote the account linking and admin roles sections of [FEATURES.md](docs/FEATURES.md) and their wiki
+  pages around the split, and removed the link role and feature request pages.
 
 #### Misc
 
@@ -219,7 +242,7 @@
   while working on it. `node src/index.js` still works exactly as it did.
     + `nodemon` is the only development dependency, and nothing needs it to *run* the bot — a deployment can
       still install with `npm install --omit=dev`.
-+ Added `.env.example`, a template holding the four required variables, to copy to `.env` on a fresh install
++ Added `.env.example`, a template holding the required variables, to copy to `.env` on a fresh install
   rather than typing them out.
 + Removed the placeholder `test` script. There is still no test suite, so `npm test` now says the script is
   missing instead of pretending to be one.
@@ -230,6 +253,25 @@
   changed; it is whitespace and quote marks across all 85 files.
     + `.prettierrc` records the settings, so an editor set to format on save now agrees with the repository
       instead of reformatting every file it opens.
+
+### Removed Features
+
+#### Community
+
++ Moved the features that need no Minecraft account to the sibling **THG community bot**. They are not gone —
+  they are run from the other bot, and the two share one database so they still agree about who is linked and
+  who is staff. The admin panel, the global profile change and auditing stay here, because all three reach
+  into guild chat.
+    + `/link`, `/unlink`, `/links`, `/whois` and `/linkrole` moved. Members link on the community bot; the
+      bridge reads the link and keeps reposting linked members with their Minecraft head and name exactly as
+      before.
+    + `/adminrole` moved. Both bots read the one list, so a role that counts as staff there counts as staff
+      here. **Set `DATABASE_URL` before upgrading**: without it the admin check fails closed and nothing
+      admin-gated works, `/adminpanel` included.
+    + `/request`, `/requestchannel` and `/requeststatus` moved outright; nothing about them touched the
+      bridge.
+    + `/adminpanel`, the global profile change and `/auditchannel` **stay here**, unchanged. Test mode still
+      recognises a tester by their account link, which now means the link they made on the community bot.
 
 ## Version 1.2.1
 

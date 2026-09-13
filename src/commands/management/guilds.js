@@ -292,7 +292,7 @@ module.exports = {
   },
 
   callback: async (client, interaction) => {
-    if (!isAdmin(interaction.member)) {
+    if (!(await isAdmin(interaction.member))) {
       return interaction.reply({
         content: "❌ You do not have permission to use this command.",
         ephemeral: true,

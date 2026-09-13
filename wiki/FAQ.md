@@ -12,7 +12,8 @@ first hundred characters or so. Send long thoughts as two messages.
 
 ## Why does my message show up under my Discord name and not my Minecraft name?
 
-You have not [linked your account](Account-Linking) yet. Run `/link <your Minecraft username>`.
+You have not [linked your account](Account-Linking) yet. Run `/link <your Minecraft username>` on the THG
+community bot.
 
 ## Why did my message disappear and come back looking different?
 
@@ -76,7 +77,7 @@ bot has already registered them.
 
 ## Where do I report a bug or ask for a feature?
 
-`/request` opens a form — see [Feature requests](Feature-Requests). Bugs in the bot itself go to
+`/request` on the THG community bot opens a form. Bugs in the bot itself go to
 [Issues](https://github.com/Trilleo/TriBridge/issues).
 
 ## Next

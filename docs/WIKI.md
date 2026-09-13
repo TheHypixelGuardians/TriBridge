@@ -15,10 +15,10 @@ sidebar keeps them apart:
 | **Using the bridge** | A guild member in the Discord server             | No access to the host, the `.env` or the console |
 | **Running the bot**  | Whoever hosts the bot and holds a bot-admin role | A terminal, the repository, and `/guilds`        |
 
-A page belongs to whichever reader can act on it. `/link` is a member page even though it touches a config
-file; `/linkrole` is a staff page even though members feel the result. When a feature genuinely has both
-halves — the global profile change, the audit trail — the member-facing consequence is one paragraph on the
-member page and the configuration lives on the staff page.
+A page belongs to whichever reader can act on it. `!nw` is a member page even though it costs a chat packet;
+`/guilds` is a staff page even though members feel the result. When a feature genuinely has both halves — the
+global profile change, the audit trail — the member-facing consequence is one paragraph on the member page and
+the configuration lives on the staff page.
 
 ## The pages
 
@@ -51,8 +51,11 @@ member page and the configuration lives on the staff page.
 - **Never paste a real token, channel id, role id or account address into a page.** Examples use
   `you@example.com`, `#log-channel` and obviously-fake ids. The wiki is public even when the repository is
   not.
-- **Say which audience a warning is for.** "Ask an administrator to run `/requestchannel set`" on a member
-  page; "run `/requestchannel set`" on a staff one.
+- **Say which audience a warning is for.** "Ask an administrator to set an audit channel" on a member page;
+  "run `/auditchannel set` on the community bot" on a staff one.
+- **Say which bot a command belongs to.** Community commands (`/link`, `/adminrole`, `/adminpanel`,
+  `/auditchannel`, `/request`) live on the THG community bot; naming the bot is what stops a reader typing
+  them at TriBridge and concluding the wiki is wrong.
 
 ## Publishing
 

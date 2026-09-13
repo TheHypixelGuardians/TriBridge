@@ -67,10 +67,11 @@ install with `npm install --omit=dev`.
 7. **Set the admin roles.**
 
    ```
-   /adminrole add role:@Staff
+   /adminrole add role:@Staff        (on the THG community bot)
    ```
 
-   Until a role is added, only someone with the Discord **Administrator** permission can run `/adminrole`
+   The list is shared by both bots. Until a role is added, only someone with the Discord **Administrator**
+   permission can run `/adminrole`
    itself, and nothing else admin-gated will work. See [Admin roles](Admin-Roles).
 
 ## Checking it worked

@@ -15,18 +15,23 @@ produces is not.
 | `.env`                       | Token, bridge channel, log channel, first account   | Editing it — see [Configuration](Configuration)  |
 | `.minecraft-auth/`           | Cached Microsoft tokens, one entry per account      | The bot                                          |
 | `guildsConfig.json`          | The Hypixel guild registry                          | [`/guilds`](Hypixel-Guilds)                      |
-| `adminRolesConfig.json`      | Discord role ids that hold bot-admin                | [`/adminrole`](Admin-Roles)                      |
-| `linkedAccountsConfig.json`  | Discord user → Minecraft name and UUID              | [`/link`, `/unlink`](Account-Linking)            |
-| `linkRoleConfig.json`        | The role given to linked users                      | [`/linkrole`](Link-Role)                         |
 | `auditChannelConfig.json`    | The default audit channel                           | [`/auditchannel`](Auditing)                      |
 | `globalProfileConfig.json`   | The running global profile change, and its scope    | [`/adminpanel`](Global-Profile-Change)           |
-| `featureRequestsConfig.json` | The request channel, the next id, and every request | [`/request`, `/requeststatus`](Feature-Requests) |
+
+## Not in a file any more
+
+Bot-admin roles, account links and the link role used to have a config file each. They now live in the
+[THG community bot](https://github.com/TheHypixelGuardians/thg-community)'s PostgreSQL
+database, which both bots read, and TriBridge reaches it with `DATABASE_URL`. An install upgrading past that
+change has to move the contents of the old
+`adminRolesConfig.json`, `linkedAccountsConfig.json`, `linkRoleConfig.json` and `featureRequestsConfig.json`
+across by hand; those files are then dead and can be deleted.
 
 ## Back these up
 
-`guildsConfig.json` and `linkedAccountsConfig.json` are the two that cost real work to rebuild — the registry
-is the whole bridge setup, and the links are something every member did by hand. Back them up alongside
-`.env`.
+`guildsConfig.json` is the one that costs real work to rebuild — it is the whole bridge setup. Back it up
+alongside `.env`. The account links are just as painful to lose, but they live in the community bot's database
+now, so they are covered by whatever backs that up.
 
 `.minecraft-auth/` is worth keeping too: losing it does not lose anything permanent, but every account has to
 go through a device-code sign-in again.

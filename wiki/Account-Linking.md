@@ -1,65 +1,47 @@
 # Account linking
 
-Linking tells the bot which Minecraft account is yours. It takes one command:
+Linking your Minecraft account makes the bridge show the same person on both sides: your Discord messages are
+reposted wearing your Minecraft head and name, and the copy that reaches guild chat is attributed to your
+Minecraft name instead of your Discord one.
 
-```
-/link Notch
-```
+## Linking
 
-Use your own Minecraft username. You must be a member of one of the bridged Hypixel guilds.
+Run **`/link <username>`** on the **THG community bot** — the sibling bot in this server. TriBridge does not
+have the command; it reads the link the community bot stores.
 
-## What changes once you are linked
+`/unlink` removes your link, `/whois` looks one up and `/links` lists them all, all on the community bot too.
 
-- **Your messages in the bridge channel are reposted with your Minecraft head and name.** Your original is
-  deleted and the repost takes its place, so the channel shows the same person the guild sees.
-- **Guild chat is told your Minecraft name**, not your Discord one. Somebody in-game replying to you can type
-  your actual name.
-- **`/networth` with no username** looks up your own account.
-- **You may be given a role**, if the server has one configured — see [Link role](Link-Role).
+- **One link per Discord user, and one Discord user per Minecraft account.** If the account you typed is
+  already linked to somebody else, the community bot says so and refuses.
+- **Your link is not tied to one Hypixel guild.** One link, whatever guild you are in.
+- **A rename does not break it.** The link stores your account's UUID as well as its name, and avatars use the
+  UUID.
 
-Your Minecraft **UUID** is stored alongside the name, and your head comes from the UUID, so the link survives
-a Minecraft name change.
+## What changes on the bridge
 
-## The rules
+| | Unlinked | Linked |
+|---|---|---|
+| **Your message in Discord** | Left exactly as you sent it | Reposted by a webhook wearing your Minecraft head and name |
+| **The copy in guild chat** | `YourDiscordName: hello` | `YourMinecraftName: hello` |
+| **Officer chat** | Speaks under your Discord name | Speaks under your Minecraft name |
 
-- **One link per Discord account, and one Discord account per Minecraft account.** You cannot link two
-  Minecraft accounts, and two people cannot claim the same one.
-- **The link is not tied to a particular guild.** One link, whichever of the bridged guilds you are in.
-- **Membership is checked against the live roster** of every connected guild when you run `/link`, and being
-  in any one of them is enough.
+Because the repost is a new message, the original is deleted: you cannot edit or delete it afterwards, and a
+reply keeps a jump link instead of Discord's own reply header. Messages carrying stickers, polls, forwards or
+voice notes are deliberately left alone rather than reposted without them.
 
-If the bot cannot get a clear answer — no account connected, a timeout, output that did not look like a
-roster — it lets the link through rather than refusing you over its own outage. It does **not** let it through
-when a roster came back cleanly and your name was not on it.
+## If it does not seem to work
 
-## Undoing it
+- **Give it fifteen seconds.** TriBridge caches link lookups briefly, so the very first message after `/link`
+  may still show your Discord name.
+- **The bot may be missing permissions.** The repost needs **Manage Webhooks** and **Manage Messages** in the
+  bridge channel. Without them your message still reaches guild chat, just under your Discord name, and a
+  warning goes to the log channel once.
+- **The community bot may be down.** TriBridge reads links from its database; when that is unreachable
+  everybody relays as if unlinked. Nothing is lost.
 
-```
-/unlink
-```
-
-Removes your own link, and takes back the link role if there is one. Admins can pass `user:` to unlink
-somebody else — for example when a member leaves the guild.
-
-## Looking links up
-
-Both are admin-only:
-
-- **`/links`** lists every linked account.
-- **`/whois <user|username>`** looks one up in either direction — Discord user to Minecraft name or back.
-
-## Things worth knowing
-
-- **A reposted message is a new message.** You cannot edit or delete it afterwards, because Discord considers
-  it the bot's message rather than yours.
-- **Replies keep a jump link** instead of Discord's reply header, for the same reason.
-- **Mentions in a repost are limited to users.** A repost is not subject to your own permissions, so
-  `@everyone` in a reposted message does not ping.
-- **If the bot is missing a permission**, linking still works — your messages just relay the ordinary way,
-  without the head and name, until an admin fixes it. See [Permissions](Permissions).
-
-## Next
+## See also
 
 - [Using the bridge](Using-the-Bridge)
-- [Networth](Networth)
-- [Link role](Link-Role) — for whoever configures the role
+- [Officer chat](Officer-Chat)
+- [Global profile change](Global-Profile-Change) — which outranks your link while it runs
+- The community bot: https://github.com/TheHypixelGuardians/thg-community

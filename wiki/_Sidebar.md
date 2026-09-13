@@ -8,7 +8,6 @@
 - [Guild tags](Guild-Tags)
 - [Account linking](Account-Linking)
 - [Networth](Networth)
-- [Feature requests](Feature-Requests)
 - [Commands](Commands)
 
 **Running the bot**
@@ -32,7 +31,6 @@
 - [Admin panel](Admin-Panel)
 - [Global profile change](Global-Profile-Change)
 - [Auditing](Auditing)
-- [Link role](Link-Role)
 
 **Help**
 

@@ -261,56 +261,44 @@ to the Hypixel API later is a sibling file and one changed `require`.
 
 ## Account linking
 
-`/link <username>` binds a Discord user to a Minecraft account.
+Members link a Minecraft account with **`/link` on the [THG community bot](https://github.com/TheHypixelGuardians/thg-community)**,
+which owns `/link`, `/unlink`, `/links`, `/whois` and the link role. TriBridge reads the link and nothing else
+— see [The shared database](SHARED_DATABASE.md).
 
-Linked users get a visibly better bridge. Their Discord message is **reposted through a webhook** wearing
+Linked members get a visibly better bridge. Their Discord message is **reposted through a webhook** wearing
 their Minecraft head and name, the original is deleted, and the guild-chat copy is attributed to their
 Minecraft name rather than their Discord one — so a guild member reading either side sees the same person.
+Officer chat uses the link too, for the name it speaks under, and takes no repost.
 
-- **One link per Discord user, and one Discord user per Minecraft account.** Both directions are enforced.
+- **One link per Discord user, and one Discord user per Minecraft account.** Both directions are enforced by
+  the community bot.
 - **Links are not scoped to a Hypixel guild.** One link, whatever guild you are in.
 - **The UUID is stored alongside the name**, and avatar URLs use it, so a link survives a Minecraft name
   change.
-- `/unlink` removes your own link; an admin can pass `user:` to remove anyone's. `/links` lists every link and
-  `/whois` looks one up by Discord user or by Minecraft username — both admin-only.
-
-`/link` verifies the name exists via Mojang, then checks the live `/guild list` roster of **every connected
-guild** and accepts membership of any one of them. It **fails open only when the result is inconclusive** — no
-bot connected, a timeout, output that never looked like a roster — and never when a roster parsed cleanly and
-the name was absent. Across guilds that means: found if any roster has them, absent only if every roster
-parsed cleanly and none did, inconclusive otherwise. Note the check necessarily weakens as guilds are added,
-since one flaky roster makes the whole thing inconclusive.
+- **An unreachable database reads as "not linked".** The message still relays, under the Discord name — a
+  degraded bridge beats a stopped one.
+- **A new link is honoured within about fifteen seconds.** This side caches lookups because they sit on the
+  message path, and cannot see the community bot's writes to invalidate them.
 
 The repost path needs **Manage Webhooks** and **Manage Messages** in the bridge channel. Without them the bot
 falls back to the ordinary relay and reports the problem once to the log channel — latched, so it does not
 spam. The repost is also sent with mentions restricted to users, because a webhook post is not subject to the
 author's own permissions and an unrestricted one would let any linked user ping `@everyone`.
 
-## Link role
-
-`/linkrole set <role>` names a Discord role that everyone with a link should have. `/link` grants it, `/unlink`
-takes it back, setting the role backfills it onto everyone already linked, and every startup re-checks the
-stored links so a link made while the bot was offline still gets it. The links are the source of truth; the
-roles are derived from them.
-
-- **The role never gates the link.** A missing role, or a lost **Manage Roles**, is a configuration problem —
-  it is reported and the link goes ahead regardless.
-- **The sync only ever adds.** The role may be handed out for unrelated reasons, so it is never stripped from
-  someone merely because they have no link. Changing or clearing the configured role likewise leaves the old
-  one in place.
-
-The bot needs **Manage Roles**, and its own highest role must rank above the link role.
-
 ## Admin roles
 
 TriBridge has two separate permission systems.
 
-**Discord permissions** are enforced generically before a command runs. Only `/adminrole` uses one: it requires
-the Discord **Administrator** permission, because it is the command that decides who else is an admin.
+**Discord permissions** are enforced generically before a command runs.
 
-**Bot-admin** is a flat list of Discord role ids in `adminRolesConfig.json`, managed with `/adminrole
-add|remove <role>`, and checked inside each admin command. Everything under Management, plus `/whois`,
-`/unlink user:`, `/linkrole`, `/auditchannel`, `/requestchannel` and `/requeststatus`, is gated this way.
+**Bot-admin** is a flat list of Discord role ids, configured on the **THG community bot** with `/adminrole
+add|remove <role>` and read from the shared database, then checked inside each admin command. Everything under
+Management is gated this way, including `/adminpanel` and `/auditchannel`. One list serves both bots, so a
+role that counts as staff there counts as staff here.
+
+**The check fails closed.** A member with no matching role, an unresolved Discord server or an unreachable
+database is not an admin. `/send` runs arbitrary commands as a Minecraft account, so handing it out during a
+database outage would be worse than the outage. Set `DATABASE_URL`, or nothing admin-gated works at all.
 
 ### One Discord server
 
@@ -319,9 +307,8 @@ refuses an interaction that did not come from it — the server resolved at star
 named explicitly with `DISCORD_GUILD_ID`.
 
 This is not tidiness. Without the check, an administrator of *any other* server the bot happens to be in could
-`/adminrole add` a role they control and inherit bot-admin over the real server, including `/send`, which runs
-arbitrary commands as a Minecraft account. The check fails closed: if the server cannot be resolved, every
-command is refused.
+reach commands scoped to the real server, including `/send`, which runs arbitrary commands as a Minecraft
+account. The check fails closed: if the server cannot be resolved, every command is refused.
 
 ## Management commands
 
@@ -414,21 +401,6 @@ orphaned channel setting behind. `/auditchannel show` lists the default and ever
 clear` drops one.
 
 The bot needs **View Channel**, **Send Messages** and **Embed Links** in every channel used.
-
-## Feature requests
-
-`/request` opens a short form — a name and a description. The submission is posted as an embed with an
-incrementing id to the channel set by `/requestchannel set`, and the id is assigned and persisted *before* the
-send, so two concurrent submissions cannot share one.
-
-Admins move a request through its lifecycle with `/requeststatus <id> <status>` — **accepted**, **denied**,
-**planned** or **duplicate** — which recolours and updates the original embed in place. A new request starts
-as ⏳ Pending.
-
-The request body is arbitrary member-supplied text posted by the bot, so mentions in it are suppressed; an
-`@everyone` in a request does not ping. If the post fails the request is still saved, and the reply says so.
-
-The bot needs **View Channel**, **Send Messages** and **Embed Links** in the request channel.
 
 ## Reconnection
 

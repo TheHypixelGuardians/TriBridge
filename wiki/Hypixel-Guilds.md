@@ -17,7 +17,7 @@ repair a broken registry — which is why Discord comes up even when no Minecraf
 | `account`            | Microsoft account email for this guild's Minecraft bot. **Immutable**, and no two guilds may share one          |
 | `color`              | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                                    |
 | `logChannelId`       | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                                     |
-| `auditChannelId`     | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                              |
+| `auditChannelId`     | Optional per-guild audit channel. Falls back to the one set with `/auditchannel` on the community bot           |
 | `officerChannelId`   | Optional two-way [officer chat](Officer-Chat) channel, shareable between guilds. No fallback — unset is off     |
 | `enabled`            | `false` disconnects the guild without removing it                                                               |
 | `crossBridge`        | `true` shares chat with the other cross-bridged guilds — see [Guild-to-guild bridging](Guild-to-Guild-Bridging) |

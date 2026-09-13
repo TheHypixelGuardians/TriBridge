@@ -102,6 +102,14 @@ TriBridge is a Node.js bot that bridges a Discord channel and a Hypixel guild ch
 messages both ways; slash commands let Discord admins run guild management commands
 in-game.
 
+Member profiles, account linking, bot-admin roles, feature requests and tickets belong to the
+sibling **THG community bot** (`../thg-community`), a TypeScript/discordx bot on PostgreSQL.
+The bridge, the admin panel and the global profile change stay here, because all three need
+the Minecraft side. The two bots share one database for the two things both must agree
+about — who is linked, and who is staff — and that contract is written down in
+[docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md). Read it before touching `utils/db.js`,
+`utils/linkedAccounts.js` or `utils/adminRoles.js`.
+
 - CommonJS (`"type": "commonjs"`) — use `require`/`module.exports`, not ESM.
 - No build step, no test suite, no linter — there is no `test` script, so `npm test` reports a missing one.
 - Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`. `nodemon` is the only
@@ -213,16 +221,19 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   server — one bridge channel, one flat admin role list. `handleCommands.js` refuses any
   interaction whose `guildId` is not `bridge.discordServerId` (resolved at startup by
   `000resolveServer.js` from the bridge channel, or `DISCORD_GUILD_ID`). Without that check an
-  administrator of *any* other server the bot is in can `/adminrole add` a role they control and
-  inherit bot-admin, since `isAdmin` only matches role IDs and has no server dimension. It fails
-  closed: an unresolved `bridge.discordServerId` refuses everything. Don't add a command dispatch
-  path that skips this guard.
+  administrator of *any* other server the bot is in reaches commands scoped to the real server,
+  since `isAdmin` only matches role IDs and has no server dimension. It fails closed: an
+  unresolved `bridge.discordServerId` refuses everything. Don't add a command dispatch path that
+  skips this guard.
 - **Permissions:** two separate systems. `permissionsRequired` is enforced generically by
   `handleCommands.js` (used for real Discord permissions like `Administrator`). Bot-admin
-  gating is done *inside* the callback with `isAdmin(interaction.member)` from
-  `utils/adminRoles.js`, which reads role IDs from `adminRolesConfig.json` (gitignored,
-  created on demand, cached in memory). Follow the existing pattern for the command type
-  you're adding.
+  gating is done *inside* the callback with `await isAdmin(interaction.member)` from
+  `utils/adminRoles.js`, which reads role IDs from the community bot's `AdminRole` table
+  (cached for 15s; there is no `/adminrole` here any more). **It is `async` and it fails
+  closed** — an unreachable database is not an admin, because `/send` runs arbitrary commands
+  as a Minecraft account. Follow the existing pattern for the command type you're adding, and
+  don't drop the `await`: a bare promise is truthy, so `if (!isAdmin(...))` would let
+  *everybody* through.
 - **Querying Hypixel:** use `queryGuild(record, chatCommand, opts)` from `utils/queryGuild.js`.
   Never hand-roll a `message` listener again — Hypixel gives no request/response correlation,
   so `queryGuild` serialises every query per bot and holds a settle window afterwards, which is
@@ -330,56 +341,65 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   columns. `.prettierrc` records the settings; reformat with
   `npx prettier --write "src/**/*.js"`. JSDoc on non-trivial helper functions.
 
-## Account linking
+## Account linking and the shared database
 
-`/link <username>` binds a Discord user to a Minecraft account. `utils/linkedAccounts.js`
-stores the bindings in `linkedAccountsConfig.json` (gitignored, created on demand, cached in
-memory — same shape as `adminRoles.js`), keyed by Discord user ID and holding both the
-canonical name and the UUID. The UUID is what avatar URLs use, so links survive Minecraft
-name changes. One Minecraft account maps to at most one Discord user; `setLink` enforces it.
+`/link` and the rest of account linking live on the **THG community bot** now. This bot reads
+the result: `utils/linkedAccounts.js` exposes `getLink(discordId)` and `getLinkByName(name)`,
+both **async**, both reading `MinecraftLink` joined through `User` in the community bot's
+PostgreSQL database. There is deliberately no write path — two bots writing one link table is
+how they would start disagreeing about who is who.
 
-Links are deliberately **not** scoped to a Hypixel guild — one link per Discord user, whatever
-guild they are in.
-
-`/link` verifies the name exists via `utils/mojang.js`, then checks the live `/guild list`
-roster of *every connected guild* via `queryGuild`, and accepts membership of any one of them.
-It **fails open only when the result is inconclusive** (no bot connected, timeout, output that
-never looked like a roster) — never when a roster parsed cleanly and the name was absent.
-Across guilds that means: `found` if any roster has them, `absent` only if every roster parsed
-cleanly and none did, `inconclusive` otherwise. Keep that distinction if you touch it;
-collapsing the two turns the membership check into decoration. Note it necessarily weakens as
-guilds are added, since one flaky roster now makes the whole check inconclusive.
+Links are **not** scoped to a Hypixel guild: one link per Discord user, whatever guild they
+are in.
 
 `relayToMinecraft.js` branches on the link. Unlinked users relay as before. Linked users get
 their message reposted through the `TriBridge Relay` webhook (`utils/relayWebhook.js`) with
-their Minecraft head and name, the original deleted, and the guild-chat copy attributed to
-the Minecraft name. Two things there are load-bearing:
+their Minecraft head and name, the original deleted, and the guild-chat copy attributed to the
+Minecraft name. Two things there are load-bearing:
 
 - **Repost before deleting.** If the webhook send throws, the user's original message
   survives instead of vanishing.
 - **`allowedMentions: { parse: ['users'] }`.** A webhook post is not subject to the author's
   own permissions, so an unrestricted repost would let any linked user ping `@everyone`.
 
-`utils/linkRole.js` holds the optional role given to linked users (`linkRoleConfig.json`,
-same shape as the other config modules; `/linkrole` configures it). `/link` adds it, `/unlink`
-removes it, and `003syncLinkRoles.js` backfills it from the stored links at every startup —
-the links are the source of truth, the roles are derived. Two constraints there:
-
-- **The role never gates the link.** `applyLinkRole` returns a result instead of throwing;
-  every caller carries on and reports the failure. A missing role or a lost **Manage Roles**
-  is a config problem, not a reason to refuse someone's `/link`.
-- **Members are fetched one id at a time.** `guild.members.fetch()` with no argument goes over
-  the gateway and needs the privileged `GuildMembers` intent, which `index.js` does not
-  request. Don't switch the sync to a bulk fetch without adding that intent.
-
-The sync only ever *adds* — the role may be handed out for unrelated reasons, so it is never
-stripped from someone merely because they have no link. Changing or clearing the configured
-role likewise leaves the old one in place.
-
 The repost path needs **Manage Webhooks** and **Manage Messages**. Neither is enforceable via
 `botPermissions` (that is only checked by `handleCommands.js`, which never sees a
 `messageCreate`), so failure is handled at runtime: fall back to the old relay behaviour and
 report once to the log channel, latched so it doesn't spam.
+
+Two modules read the shared database, both on message paths, so both are **async and never
+throw** — `utils/db.js` returns `null` for a failed query rather than rejecting. Their answers
+to "database down" are deliberately different:
+
+| Module                    | Reads                    | Behaviour when the read fails             |
+|---------------------------|--------------------------|-------------------------------------------|
+| `utils/linkedAccounts.js` | `MinecraftLink` + `User` | Not linked — relay under the Discord name |
+| `utils/adminRoles.js`     | `AdminRole`              | **Fails closed** — refuses                |
+
+Both cache for 15 seconds. They cannot invalidate on write — the writer is another process —
+so the TTL *is* the worst-case lag between an admin doing something on the community bot and
+this side honouring it. Don't raise it without reading
+[docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md): 15s is what keeps a member's very first
+message after `/link` attributed correctly.
+
+Everything else stays in this repository's own config files, including the global profile
+change and the audit channel.
+
+## The global profile change
+
+`/adminpanel` starts and stops it, `utils/globalProfile.js` holds the state in
+`globalProfileConfig.json`, and `utils/disguise.js` applies it to three legs: the Discord
+repost, the name guild chat is told (`disguiseToMinecraft`), and the name on incoming guild
+chat (`disguiseToDiscord`). `resolveIdentity()` is **async** — a global profile change
+outranks an account link, which outranks the plain Discord author, and the link is a database
+read now.
+
+`appliesToGuildChat()` is async for the same reason: test mode matches an incoming Minecraft
+name back to an account link, because guild chat carries no Discord author to check. A tester
+who has not linked will not see their guild chat rewritten, and that is the point — without
+it, testing would silently relabel guild members who never agreed to take part.
+
+Never `resolveIdentity()` in the officer leg — see the officer-chat convention above.
 
 ## Hypixel guilds and reconnection
 
@@ -412,10 +432,14 @@ whoever holds the code can complete the sign-in with *their own* Microsoft accou
 
 ## Files to leave alone
 
-`.env`, `.minecraft-auth/`, `adminRolesConfig.json`, `linkedAccountsConfig.json`,
-`linkRoleConfig.json`, `globalProfileConfig.json`, `auditChannelConfig.json`,
-`featureRequestsConfig.json`, `guildsConfig.json`, `.idea/` — local/secret state. Never print
-or commit token, auth-cache or account-address contents.
+`.env`, `.minecraft-auth/`, `guildsConfig.json`, `globalProfileConfig.json`,
+`auditChannelConfig.json`, `.idea/` — local/secret state. Never print or commit token,
+auth-cache, database-URL or account-address contents.
+
+The config files the migrated features used — `adminRolesConfig.json`,
+`linkedAccountsConfig.json`, `linkRoleConfig.json`, `featureRequestsConfig.json` — are gone.
+Their data lives in the community bot's database; an install upgrading past this needs it
+moved by hand, and the old files can then be deleted.
 
 `src/events/minecraft/message/test.js` is a no-op debug scratch file with commented-out
 logging; it is intentionally inert.

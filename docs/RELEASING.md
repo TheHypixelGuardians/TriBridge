@@ -49,7 +49,7 @@ synonym.
 
 ### Writing the entries
 
-- **Write for the people running and using the bot, not for developers.** "Added `/whois` to look up a link",
+- **Write for the people running and using the bot, not for developers.** "Added `/online` to list who is in the guild",
   not "Refactored linkedAccounts".
 - **One change per bullet.** Details, caveats and defaults go in indented sub-bullets underneath.
 - **Say what the default is** whenever a feature ships switched off, and say what an existing install sees.

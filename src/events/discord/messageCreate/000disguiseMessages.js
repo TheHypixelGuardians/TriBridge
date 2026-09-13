@@ -34,7 +34,7 @@ module.exports = async (client, message) => {
   if (shouldSkip(message)) return;
   if (!canRepostIn(message.channel)) return;
 
-  const identity = resolveIdentity(message);
+  const identity = await resolveIdentity(message);
   const result = await repostAs(message, identity);
   if (!result.ok) return;
 

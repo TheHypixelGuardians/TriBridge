@@ -21,7 +21,7 @@ module.exports = {
 
     // No Minecraft bot is involved, so no resolveTarget and no guild option:
     // networth is a property of a player, not of a guild.
-    const link = requested ? null : getLink(interaction.user.id);
+    const link = requested ? null : await getLink(interaction.user.id);
     const username = requested ?? link?.name ?? null;
 
     if (!username) {

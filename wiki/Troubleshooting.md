@@ -45,10 +45,13 @@ Set `DISCORD_GUILD_ID` in the `.env` to the server's id and restart. See [Admin 
 
 ## Admin commands are refused for one person
 
-They hold no [bot-admin role](Admin-Roles). `/adminrole add role:@Staff`, run by someone with the Discord
+They hold no [bot-admin role](Admin-Roles). `/adminrole add role:@Staff` on the community bot, run by someone
+with the Discord
 **Administrator** permission.
 
-Note `/adminrole` is the only command gated on a real Discord permission; everything else uses the role list.
+Note `/adminrole` lives on the community bot and is the only command gated on a real Discord permission;
+everything else uses the role list. If `DATABASE_URL` is unset or Postgres is unreachable, the check fails
+closed and *nobody* is an admin.
 
 ## New or changed commands do not appear
 
@@ -63,13 +66,8 @@ both and it resumes on the next message.
 
 ## The link role is not being handed out
 
-Two usual causes, both about role hierarchy:
-
-- the bot lacks **Manage Roles**, or
-- the link role sits **at or above** the bot's own highest role. Discord refuses that regardless of
-  permissions.
-
-Move the bot's role above it and restart — the startup sync backfills everyone. See [Link role](Link-Role).
+The link role belongs to the THG community bot, not to TriBridge — check its permissions and role hierarchy
+there. TriBridge neither grants nor removes it.
 
 ## A global profile change is not applying in some channels
 

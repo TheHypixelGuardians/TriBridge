@@ -127,12 +127,14 @@ function canRepostIn(channel) {
  * Discord identity but Hypixel is better served by a real Minecraft name.
  *
  * @param {import('discord.js').Message} message
- * @returns {{name: string, avatarURL: string|null, chatName: string, repost: boolean, disguised: boolean}}
+ * @returns {Promise<{name: string, avatarURL: string|null, chatName: string, repost: boolean, disguised: boolean}>}
  */
-function resolveIdentity(message) {
+async function resolveIdentity(message) {
   if (appliesTo(message.author.id, message.channel.id)) {
     const target = getTarget();
-    const link = getLink(message.author.id);
+    // The link is the one input here that lives in the community bot's
+    // database; everything else is a cached local read.
+    const link = await getLink(message.author.id);
 
     return {
       name: target.name,
@@ -148,7 +150,7 @@ function resolveIdentity(message) {
     };
   }
 
-  const link = getLink(message.author.id);
+  const link = await getLink(message.author.id);
   if (link) {
     return {
       name: link.name,
