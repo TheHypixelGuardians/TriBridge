@@ -1,0 +1,106 @@
+---
+title: "Installation"
+description: "Install and run the THG Community bot — Node.js, Yarn, PostgreSQL, and Discord setup."
+---
+
+## Prerequisites
+
+| Requirement | Details |
+|-------------|---------|
+| **Node.js** | **v20.19** or newer (Prisma 7 and chokidar 5 require it) |
+| **Yarn** | Package manager for this repo |
+| **PostgreSQL** | A reachable database; set `DATABASE_URL` |
+| **Discord bot** | Application at the [Developer Portal](https://discord.com/developers/applications) with the privileged intents below |
+
+### Discord intents
+
+Enable these in the Developer Portal (they match `src/bot.ts`):
+
+| Intent | Privileged | Why |
+|--------|------------|-----|
+| Server Members | yes | Member lookups and profile data |
+| Message Content | yes | Prefix commands (`!`) via discordx `simpleCommand` |
+| Guilds, Messages, Reactions, Voice States | no | Standard guild / message / voice handling |
+
+Slash commands register **per guild** (`botGuilds`), so changes show up immediately rather than after
+Discord's global propagation delay.
+
+## Install
+
+1. **Clone and install**
+
+   ```bash
+   git clone https://github.com/TheHypixelGuardians/thg-community.git
+   cd thg-community
+   yarn setup
+   ```
+
+   `yarn setup` installs dependencies, generates the Prisma client into `src/generated/prisma` (gitignored),
+   and pushes the schema to the database. A fresh clone will not typecheck or boot until
+   `yarn prisma:generate` has run.
+
+2. **Create `.env`** from `.env.example`:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Invite the bot** with the intents above, then start it:
+
+   ```bash
+   yarn dev      # development — hot reload
+   # or
+   yarn build && yarn start   # production — runs build/main.js
+   ```
+
+## Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DISCORD_TOKEN` | yes | Bot token from the Developer Portal |
+| `DATABASE_URL` | yes | PostgreSQL connection string (also read by `prisma.config.ts`) |
+| `ERROR_LOG_CHANNEL_ID` | no | Channel that receives error embeds from the global error handler |
+| `LOG_CHANNEL_ID` | no | Fallback general log channel — account links and link-role sync. A per-server `logChannelId` in the database wins over it |
+| `SHEETDB_API_URL` | no | SheetDB base URL for moderation-sheet helpers |
+| `SHEETDB_API_KEY` | no | SheetDB API key |
+| `NODE_ENV` | no | `development` includes stack traces in user-facing error replies |
+| `DISCORD_CLIENT_ID` | no | Present in `.env.example`; not read by the bot today |
+| `DISCORD_GUILD_ID` | no | Present in `.env.example`; not read by the bot today |
+
+Keep `.env`, `src/generated/`, and `build/` out of git. Never commit tokens or database URLs.
+
+## Scripts
+
+| Script | What it does |
+|--------|--------------|
+| `yarn setup` | Install, `prisma generate`, `prisma db push` |
+| `yarn setup:prod` | Same, omitting devDependencies |
+| `yarn dev` | Run `src/dev.ts` with hot reload |
+| `yarn watch` | Nodemon wrapper around `yarn dev` |
+| `yarn build` | `tsc` → `build/` |
+| `yarn start` | `node build/main.js` |
+| `yarn start:prod` | Build then start |
+| `yarn lint` | Biome check |
+| `yarn biome:fix` | Biome lint + format write |
+
+## Project structure
+
+```plaintext
+src/
+├── main.ts                 # Production entry — error handlers, shutdown hooks
+├── dev.ts                  # Development entry — hot reload
+├── bot.ts                  # Shared discordx Client, intents, botGuilds
+├── commands/categories/    # Slash commands by category
+├── events/                 # @On / @Once handlers
+├── utils/                  # prisma, userManager, localization, …
+└── generated/prisma/       # Prisma client (gitignored)
+prisma/schema.prisma        # User, Setup, MinecraftLink, AdminRole, FeatureRequest
+```
+
+There are **two entry points** (`main.ts` and `dev.ts`) and they are not equivalent — production installs
+global error handlers and closes Prisma on shutdown; development does neither.
+
+## Related
+
+- [Shared database](/community/shared-database) — PostgreSQL contract with [TriBridge](/tribridge)
+- [Commands](/community/commands) — slash command reference

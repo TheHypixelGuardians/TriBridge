@@ -1,0 +1,48 @@
+---
+title: "Commands"
+description: "Every slash command the THG Community bot supports."
+---
+
+Slash commands register **per guild**, so changes appear immediately after a restart — there is no global
+propagation delay. `/help` lists commands by category with a select menu.
+
+New commands go under `src/commands/categories/<category>/` as `@Discord()` + `@Category(...)` classes. A
+command without `@Category` still works but is invisible in `/help`.
+
+## Utility
+
+| Command | Description |
+|---------|-------------|
+| `/help` | Browse slash commands by category |
+| `/ping` | Bot latency |
+| `/info [user]` | Discord user information |
+| `/profile action:view\|update` | View or refresh your community profile row |
+
+## Linking
+
+| Command | Description |
+|---------|-------------|
+| `/link <username>` | Bind your Minecraft account to your Discord account |
+| `/unlink [user]` | Remove your link, or anyone's (admin only for `user:`) |
+| `/links` | List every linked Minecraft account (admin only) |
+| `/whois <user\|username>` | Look up a link in either direction (admin only) |
+| `/linkrole set\|show\|clear` | The role given to linked members (admin only) |
+
+See [Account linking](/community/account-linking) for verification rules and the link role.
+
+## Requests
+
+| Command | Description |
+|---------|-------------|
+| `/request` | Submit a feature request through a short form |
+| `/requestchannel set\|show` | Where feature requests are posted (admin only) |
+| `/requeststatus <id> <status>` | Mark a request accepted, denied, planned, or duplicate (admin only) |
+
+## Management
+
+| Command | Description |
+|---------|-------------|
+| `/adminrole add\|remove\|show` | The Discord roles that count as bot-admin (server admin only) |
+
+The admin-role list is **shared with TriBridge** — one list decides who is staff on both bots. See
+[Shared database](/community/shared-database).

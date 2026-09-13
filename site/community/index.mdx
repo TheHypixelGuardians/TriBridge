@@ -1,0 +1,51 @@
+---
+title: "THG Community"
+description: "The Discord community bot for The Hypixel Guardians — profiles, linking, and server setup."
+---
+
+**THG Community** is the Discord bot for the **THG** Hypixel SkyBlock guild community. It owns the Discord
+side of community life: member profiles, localization, server setup data, and (as they land) moderation,
+tickets, and SkyBlock lookups.
+
+It is **not** a Minecraft bridge. There is no in-game account and no guild-chat relay — that is
+[TriBridge](/tribridge). SkyBlock features here talk to HTTP APIs only.
+
+The two bots serve one Discord server and **share one PostgreSQL database**, so they agree about who is
+linked and who is staff. This bot owns the schema; TriBridge reads it. See
+[Shared database](/community/shared-database).
+
+<Note>
+  Status: early alpha (`0.0.1-alpha.1`). Utility commands, account linking, and feature requests work today;
+  moderation, tickets, and automod are scaffolded in the schema and locale tables but not yet shipped as
+  commands.
+</Note>
+
+## Start here
+
+| You are… | Go to |
+|----------|-------|
+| **Using commands in Discord** | [Commands](/community/commands) |
+| **Linking your Minecraft account** | [Account linking](/community/account-linking) |
+| **Hosting or configuring the bot** | [Installation](/community/installation) |
+
+## What this bot does
+
+See [Features](/community/features) for the full list. Highlights:
+
+- **Member profiles** — `/profile` views or updates the database row created for every member who runs a
+  command.
+- **Account linking** — `/link` binds Minecraft to Discord; [TriBridge](/tribridge) uses the same link for
+  guild-chat attribution.
+- **Feature requests** — `/request` opens a form; admins move submissions through a status with
+  `/requeststatus`.
+- **Bot-admin roles** — `/adminrole` names staff roles shared with TriBridge.
+- **Localization** — Dutch (`nl`, default), English, and Spanish via `t()`.
+
+## Documentation map
+
+- [Commands](/community/commands) — every slash command
+- [Account linking](/community/account-linking) — links, verification, and the link role
+- [User management](/community/user-management) — automatic registration on every command
+- [Installation](/community/installation) — prerequisites, setup, and environment variables
+- [Shared database](/community/shared-database) — the contract with TriBridge
+- [Features](/community/features) — feature overview from the README

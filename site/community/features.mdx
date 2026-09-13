@@ -1,0 +1,44 @@
+---
+title: "Features"
+description: "What the THG Community bot does today and what is planned."
+---
+
+Early alpha (`0.0.1-alpha.1`). The items below reflect what ships today unless marked as scaffolded.
+
+## Shipped
+
+| Feature | Summary |
+|---------|---------|
+| **Member profiles** | `/profile` views or updates the database row created for every member who runs a command |
+| **Help** | `/help` lists slash commands by category with a Components V2 select menu |
+| **User info & ping** | `/info` and `/ping` |
+| **Automatic user registration** | Every non-bot command ensures a `User` row exists first — see [User management](/community/user-management) |
+| **Localization** | Dutch (`nl`, default), English, and Spanish via `t()` / `tWithUser()` |
+| **Account linking** | `/link`, `/unlink`, `/whois`, `/links`, `/linkrole` — shared with [TriBridge](/tribridge) via PostgreSQL |
+| **Feature requests** | `/request`, `/requestchannel`, `/requeststatus` |
+| **Bot-admin roles** | `/adminrole` — the same role list TriBridge uses for staff commands |
+| **Per-server setup storage** | Ticket, automod, link-role, request-channel, and log-channel settings in the `Setup` table |
+| **Error reporting** | Unhandled errors can post to a Discord channel when `ERROR_LOG_CHANNEL_ID` is set |
+| **Hot reload** | `yarn dev` reloads commands and events without a full process restart |
+
+## Database models
+
+| Model | Purpose |
+|-------|---------|
+| `User` | One row per Discord user; `language` defaults to `nl` |
+| `Setup` | Per-Discord-server configuration |
+| `MinecraftLink` | Minecraft name and UUID, related to `User.id` — **read by TriBridge** |
+| `AdminRole` | Discord roles that count as bot-admin — **shared with TriBridge** |
+| `FeatureRequest` | `/request` submissions with a sequence `id` |
+
+See [Shared database](/community/shared-database) before renaming columns on `MinecraftLink` or `AdminRole`.
+
+## Scaffolded (not yet commands)
+
+Moderation, tickets, and automod have schema and locale hooks but no shipped slash commands yet.
+
+## Not in this bot
+
+- **Minecraft / Hypixel bridge** — [TriBridge](/tribridge)
+- **Guild chat relay, officer chat, networth in-game** — TriBridge
+- **Global profile change / audit trail** — TriBridge admin panel
