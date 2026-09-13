@@ -20,10 +20,10 @@ repair a broken registry — which is why Discord comes up even when no Minecraf
 | `color`              | Hex colour for this guild's relayed messages, e.g. `#2ECC71`                                                    |
 | `logChannelId`       | Optional per-guild log channel. Falls back to `LOG_CHANNEL`                                                     |
 | `auditChannelId`     | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                              |
-| `officerChannelId`   | Optional two-way [officer chat](/officer-chat) channel, shareable between guilds. No fallback — unset is off     |
+| `officerChannelId`   | Optional two-way [officer chat](/tribridge/officer-chat) channel, shareable between guilds. No fallback — unset is off     |
 | `enabled`            | `false` disconnects the guild without removing it                                                               |
-| `crossBridge`        | `true` shares chat with the other cross-bridged guilds — see [Guild-to-guild bridging](/guild-to-guild-bridging) |
-| `crossBridgeOfficer` | `true` shares [officer chat](/officer-chat) in-game with the other guilds that have it on                        |
+| `crossBridge`        | `true` shares chat with the other cross-bridged guilds — see [Guild-to-guild bridging](/tribridge/guild-to-guild-bridging) |
+| `crossBridgeOfficer` | `true` shares [officer chat](/tribridge/officer-chat) in-game with the other guilds that have it on                        |
 
 > **`key` and `account` cannot be changed.** `account` is the key prismarine-auth hashes for its token cache,
 > so editing it later silently starts a fresh device-code flow against a different cache file. Renaming means
@@ -69,11 +69,11 @@ guild, because it runs arbitrary commands as a Minecraft account.
 ```
 
 `clear` drops a per-guild channel — **Log channel**, **Audit channel** or **Log and audit channels** falls
-back to the global one again, and **Officer channel** switches [officer chat](/officer-chat) off, since that
+back to the global one again, and **Officer channel** switches [officer chat](/tribridge/officer-chat) off, since that
 one has no global fallback.
 
 > ⚠️ An officer channel is **two-way**: everyone who can post in it is speaking in officer chat in-game.
-> Restrict it with Discord's channel permissions before setting it — see [Officer chat](/officer-chat).
+> Restrict it with Discord's channel permissions before setting it — see [Officer chat](/tribridge/officer-chat).
 
 Several guilds may be pointed at the same officer channel, and usually should be: their officer chat then
 arrives in one place, tagged, and a reply picks a guild with `!tag`. Separate channels still work.
@@ -109,8 +109,8 @@ Repeats the device-code flow for a guild whose token has expired or been revoked
 ```
 
 Every registered guild with its connection status, its tag and colour, its channels, a 🔁 on the guilds taking
-part in [guild-to-guild bridging](/guild-to-guild-bridging) and a 🛡️ on those sharing
-[officer chat](/officer-chat). Account addresses are masked.
+part in [guild-to-guild bridging](/tribridge/guild-to-guild-bridging) and a 🛡️ on those sharing
+[officer chat](/tribridge/officer-chat). Account addresses are masked.
 
 ## With only one guild
 
@@ -127,7 +127,7 @@ seconds is treated as a duplicate. You get one embed. Still, put one account per
 
 ## Next
 
-- [Guild-to-guild bridging](/guild-to-guild-bridging)
-- [Officer chat](/officer-chat)
-- [Reconnection](/reconnection)
-- [Guild tags](/guild-tags)
+- [Guild-to-guild bridging](/tribridge/guild-to-guild-bridging)
+- [Officer chat](/tribridge/officer-chat)
+- [Reconnection](/tribridge/reconnection)
+- [Guild tags](/tribridge/guild-tags)

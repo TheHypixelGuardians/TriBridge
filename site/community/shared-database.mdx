@@ -1,0 +1,55 @@
+---
+title: "Shared database"
+description: "PostgreSQL contract between THG Community and TriBridge."
+---
+
+This bot and [TriBridge](/tribridge) are two processes serving one Discord server. This bot owns the community
+half — profiles, account links, bot-admin roles, feature requests — and TriBridge owns the Discord ↔ Hypixel
+guild chat bridge, along with the admin panel and the global profile change.
+
+Two tables are **needed** by the bridge, so both processes talk to one PostgreSQL database instead of keeping
+separate copies.
+
+**This bot owns the schema.** `prisma/schema.prisma` defines every table, and `yarn prisma:push` creates them.
+TriBridge has no ORM; it reads with plain SQL through `src/utils/db.js`, using the same `DATABASE_URL`, and
+**never writes**.
+
+## What TriBridge reads
+
+| Table | What the bridge does with it |
+|-------|------------------------------|
+| `MinecraftLink`, `User` | Attributes guild chat to a member's Minecraft name and reposts them with their head |
+| `AdminRole` | Gates every admin command, including `/adminpanel` and `/auditchannel` |
+
+Three consequences for anyone changing those tables:
+
+- **Renaming a column breaks the bridge silently.** TriBridge selects by name in raw SQL; a failed query
+  returns `null`, which callers read as "no link" / "not an admin". A rename needs a matching change in
+  TriBridge's `utils/linkedAccounts.js` or `utils/adminRoles.js` in the same change.
+- **TriBridge caches both reads for about fifteen seconds** and cannot see this bot's writes, so a change
+  here takes up to that long to reach the bridge. That is why `/link` tells the member their *next* message
+  will be attributed.
+- **A `MinecraftLink` row powers TriBridge's global profile test mode.** Guild chat carries no Discord author,
+  so the bridge recognises a tester by matching the Minecraft name back to a link.
+
+## What TriBridge does not read
+
+The admin panel, global profile change, and audit channel live in TriBridge's own config files
+(`globalProfileConfig.json`, `auditChannelConfig.json`). Nothing in this bot starts, stops, or records a
+disguise.
+
+## Failure behaviour
+
+This bot treats a database failure as a real error — commands surface it through the error handler.
+TriBridge degrades on the message path instead: links read as *not linked*, and `isAdmin` **fails closed** when
+`DATABASE_URL` is unset on the bridge.
+
+## Caching here
+
+This process is the only writer, so caches invalidate on write — `setup.ts`, `adminRoles.ts`, and
+`linkedAccounts.ts` all work that way.
+
+## Related
+
+- [Account linking](/community/account-linking) — what goes into `MinecraftLink`
+- [TriBridge account linking](/tribridge/account-linking) — how the bridge uses the same rows

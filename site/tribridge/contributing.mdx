@@ -21,7 +21,7 @@ Two ways to run it:
 
 Running the bot connects to **live** Discord and Hypixel, with real accounts in real guilds. Don't start it to
 verify a change unless you have a bot and a guild of your own to point it at. A good deal is testable offline
-against fakes — see [Architecture](/architecture).
+against fakes — see [Architecture](/tribridge/architecture).
 
 `npm run dev` restarts on every save, so it reconnects the Minecraft accounts every time — leaving it running
 while editing will sign them in repeatedly and can get them throttled by Hypixel. Stop it while you work, and
@@ -46,7 +46,7 @@ Present tense, specific, no trailing period. The full convention is in
 ## What a good change looks like
 
 - **It carries its own documentation.** The changelog entry, the README row and the wiki page ship in the same
-  commit as the code. See the checklist in [Adding a command](/adding-a-command).
+  commit as the code. See the checklist in [Adding a command](/tribridge/adding-a-command).
 - **It explains the non-obvious in a comment.** Much of this codebase's value is in comments saying why the
   obvious alternative was worse — a silent drop, a mute, a permission escalation. When you write a rule like
   that, write the reason next to it. That sentence is what stops the rule being simplified away later.
@@ -73,10 +73,10 @@ in them — see below.
 
 - **Bugs and ideas from outside the server:**
   [Issues](https://github.com/TheHypixelGuardians/TriBridge/issues).
-- **From inside the server:** `/request` — see [Feature requests](/feature-requests).
+- **From inside the server:** `/request` — see [Feature requests](/tribridge/feature-requests).
 
 ## Next
 
-- [Architecture](/architecture)
-- [Adding a command](/adding-a-command)
-- [Releasing](/releasing)
+- [Architecture](/tribridge/architecture)
+- [Adding a command](/tribridge/adding-a-command)
+- [Releasing](/tribridge/releasing)

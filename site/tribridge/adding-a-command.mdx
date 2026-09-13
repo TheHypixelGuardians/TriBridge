@@ -2,7 +2,7 @@
 title: "Adding a Command"
 description: "Checklist for shipping a new slash command."
 ---
-The checklist for a change that ships. [Architecture](/architecture) explains why the pieces are shaped this
+The checklist for a change that ships. [Architecture](/tribridge/architecture) explains why the pieces are shaped this
 way; this page is the sequence.
 
 ## 1. Write the command
@@ -64,7 +64,7 @@ wording.
 | Anyone                    | Neither                                           |
 
 Do not invent a third path, and do not add a dispatch route that skips the single-server guard in
-`handleCommands.js`. See [Admin roles](/admin-roles).
+`handleCommands.js`. See [Admin roles](/tribridge/admin-roles).
 
 ## 4. Talk to Hypixel through the helpers
 
@@ -89,16 +89,16 @@ This is the part that is easy to skip and shouldn't be. All four, in the same co
 
 1. **[CHANGELOG.md](https://github.com/TheHypixelGuardians/TriBridge/blob/master/CHANGELOG.md)** — an entry under
    `## Unreleased`, written for the people running the bot. Format in
-   [Releasing](/releasing).
+   [Releasing](/tribridge/releasing).
 2. **[DISCORD_CHANGELOG.md](https://github.com/TheHypixelGuardians/TriBridge/blob/master/DISCORD_CHANGELOG.md)** — one
    line, second person, only if a guild member would notice.
 3. **[README.md](https://github.com/TheHypixelGuardians/TriBridge/blob/master/README.md)** — a row in the command table,
    and anything else it mentions that you changed.
 4. **The docs and this wiki** —
    [docs/FEATURES.md](https://github.com/TheHypixelGuardians/TriBridge/blob/master/docs/FEATURES.md) is canonical; the
-   wiki page restates it for its reader. A new command always touches [Commands](/commands), which is meant to
-   be exhaustive. New config file? [Config files](/config-files). New permission?
-   [Permissions](/permissions).
+   wiki page restates it for its reader. A new command always touches [Commands](/tribridge/commands), which is meant to
+   be exhaustive. New config file? [Config files](/tribridge/config-files). New permission?
+   [Permissions](/tribridge/permissions).
 
 ## 7. Do not run the bot to check
 
@@ -119,6 +119,6 @@ Setting `deleted: true` on a command unregisters it.
 
 ## Next
 
-- [Architecture](/architecture)
-- [Contributing](/contributing)
-- [Releasing](/releasing)
+- [Architecture](/tribridge/architecture)
+- [Contributing](/tribridge/contributing)
+- [Releasing](/tribridge/releasing)

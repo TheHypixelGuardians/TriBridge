@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * One-off migration: wiki/*.md → site/*.mdx for Mintlify.
+ * One-off migration: wiki/*.md → site/tribridge/*.mdx for Mintlify.
  * Run from repository root: node scripts/migrate-wiki-to-mintlify.js
  */
 
@@ -9,7 +9,7 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const WIKI_DIR = path.join(ROOT, "wiki");
-const SITE_DIR = path.join(ROOT, "site");
+const SITE_DIR = path.join(ROOT, "site", "tribridge");
 
 const REPO = "TheHypixelGuardians/TriBridge";
 
@@ -99,7 +99,7 @@ function fixRepoLinks(content) {
     .replace(/github\.com\/Trilleo\/TriBridge/g, `github.com/${REPO}`)
     .replace(
       /https:\/\/github\.com\/[^/]+\/TriBridge\/wiki\/([A-Za-z0-9-]+)/g,
-      (_, page) => `/${wikiBasenameToSlug(page)}`,
+      (_, page) => `/tribridge/${wikiBasenameToSlug(page)}`,
     );
 }
 
@@ -111,7 +111,8 @@ function fixWikiLinks(content) {
         return match;
       }
       const slug = wikiBasenameToSlug(target);
-      return `[${text}](/${slug})`;
+      if (slug === "index") return `[${text}](/tribridge)`;
+      return `[${text}](/tribridge/${slug})`;
     },
   );
 }
@@ -207,7 +208,9 @@ function main() {
   for (const file of wikiFiles) {
     const basename = file.replace(/\.md$/, "");
     convertFile(basename);
-    console.log(`Converted ${file} → site/${wikiBasenameToSlug(basename)}.mdx`);
+    console.log(
+      `Converted ${file} → site/tribridge/${wikiBasenameToSlug(basename)}.mdx`,
+    );
   }
 }
 

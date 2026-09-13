@@ -14,15 +14,15 @@ produces is not.
 
 | File                         | Holds                                               | Managed with                                     |
 |------------------------------|-----------------------------------------------------|--------------------------------------------------|
-| `.env`                       | Token, bridge channel, log channel, first account   | Editing it — see [Configuration](/configuration)  |
+| `.env`                       | Token, bridge channel, log channel, first account   | Editing it — see [Configuration](/tribridge/configuration)  |
 | `.minecraft-auth/`           | Cached Microsoft tokens, one entry per account      | The bot                                          |
-| `guildsConfig.json`          | The Hypixel guild registry                          | [`/guilds`](/hypixel-guilds)                      |
-| `adminRolesConfig.json`      | Discord role ids that hold bot-admin                | [`/adminrole`](/admin-roles)                      |
-| `linkedAccountsConfig.json`  | Discord user → Minecraft name and UUID              | [`/link`, `/unlink`](/account-linking)            |
-| `linkRoleConfig.json`        | The role given to linked users                      | [`/linkrole`](/link-role)                         |
-| `auditChannelConfig.json`    | The default audit channel                           | [`/auditchannel`](/auditing)                      |
-| `globalProfileConfig.json`   | The running global profile change, and its scope    | [`/adminpanel`](/global-profile-change)           |
-| `featureRequestsConfig.json` | The request channel, the next id, and every request | [`/request`, `/requeststatus`](/feature-requests) |
+| `guildsConfig.json`          | The Hypixel guild registry                          | [`/guilds`](/tribridge/hypixel-guilds)                      |
+| `adminRolesConfig.json`      | Discord role ids that hold bot-admin                | [`/adminrole`](/tribridge/admin-roles)                      |
+| `linkedAccountsConfig.json`  | Discord user → Minecraft name and UUID              | [`/link`, `/unlink`](/tribridge/account-linking)            |
+| `linkRoleConfig.json`        | The role given to linked users                      | [`/linkrole`](/tribridge/link-role)                         |
+| `auditChannelConfig.json`    | The default audit channel                           | [`/auditchannel`](/tribridge/auditing)                      |
+| `globalProfileConfig.json`   | The running global profile change, and its scope    | [`/adminpanel`](/tribridge/global-profile-change)           |
+| `featureRequestsConfig.json` | The request channel, the next id, and every request | [`/request`, `/requeststatus`](/tribridge/feature-requests) |
 
 ## Back these up
 
@@ -46,8 +46,8 @@ instead.
 
 **Per-guild channel overrides live in `guildsConfig.json`**, not in `auditChannelConfig.json` — so removing a
 guild cannot leave an orphaned channel setting behind. `officerChannelId` and `crossBridgeOfficer` live there
-too, alongside `crossBridge`; see [Officer chat](/officer-chat). `officerChannelId` is the one channel field
-guilds may deliberately share — replies typed there are routed by [guild tag](/guild-tags).
+too, alongside `crossBridge`; see [Officer chat](/tribridge/officer-chat). `officerChannelId` is the one channel field
+guilds may deliberately share — replies typed there are routed by [guild tag](/tribridge/guild-tags).
 
 **Each file is cached in memory** after its first read and written back whole on a change. Hand-editing a file
 while the bot is running will be overwritten by the next write; stop the process first.
@@ -57,6 +57,6 @@ and `guildsConfig.json` holds account addresses — which is why `/guilds` masks
 
 ## Next
 
-- [Configuration](/configuration)
-- [Hypixel guilds](/hypixel-guilds)
-- [Updating](/updating)
+- [Configuration](/tribridge/configuration)
+- [Hypixel guilds](/tribridge/hypixel-guilds)
+- [Updating](/tribridge/updating)

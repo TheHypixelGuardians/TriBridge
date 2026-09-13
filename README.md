@@ -44,7 +44,8 @@ all.
   guild or the default.
 - **Information** — `/online`, `/ping`, `/help` and `/networth`.
 
-*See [Features](docs/FEATURES.md) for what each one does in full, the [docs site](site/) (or
+*See [Features](docs/FEATURES.md) for what each one does in full, the
+[docs site](https://thehypixelguardians.mintlify.site) (TriBridge product, or the
 [wiki](https://github.com/TheHypixelGuardians/TriBridge/wiki) until cutover) for the same material split by
 audience, and the [change log](CHANGELOG.md) for what's new in each release.*
 
@@ -98,7 +99,7 @@ audience, and the [change log](CHANGELOG.md) for what's new in each release.*
    > any other server the bot was added to could add themselves to the bot's admin roles.
 
 4. **Invite the bot** with the permissions listed
-   in [Permissions](site/permissions.mdx).
+   in [Permissions](https://thehypixelguardians.mintlify.site/tribridge/permissions).
 
 5. **Start it**
 
@@ -112,7 +113,7 @@ audience, and the [change log](CHANGELOG.md) for what's new in each release.*
 
 6. **Set the admin roles** — `/adminrole add role:@Staff`. Until then, nothing admin-gated works.
 
-Full walkthrough: [Installation](site/installation.mdx).
+Full walkthrough: [Installation](https://thehypixelguardians.mintlify.site/tribridge/installation).
 
 ## Commands
 
@@ -143,7 +144,7 @@ Full walkthrough: [Installation](site/installation.mdx).
 
 Plus the chat commands typed in guild chat or the bridge channel: `!nw <username>` for a networth lookup, and
 `!tag message` to aim at one guild. Full reference:
-[Commands](site/commands.mdx).
+[Commands](https://thehypixelguardians.mintlify.site/tribridge/commands).
 
 ## Usage
 
@@ -163,7 +164,7 @@ Everything past the first Hypixel guild is configured from Discord rather than f
 ```
 
 Config files are written next to the repository and are all gitignored, so they survive a `git pull` — see
-[Config files](site/config-files.mdx).
+[Config files](https://thehypixelguardians.mintlify.site/tribridge/config-files).
 
 ## Updating
 
@@ -173,13 +174,14 @@ npm install
 ```
 
 Then restart the bot. New or changed slash commands take up to an hour to propagate on Discord's side. See
-[Updating](site/updating.mdx).
+[Updating](https://thehypixelguardians.mintlify.site/tribridge/updating).
 
 ## Documentation
 
-- **[Docs site](site/)** — Mintlify source for TriBridge's public documentation (preview with `cd site && npx mint
-  dev`). The [GitHub wiki](https://github.com/TheHypixelGuardians/TriBridge/wiki) still exists until Mintlify is
-  connected in the dashboard and the cutover is complete — see [site/README.md](site/README.md).
+- **[Docs site](https://thehypixelguardians.mintlify.site)** — org-wide Mintlify site (TriBridge + THG Community
+  products; source in [`site/`](site/), preview with `cd site && npx mint dev`). The
+  [GitHub wiki](https://github.com/TheHypixelGuardians/TriBridge/wiki) still exists until cutover — see
+  [site/README.md](site/README.md).
 - [Features](docs/FEATURES.md) — the canonical description of everything the bot does
 - [Change log](CHANGELOG.md), and the [Discord change log](DISCORD_CHANGELOG.md) for the announcement channel
 - [Writing the changelog & releasing](docs/RELEASING.md)

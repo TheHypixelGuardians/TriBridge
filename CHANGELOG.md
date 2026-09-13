@@ -8,6 +8,8 @@
 
 + Updated `CLAUDE.md` agent guidance for the Mintlify docs migration: public docs now live under `site/` alongside
   `wiki/` until cutover, with both kept in sync for user-visible changes.
++ Restructured the Mintlify site as an org-wide hub at `thehypixelguardians.mintlify.site` with **Products** for
+  TriBridge (`site/tribridge/`) and THG Community (`site/community/`).
 
 ### New Features
 

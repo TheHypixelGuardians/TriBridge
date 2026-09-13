@@ -3,11 +3,11 @@ title: "Commands"
 description: "Every slash command and chat command TriBridge supports."
 ---
 Every command TriBridge answers to. Slash commands are registered **globally** but only accepted in the one
-Discord server the bot serves — see [Admin roles](/admin-roles) for why. `/help` browses the same list in
+Discord server the bot serves — see [Admin roles](/tribridge/admin-roles) for why. `/help` browses the same list in
 Discord, one page per category.
 
 ⛔ marks a command that needs the Discord **Administrator** permission. 🔒 marks one gated on a
-[bot-admin role](/admin-roles).
+[bot-admin role](/tribridge/admin-roles).
 
 ## Chat commands
 
@@ -18,9 +18,9 @@ Not slash commands. Type these in the bridge channel **or** in guild chat.
 !networth <username> — the same command
 ```
 
-Double the `!` to send one literally: `!!nw x` arrives as the text `!nw x`. See [Networth](/networth).
+Double the `!` to send one literally: `!!nw x` arrives as the text `!nw x`. See [Networth](/tribridge/networth).
 
-Also typed rather than slashed: **[guild tags](/guild-tags)**. `!sb hey` sends to one guild only.
+Also typed rather than slashed: **[guild tags](/tribridge/guild-tags)**. `!sb hey` sends to one guild only.
 
 ## Information
 
@@ -29,7 +29,7 @@ Also typed rather than slashed: **[guild tags](/guild-tags)**. `!sb hey` sends t
 | `/help`                | Browse every command by category, with ◀ / ▶ buttons                        |
 | `/ping`                | Discord latency, roundtrip, and each guild's Minecraft connection status    |
 | `/online [guild]`      | Who is online in every guild, or one                                        |
-| `/networth [username]` | A player's SkyBlock networth. No username uses your [link](/account-linking) |
+| `/networth [username]` | A player's SkyBlock networth. No username uses your [link](/tribridge/account-linking) |
 
 `/ping` has no `guild` option on purpose: it is a status readout, so it always covers everything the bot is
 responsible for. `/help`'s buttons stop working after five minutes — run it again.
@@ -46,12 +46,12 @@ responsible for. `/help`'s buttons stop working after five minutes — run it ag
 | `/linkrole show`          | 🔒 Show the configured role                                    |
 | `/linkrole clear`         | 🔒 Stop giving out a role on link. Does not take it off anyone |
 
-See [Account linking](/account-linking) and [Link role](/link-role).
+See [Account linking](/tribridge/account-linking) and [Link role](/tribridge/link-role).
 
 ## Management
 
 Every command in this section is 🔒 bot-admin only. The six that act on a Hypixel guild take an optional
-`guild` with autocomplete; leave it out and the [default guild](/hypixel-guilds) is used.
+`guild` with autocomplete; leave it out and the [default guild](/tribridge/hypixel-guilds) is used.
 
 | Command                               | Does                                                                   |
 |---------------------------------------|------------------------------------------------------------------------|
@@ -61,9 +61,9 @@ Every command in this section is 🔒 bot-admin only. The six that act on a Hypi
 | `/demote <username> [guild]`          | Demote a member                                                        |
 | `/send <message> [guild]`             | Run any command or message as that guild's account, and show the reply |
 | `/login [guild]`                      | Connect the bot. With no guild, every *disconnected* guild             |
-| `/adminpanel`                         | Open the [admin panel](/admin-panel)                                    |
+| `/adminpanel`                         | Open the [admin panel](/tribridge/admin-panel)                                    |
 | `/adminrole add\|remove <role>`       | ⛔ Configure the bot-admin roles                                        |
-| `/auditchannel set <channel> [guild]` | Set where [audit](/auditing) entries go                                 |
+| `/auditchannel set <channel> [guild]` | Set where [audit](/tribridge/auditing) entries go                                 |
 | `/auditchannel show`                  | Show the default audit channel and every per-guild override            |
 | `/auditchannel clear [guild]`         | Stop recording, or drop one guild's override                           |
 
@@ -73,7 +73,7 @@ what was meant.
 
 ### `/guilds`
 
-🔒 The whole [Hypixel guild registry](/hypixel-guilds), in one command.
+🔒 The whole [Hypixel guild registry](/tribridge/hypixel-guilds), in one command.
 
 | Subcommand                                                                                                                                    | Does                                                |
 |-----------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|
@@ -87,7 +87,7 @@ what was meant.
 `key` and `account` are **immutable** — `/guilds edit` will not change them. `confirm:True` is required to
 remove the default guild.
 
-`officerchannel` opens a **two-way** [officer chat](/officer-chat) channel: everyone who can post in it is
+`officerchannel` opens a **two-way** [officer chat](/tribridge/officer-chat) channel: everyone who can post in it is
 speaking in officer chat in-game. Several guilds may point at the same channel and share it, with `!tag`
 picking which one a reply reaches. `crossbridgeofficer` separately shares officer chat between the guilds
 in-game; it is independent of `crossbridge`.
@@ -101,7 +101,7 @@ in-game; it is independent of `crossbridge`.
 | `/requestchannel show`          | 🔒 Show where requests are posted                        |
 | `/requeststatus <id> <status>`  | 🔒 Mark a request accepted, denied, planned or duplicate |
 
-See [Feature requests](/feature-requests).
+See [Feature requests](/tribridge/feature-requests).
 
 ## Notes
 
@@ -109,10 +109,10 @@ See [Feature requests](/feature-requests).
   in Discord's autocomplete immediately after a restart.
 - **A `guild` option is autocompleted from the registry**, so it only ever offers guilds that exist.
 - **Commands from any other Discord server are refused**, even from someone who is an administrator there.
-  See [Admin roles](/admin-roles).
+  See [Admin roles](/tribridge/admin-roles).
 
 ## Next
 
-- [Using the bridge](/using-the-bridge)
-- [Admin roles](/admin-roles)
-- [Adding a command](/adding-a-command)
+- [Using the bridge](/tribridge/using-the-bridge)
+- [Admin roles](/tribridge/admin-roles)
+- [Adding a command](/tribridge/adding-a-command)

@@ -36,37 +36,42 @@ Before finishing any task that changes the bot, do all of the following:
    gets its own `##` section there (what it does, how it is switched on and configured, any limitation); a
    change to an existing feature updates that feature's section rather than appending a note to the end of it.
    Write for whoever runs or uses the bot — implementation notes belong in the changelog's
-   `### Technical Details` and in [site/architecture.mdx](site/architecture.mdx) (or
+   `### Technical Details` and in [site/tribridge/architecture.mdx](site/tribridge/architecture.mdx) (or
    [wiki/Architecture.md](wiki/Architecture.md) until cutover).
     - One exception worth keeping: where a rule exists because the obvious alternative was actively harmful (a
       silent drop, a Hypixel mute, a permission escalation), say so. That sentence is what stops the rule being
       "simplified" away later.
 
-4. **Update the public docs** — user-facing documentation is migrating from the GitHub wiki to Mintlify under
-   [site/](site/). Until cutover, **both** must stay in sync for anything user-visible — the wiki still
-   publishes automatically via [.github/workflows/wiki.yml](.github/workflows/wiki.yml), and the Mintlify site
-   is the destination once the dashboard is connected (content root `site/`; preview with `mint dev` — see
-   [site/README.md](site/README.md)).
-    - **Prefer Mintlify for new work** — edit the matching `site/*.mdx` page and [site/docs.json](site/docs.json)
-      navigation where needed. Keep the parallel `wiki/<Page-Name>.md` (and sidebar/home entries) updated in
-      the same task until the wiki sync is retired.
+4. **Update the public docs** — user-facing documentation is migrating from the GitHub wiki to the org-wide
+   Mintlify site at [https://thehypixelguardians.mintlify.site](https://thehypixelguardians.mintlify.site)
+   (source in [site/](site/), content root `site/`). TriBridge pages live under
+   [site/tribridge/](site/tribridge/) as the **TriBridge** product in `navigation.products`; THG Community
+   pages live under [site/community/](site/community/). Until cutover, **wiki and TriBridge Mintlify pages**
+   must stay in sync for anything user-visible — the wiki still publishes via
+   [.github/workflows/wiki.yml](.github/workflows/wiki.yml). Preview with `mint dev` — see
+   [site/README.md](site/README.md).
+    - **Prefer Mintlify for new TriBridge work** — edit the matching `site/tribridge/<slug>.mdx` page and
+      [site/docs.json](site/docs.json) navigation where needed. Keep the parallel `wiki/<Page-Name>.md` (and
+      sidebar/home entries) updated in the same task until the wiki sync is retired.
     - The audience split still applies in both places: *Using the bridge* is for guild members in the Discord
       server, *Running the bot* is for whoever hosts it and holds a bot-admin role. A page belongs to whichever
       reader can act on it. Where a feature has both halves (the global profile change, auditing), the
       member-facing consequence is a paragraph on the member page and the configuration lives on the staff page.
       Mintlify mirrors this in `docs.json` navigation groups.
-    - A **new feature** gets its own page in both trees — `site/<slug>.mdx` with a line in `docs.json`, and
-      `wiki/<Page-Name>.md` with a line in [wiki/_Sidebar.md](wiki/_Sidebar.md) and a row in the feature table
-      of [wiki/Home.md](wiki/Home.md) / [site/index.mdx](site/index.mdx).
+    - A **new feature** gets its own page in both trees — `site/tribridge/<slug>.mdx` with a line in
+      `docs.json`, and `wiki/<Page-Name>.md` with a line in [wiki/_Sidebar.md](wiki/_Sidebar.md) and a row in
+      the feature table of [wiki/Home.md](wiki/Home.md) / [site/tribridge/index.mdx](site/tribridge/index.mdx).
     - A **change to an existing feature** updates that feature's page in both places, in the same task as the
       code.
     - Three pages are **exhaustive lists**, so a missing entry is a visible gap in **both** places until
-      cutover: a new or changed command touches [site/commands.mdx](site/commands.mdx) and
-      [wiki/Commands.md](wiki/Commands.md); a new config file touches [site/config-files.mdx](site/config-files.mdx)
-      and [wiki/Config-Files.md](wiki/Config-Files.md); a new permission or intent touches
-      [site/permissions.mdx](site/permissions.mdx) and [wiki/Permissions.md](wiki/Permissions.md).
+      cutover: a new or changed command touches [site/tribridge/commands.mdx](site/tribridge/commands.mdx) and
+      [wiki/Commands.md](wiki/Commands.md); a new config file touches
+      [site/tribridge/config-files.mdx](site/tribridge/config-files.mdx) and
+      [wiki/Config-Files.md](wiki/Config-Files.md); a new permission or intent touches
+      [site/tribridge/permissions.mdx](site/tribridge/permissions.mdx) and
+      [wiki/Permissions.md](wiki/Permissions.md).
     - **Link conventions differ.** Wiki pages use extension-less relative links (`[Guild tags](Guild-Tags)`).
-      Mintlify MDX uses route paths (`[Guild tags](/guild-tags)`). Links into this repository are absolute
+      Mintlify MDX uses route paths (`[Guild tags](/tribridge/guild-tags)`). Links into this repository are absolute
       GitHub URLs in both. See [docs/WIKI.md](docs/WIKI.md) for wiki publishing; never publish the wiki by hand
       or edit through GitHub's wiki editor — the next push overwrites it.
     - Never put a real token, channel id, role id or account address in a page — public docs are public.
@@ -102,11 +107,12 @@ in-game.
 - Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`. `nodemon` is the only
   dev dependency, used by `npm run dev` and needed by nothing that runs the bot.
 - Documentation lives in three places: [docs/](docs/) holds the canonical reference
-  ([FEATURES.md](docs/FEATURES.md)) and maintainer workflow docs; [site/](site/) is the Mintlify public docs
-  (MDX + `docs.json`), replacing the GitHub wiki once connected and cut over; and [wiki/](wiki/) still
-  publishes to the GitHub wiki until then — keep it in sync with `site/` for user-visible changes.
-  [site/architecture.mdx](site/architecture.mdx) (and [wiki/Architecture.md](wiki/Architecture.md) until
-  cutover) is the long-form version of the Architecture section below — when one changes, check the other.
+  ([FEATURES.md](docs/FEATURES.md)) and maintainer workflow docs; [site/](site/) is the org-wide Mintlify site
+  ([thehypixelguardians.mintlify.site](https://thehypixelguardians.mintlify.site)) with **Products** for
+  TriBridge (`site/tribridge/`) and THG Community (`site/community/`); and [wiki/](wiki/) still publishes to
+  the GitHub wiki until cutover — keep TriBridge wiki pages in sync with `site/tribridge/` for user-visible
+  changes. [site/tribridge/architecture.mdx](site/tribridge/architecture.mdx) (and
+  [wiki/Architecture.md](wiki/Architecture.md) until cutover) is the long-form Architecture section below.
 - Commit messages follow the `<tag>: <message>` convention (`Feature:`, `Improvement:`, `Fix:`, `Internal:`,
   `Backend:`, `Update:`) with one granular commit per logical change — see
   [docs/COMMIT_STRUCTURE.md](docs/COMMIT_STRUCTURE.md).

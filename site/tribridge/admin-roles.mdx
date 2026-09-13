@@ -24,15 +24,15 @@ who else is an admin. Everything else defers to the list.
 
 Until at least one role is added, nothing admin-gated works for anyone except a Discord administrator running
 `/adminrole`. That is the intended starting state, not a bug — do this during
-[installation](/installation).
+[installation](/tribridge/installation).
 
-The list lives in `adminRolesConfig.json`. See [Config files](/config-files).
+The list lives in `adminRolesConfig.json`. See [Config files](/tribridge/config-files).
 
 ## What bot-admin unlocks
 
 Everything under Management — `/invite`, `/kick`, `/promote`, `/demote`, `/send`, `/login`, `/guilds`,
 `/adminpanel`, `/auditchannel` — plus `/whois`, `/unlink user:`, `/linkrole`, `/requestchannel` and
-`/requeststatus`. [Commands](/commands) marks them all with 🔒.
+`/requeststatus`. [Commands](/tribridge/commands) marks them all with 🔒.
 
 `/send` deserves singling out: it runs **arbitrary commands** as a Minecraft account. Anyone with a bot-admin
 role can make the account do anything a player could, including leaving the guild. Treat the list the way you
@@ -57,10 +57,10 @@ The server is resolved at startup from the bridge channel, or named explicitly w
 behaviour. Interactions in DMs are refused for the same reason.
 
 If every command suddenly returns a refusal after a restart, this is the first thing to check — see
-[Troubleshooting](/troubleshooting).
+[Troubleshooting](/tribridge/troubleshooting).
 
 ## Next
 
-- [Configuration](/configuration)
-- [Permissions](/permissions)
-- [Admin panel](/admin-panel)
+- [Configuration](/tribridge/configuration)
+- [Permissions](/tribridge/permissions)
+- [Admin panel](/tribridge/admin-panel)

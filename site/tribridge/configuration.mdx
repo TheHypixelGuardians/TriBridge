@@ -10,7 +10,7 @@ TriBridge is configured in two places, and the split matters:
 | **`*Config.json`** | Everything else                               | Slash commands, while the bot is running |
 
 If you find yourself editing a `*Config.json` by hand, there is almost certainly a command for it. See
-[Config files](/config-files).
+[Config files](/tribridge/config-files).
 
 ## The `.env` file
 
@@ -38,7 +38,7 @@ To get a channel id: enable **Developer Mode** in Discord's Advanced settings, t
 
 It only seeds the **first** Hypixel guild on a fresh install. Once `guildsConfig.json` exists the registry is
 authoritative and the variable is ignored — if it names an account that is not in the registry, the bot says
-so on startup and carries on. Add and change accounts with [`/guilds`](/hypixel-guilds), not by editing this.
+so on startup and carries on. Add and change accounts with [`/guilds`](/tribridge/hypixel-guilds), not by editing this.
 
 ### About `DISCORD_GUILD_ID`
 
@@ -57,13 +57,13 @@ explicitly if the bridge channel is somewhere the bot cannot resolve at startup.
 
 | What                              | Command                           | Page                                               |
 |-----------------------------------|-----------------------------------|----------------------------------------------------|
-| Which Hypixel guilds are bridged  | `/guilds`                         | [Hypixel guilds](/hypixel-guilds)                   |
-| Guild-to-guild chat sharing       | `/guilds edit … crossbridge:True` | [Guild-to-guild bridging](/guild-to-guild-bridging) |
-| Who counts as a bot admin         | `/adminrole`                      | [Admin roles](/admin-roles)                         |
-| The role given to linked users    | `/linkrole`                       | [Link role](/link-role)                             |
-| Where audit entries go            | `/auditchannel`                   | [Auditing](/auditing)                               |
-| Where feature requests are posted | `/requestchannel`                 | [Feature requests](/feature-requests)               |
-| Per-guild log and audit channels  | `/guilds edit`                    | [Hypixel guilds](/hypixel-guilds)                   |
+| Which Hypixel guilds are bridged  | `/guilds`                         | [Hypixel guilds](/tribridge/hypixel-guilds)                   |
+| Guild-to-guild chat sharing       | `/guilds edit … crossbridge:True` | [Guild-to-guild bridging](/tribridge/guild-to-guild-bridging) |
+| Who counts as a bot admin         | `/adminrole`                      | [Admin roles](/tribridge/admin-roles)                         |
+| The role given to linked users    | `/linkrole`                       | [Link role](/tribridge/link-role)                             |
+| Where audit entries go            | `/auditchannel`                   | [Auditing](/tribridge/auditing)                               |
+| Where feature requests are posted | `/requestchannel`                 | [Feature requests](/tribridge/feature-requests)               |
+| Per-guild log and audit channels  | `/guilds edit`                    | [Hypixel guilds](/tribridge/hypixel-guilds)                   |
 
 ## Restarting
 
@@ -71,6 +71,6 @@ Only `.env` changes need a restart. Everything set through a command takes effec
 
 ## Next
 
-- [Config files](/config-files)
-- [Permissions](/permissions)
-- [Hypixel guilds](/hypixel-guilds)
+- [Config files](/tribridge/config-files)
+- [Permissions](/tribridge/permissions)
+- [Hypixel guilds](/tribridge/hypixel-guilds)

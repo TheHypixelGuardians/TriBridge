@@ -44,7 +44,7 @@ install with `npm install --omit=dev`.
    cp .env.example .env
    ```
 
-   See [Configuration](/configuration) for every variable and what it does; the minimum is:
+   See [Configuration](/tribridge/configuration) for every variable and what it does; the minimum is:
 
    ```env
    DISCORD_TOKEN=your_discord_bot_token
@@ -53,7 +53,7 @@ install with `npm install --omit=dev`.
    MINECRAFT_USERNAME=you@example.com
    ```
 
-4. **Invite the bot to your Discord server** with the permissions listed in [Permissions](/permissions).
+4. **Invite the bot to your Discord server** with the permissions listed in [Permissions](/tribridge/permissions).
 
 5. **Start it**
 
@@ -73,7 +73,7 @@ install with `npm install --omit=dev`.
    ```
 
    Until a role is added, only someone with the Discord **Administrator** permission can run `/adminrole`
-   itself, and nothing else admin-gated will work. See [Admin roles](/admin-roles).
+   itself, and nothing else admin-gated will work. See [Admin roles](/tribridge/admin-roles).
 
 ## Checking it worked
 
@@ -83,7 +83,7 @@ install with `npm install --omit=dev`.
 
 The reply gives Discord latency, the interaction roundtrip, and each Hypixel guild's connection state with the
 Minecraft account's own ping. A guild showing offline means the account has not connected — check
-[Troubleshooting](/troubleshooting).
+[Troubleshooting](/tribridge/troubleshooting).
 
 Then say something in the bridge channel and check it arrives in guild chat, and say something in guild chat
 and check it arrives in Discord. Both directions are separate code paths; one working does not prove the
@@ -98,13 +98,13 @@ Everything after the first guild is done from Discord, not from the `.env`:
 ```
 
 The device code arrives in your own private reply — no console access needed. See
-[Hypixel guilds](/hypixel-guilds).
+[Hypixel guilds](/tribridge/hypixel-guilds).
 
 ## Where TriBridge keeps its files
 
 Everything is written next to the repository, in the project root, and every one of those files is gitignored.
-See [Config files](/config-files) for what each holds. They survive a `git pull`, which is what makes
-[updating](/updating) a two-command job.
+See [Config files](/tribridge/config-files) for what each holds. They survive a `git pull`, which is what makes
+[updating](/tribridge/updating) a two-command job.
 
 ## Running it as a service
 
@@ -119,11 +119,11 @@ Point the supervisor at `node` directly rather than at `npm start`. `npm` would 
 the bot as an extra process, and stop and restart signals have to pass through it to reach the process that
 actually holds the Discord and Hypixel connections.
 
-The bot reconnects to Hypixel on its own ([Reconnection](/reconnection)); it does not restart *itself* if the
+The bot reconnects to Hypixel on its own ([Reconnection](/tribridge/reconnection)); it does not restart *itself* if the
 Node process dies, which is what the supervisor is for.
 
 ## Next
 
-- [Configuration](/configuration)
-- [Permissions](/permissions)
-- [Hypixel guilds](/hypixel-guilds)
+- [Configuration](/tribridge/configuration)
+- [Permissions](/tribridge/permissions)
+- [Hypixel guilds](/tribridge/hypixel-guilds)

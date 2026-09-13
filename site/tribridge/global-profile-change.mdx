@@ -6,13 +6,13 @@ Pick a member and a duration, and for that long **everybody's messages are repos
 and avatar** — in Discord, in the guild-chat copy, and on guild chat coming back the other way.
 
 It is a joke feature with real teeth: it deletes people's messages and reposts them under someone else's face.
-Read [Auditing](/auditing) before running one live.
+Read [Auditing](/tribridge/auditing) before running one live.
 
-Set it up from [`/adminpanel`](/admin-panel) → **Global Profile**.
+Set it up from [`/adminpanel`](/tribridge/admin-panel) → **Global Profile**.
 
 ## Setting one up
 
-1. **Pick the member** everybody will appear as. If they have a [linked account](/account-linking), their
+1. **Pick the member** everybody will appear as. If they have a [linked account](/tribridge/account-linking), their
    Minecraft name is used on the guild-chat side too.
 2. **Pick a duration** — 5 minutes to 24 hours, **Until stopped**, or **Custom…**.
 3. **Choose the bridge directions** (below).
@@ -41,7 +41,7 @@ Switching *Discord → Minecraft* off stops the disguise **at the bridge** rathe
 Discord still shows the target's face, guild chat gets real names. That is the setting for running a joke in
 Discord without confusing people in-game.
 
-Neither switch affects [guild-to-guild bridging](/guild-to-guild-bridging). Forwarded chat always uses real
+Neither switch affects [guild-to-guild bridging](/tribridge/guild-to-guild-bridging). Forwarded chat always uses real
 names.
 
 ## Test mode
@@ -49,7 +49,7 @@ names.
 Test mode applies the effect **only to listed testers, and only in listed channels**. Everything else in the
 server is untouched. Use it before going live.
 
-On the guild-chat side, a tester is recognised by their [account link](/account-linking) — the bot has no
+On the guild-chat side, a tester is recognised by their [account link](/tribridge/account-linking) — the bot has no
 Discord author to check when a line arrives from Minecraft, so it matches the Minecraft name back to a link
 and checks that. **A tester with no link will not see their guild chat rewritten**, and without that rule
 testing would silently relabel guild members who never agreed to take part.
@@ -61,7 +61,7 @@ Applies server-wide, except:
 - **channels you excluded** in the scope view,
 - **channels where the bot lacks Manage Webhooks or Manage Messages** — those are skipped and left completely
   alone, with one warning to the log channel. They are never partially disguised, and
-- **[officer channels](/officer-chat)**, always. A channel that exists to record what officers said is the last
+- **[officer channels](/tribridge/officer-chat)**, always. A channel that exists to record what officers said is the last
   place to relabel who said it, and reposting there would break the reply leg outright — the repost is
   authored by a webhook, and the officer bridge ignores anything a bot posted.
 
@@ -85,19 +85,19 @@ A repost is a **new message**, and the original is deleted. So, while an effect 
 - **messages carrying stickers, polls, forwards or voice notes are left undisguised** rather than reposted
   without them;
 - **the real author is no longer visible on the message** — which is exactly why every disguised message is
-  [audited](/auditing).
+  [audited](/tribridge/auditing).
 
 Reposts within a channel are chained so a burst arrives in the order it was sent.
 
 ## Before you run one live
 
-- Set an [audit channel](/auditing). Without one, a disguised message has no record of who actually wrote it.
+- Set an [audit channel](/tribridge/auditing). Without one, a disguised message has no record of who actually wrote it.
 - Check the bot has **Manage Webhooks** and **Manage Messages** everywhere you mean it to apply.
 - Exclude channels where deleted-and-reposted messages would be a problem — anything people rely on editing.
 - Consider telling the server first. People notice.
 
 ## Next
 
-- [Auditing](/auditing)
-- [Admin panel](/admin-panel)
-- [Permissions](/permissions)
+- [Auditing](/tribridge/auditing)
+- [Admin panel](/tribridge/admin-panel)
+- [Permissions](/tribridge/permissions)

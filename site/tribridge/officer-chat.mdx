@@ -41,7 +41,7 @@ Point several guilds at the same channel and they share it, exactly as they shar
 ```
 
 Each guild's officer chat arrives there tagged and in that guild's colour, and replies are routed by
-[guild tag](/guild-tags). One channel is usually what you want — officers tend to be officers in both guilds,
+[guild tag](/tribridge/guild-tags). One channel is usually what you want — officers tend to be officers in both guilds,
 and two channels means two places to watch.
 
 Separate channels still work. A guild pointed at a channel nobody else uses behaves exactly as it did when
@@ -68,12 +68,12 @@ Officer > [MVP+] TriBridgeBot: Notch: hello
 ```
 
 The name in front of the message is **your Minecraft name if your account is
-[linked](/account-linking)**, and your Discord name if not. Linking is worth doing here — officer chat is a
+[linked](/tribridge/account-linking)**, and your Discord name if not. Linking is worth doing here — officer chat is a
 place where who said something usually matters.
 
 ## Replying to one guild
 
-[Guild tags](/guild-tags) work here just as they do in the bridge channel:
+[Guild tags](/tribridge/guild-tags) work here just as they do in the bridge channel:
 
 ```
 !sb we should demote him
@@ -94,9 +94,9 @@ To start a message with a literal `!`, type it twice: `!!sb` comes out as `!sb`.
 - **No fan-out beyond the tag.** A reply reaches the guilds it was addressed to and no further, even when
   officer sharing is on below. That matches the main bridge, where a Discord message also only reaches the
   guilds it was addressed to.
-- **[Chat commands](/networth) are not answered.** `!nw Notch` typed here, or in officer chat in-game, is just
+- **[Chat commands](/tribridge/networth) are not answered.** `!nw Notch` typed here, or in officer chat in-game, is just
   something an officer said. It does look like a tag, so it collects a ❓ — `!!nw Notch` avoids that.
-- **Real names.** A running [global profile change](/global-profile-change) does not apply in the officer
+- **Real names.** A running [global profile change](/tribridge/global-profile-change) does not apply in the officer
   channel, in either direction. A channel that exists to record what officers said is the last place to
   relabel who said it.
 - **Nothing is deleted or reposted.** Unlike the bridge channel, your message stays exactly as you sent it,
@@ -108,7 +108,7 @@ To start a message with a literal `!`, type it twice: `!!sb` comes out as `!sb`.
 ## Sharing officer chat between guilds
 
 Everything above is about Discord. Officer chat can *also* cross between the guilds in-game, into each
-other's officer chat, the same way [guild chat can](/guild-to-guild-bridging):
+other's officer chat, the same way [guild chat can](/tribridge/guild-to-guild-bridging):
 
 ```
 /guilds edit guild:sb crossbridgeofficer:True
@@ -116,7 +116,7 @@ other's officer chat, the same way [guild chat can](/guild-to-guild-bridging):
 ```
 
 Forwarded lines arrive tagged with the guild they came from, `[SB] Notch: hello`, and every rule from
-[guild-to-guild bridging](/guild-to-guild-bridging) applies — symmetric, off by default, takes two guilds,
+[guild-to-guild bridging](/tribridge/guild-to-guild-bridging) applies — symmetric, off by default, takes two guilds,
 lines older than ten seconds are dropped rather than queued.
 
 It is an **independent switch**: `crossbridge` does not have to be on. The two answer different questions,
@@ -145,6 +145,6 @@ Switch it on where the officer channels are actually busy, not everywhere by def
 
 ## Next
 
-- [Guild-to-guild bridging](/guild-to-guild-bridging)
-- [Hypixel guilds](/hypixel-guilds)
-- [Permissions](/permissions)
+- [Guild-to-guild bridging](/tribridge/guild-to-guild-bridging)
+- [Hypixel guilds](/tribridge/hypixel-guilds)
+- [Permissions](/tribridge/permissions)
