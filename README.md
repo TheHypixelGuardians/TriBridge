@@ -62,7 +62,7 @@ audience, and the [change log](CHANGELOG.md) for what's new in each release.*
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/Trilleo/TriBridge.git
+   git clone https://github.com/TheHypixelGuardians/TriBridge.git
    cd TriBridge
    ```
 
