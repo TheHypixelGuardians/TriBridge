@@ -6,8 +6,11 @@
 
 #### Documentation
 
-+ Updated `CLAUDE.md` agent guidance for the Mintlify docs migration: public docs now live under `site/` alongside
-  `wiki/` until cutover, with both kept in sync for user-visible changes.
++ Retired the GitHub wiki sync workflow (`.github/workflows/wiki.yml`). Public documentation is now
+  [thehypixelguardians.mintlify.site](https://thehypixelguardians.mintlify.site/tribridge) only; the `wiki/`
+  folder is frozen as a legacy archive with a README stub.
++ Updated `CLAUDE.md` agent guidance during the Mintlify migration: public docs lived under `site/` alongside
+  `wiki/` with both kept in sync until cutover.
 + Restructured the Mintlify site as an org-wide hub at `thehypixelguardians.mintlify.site` with **Products** for
   TriBridge (`site/tribridge/`) and THG Community (`site/community/`).
 

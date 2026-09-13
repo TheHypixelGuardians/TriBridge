@@ -1,109 +1,32 @@
-# The GitHub wiki
+# Legacy GitHub wiki (retired)
 
-The wiki pages live in [`wiki/`](../wiki) in this repository and are copied into the wiki's own Git repository
-(`https://github.com/Trilleo/TriBridge.wiki.git`) **automatically, by a GitHub Actions workflow, on every push
-to `master` that touches them**. Keeping the source here means wiki edits go through the same review as code,
-a feature commit can update the wiki alongside it, and nobody has to remember to publish.
+TriBridge public documentation now lives on the **Mintlify** site:
 
-## Two readers, one wiki
+**https://thehypixelguardians.mintlify.site/tribridge**
 
-TriBridge has two audiences and they want opposite things, so the pages are split into two runs and the
-sidebar keeps them apart:
+Edit [`site/tribridge/`](../site/tribridge/) and [`site/docs.json`](../site/docs.json). Preview locally with `cd site && npx mint dev` — see [site/README.md](../site/README.md).
 
-| Section              | Reader                                           | Assumes                                          |
-|----------------------|--------------------------------------------------|--------------------------------------------------|
-| **Using the bridge** | A guild member in the Discord server             | No access to the host, the `.env` or the console |
-| **Running the bot**  | Whoever hosts the bot and holds a bot-admin role | A terminal, the repository, and `/guilds`        |
+## What happened to the wiki
 
-A page belongs to whichever reader can act on it. `!nw` is a member page even though it costs a chat packet;
-`/guilds` is a staff page even though members feel the result. When a feature genuinely has both halves — the
-global profile change, the audit trail — the member-facing consequence is one paragraph on the member page and
-the configuration lives on the staff page.
+Before Mintlify, user-facing docs were maintained in [`wiki/`](../wiki/) and copied into the repository's GitHub wiki by [`.github/workflows/wiki.yml`](../.github/workflows/wiki.yml) on every push to `master`. That workflow was **removed** when Mintlify became canonical; the GitHub wiki is no longer updated from this repository.
 
-## The pages
+The [`wiki/`](../wiki/) folder remains as a frozen archive. See [wiki/README.md](../wiki/README.md).
 
-| File                                                                                               | Page                                                    |
-|----------------------------------------------------------------------------------------------------|---------------------------------------------------------|
-| `Home.md`                                                                                          | Landing page — the two entry points and a feature table |
-| `_Sidebar.md`                                                                                      | Navigation shown beside every page                      |
-| `_Footer.md`                                                                                       | Footer shown under every page                           |
-| `Using-the-Bridge.md`, `Guild-Tags.md`, `Account-Linking.md`, `Networth.md`, `Feature-Requests.md` | Using the bridge                                        |
-| `Commands.md`                                                                                      | Every slash command, both audiences, in one table       |
-| `Installation.md`, `Configuration.md`, `Config-Files.md`, `Permissions.md`, `Updating.md`          | Running the bot — setup                                 |
-| `Hypixel-Guilds.md`, `Guild-to-Guild-Bridging.md`, `Reconnection.md`                               | Running the bot — the guild registry                    |
-| `Admin-Roles.md`, `Admin-Panel.md`, `Global-Profile-Change.md`, `Auditing.md`, `Link-Role.md`      | Running the bot — administration                        |
-| `FAQ.md`, `Troubleshooting.md`                                                                     | Help                                                    |
-| `Architecture.md`, `Adding-a-Command.md`, `Contributing.md`, `Releasing.md`                        | Development                                             |
+## Maintainer checklist (current)
 
-## Conventions
+When a user-visible feature changes, update in the same task as the code:
 
-- **A file name is a page title.** `Config-Files.md` is the page *Config files*; hyphens render as spaces in
-  the wiki's page list. Renaming a file breaks every link to it and any external bookmark, so treat names as
-  stable.
-- **Links between pages are plain relative Markdown**: `[Guild tags](Guild-Tags)`, without the `.md`. This
-  form works both in the published wiki and when browsing `wiki/` on GitHub.
-- **Links into the repository are absolute URLs**
-  (`https://github.com/Trilleo/TriBridge/blob/master/CHANGELOG.md`), because the wiki is a different
-  repository and relative paths would not resolve.
-- `_Sidebar.md` and `_Footer.md` are special names GitHub renders around every page. A new page needs a line
-  in `_Sidebar.md`, under the right section, and a user-visible feature also needs a row in the `Home.md`
-  table.
-- **Never paste a real token, channel id, role id or account address into a page.** Examples use
-  `you@example.com`, `#log-channel` and obviously-fake ids. The wiki is public even when the repository is
-  not.
-- **Say which audience a warning is for.** "Ask an administrator to set an audit channel" on a member page;
-  "run `/auditchannel set` on the community bot" on a staff one.
-- **Say which bot a command belongs to.** Community commands (`/link`, `/adminrole`, `/adminpanel`,
-  `/auditchannel`, `/request`) live on the THG community bot; naming the bot is what stops a reader typing
-  them at TriBridge and concluding the wiki is wrong.
+1. [docs/FEATURES.md](FEATURES.md) — canonical in-repo description.
+2. The matching page under `site/tribridge/` (and `site/docs.json` when adding a page).
+3. [CHANGELOG.md](../CHANGELOG.md) and, if guild members would notice, [DISCORD_CHANGELOG.md](../DISCORD_CHANGELOG.md).
+4. [README.md](../README.md) when commands, install steps, or `.env` variables change.
 
-## Publishing
+Three Mintlify pages are **exhaustive lists** — a missing entry is a visible gap:
 
-[`.github/workflows/wiki.yml`](../.github/workflows/wiki.yml) does it. Pushing to `master` with a change under
-`wiki/` clones the wiki repository, replaces its top-level `*.md` files with this folder's, and commits —
-skipping the commit entirely when nothing differs, so an unrelated push does not produce an empty wiki commit.
-It can also be run by hand from the Actions tab (`workflow_dispatch`).
+- [site/tribridge/commands.mdx](../site/tribridge/commands.mdx) — every slash command and chat command.
+- [site/tribridge/config-files.mdx](../site/tribridge/config-files.mdx) — every config file the bot writes.
+- [site/tribridge/permissions.mdx](../site/tribridge/permissions.mdx) — every Discord permission and intent.
 
-It authenticates with the automatic `GITHUB_TOKEN` and needs `permissions: contents: write`, which is what the
-workflow declares. There is nothing to configure and no secret to create.
+The audience split from the old wiki still applies in Mintlify navigation: *Using the bridge* is for guild members; *Running the bot* is for whoever hosts the bot and holds a bot-admin role.
 
-Two things it does **not** do:
-
-- **It never deletes a page you did not delete here.** The sync removes only top-level `*.md` files before
-  copying, so a page removed from `wiki/` does disappear — but anything created directly in the wiki's web UI
-  and not mirrored here is removed too. Treat `wiki/` as the only source: editing a page through GitHub's wiki
-  editor is fine as a preview, but the next push overwrites it.
-- **It does not initialise the wiki.** The wiki must be **enabled and initialised** in the repository settings
-  before that clone URL exists — create the first page through the web UI once, and every later publish is
-  automatic. Until then the workflow's clone step fails, which is the failure to expect on a fresh repository.
-
-The manual equivalent, if the workflow is ever unavailable:
-
-```bash
-git clone https://github.com/Trilleo/TriBridge.wiki.git /tmp/tribridge-wiki
-cp wiki/*.md /tmp/tribridge-wiki/
-cd /tmp/tribridge-wiki && git add -A && git commit -m "Internal: Sync wiki from main repository" && git push
-```
-
-## Keeping it in sync
-
-Keeping the wiki current is **step 4 of the after-every-change checklist in [CLAUDE.md](../CLAUDE.md)**, not
-an afterthought: the wiki is what somebody finds from a search engine, and a page that lags behind the bot is
-worse than no page at all.
-
-The wiki restates what [FEATURES.md](FEATURES.md) documents, aimed at somebody arriving from a search engine
-rather than a reader going through the repo. When a feature changes, both move together:
-
-1. `docs/FEATURES.md` — the canonical description.
-2. `wiki/<Page>.md` — the same change, in the wiki's voice, on whichever side of the split it belongs to.
-3. `wiki/Home.md` and `wiki/_Sidebar.md` — only when a page is added or renamed.
-
-Three pages are **exhaustive lists**, so a missing entry is a visible gap rather than a thin page:
-
-- [wiki/Commands.md](../wiki/Commands.md) — every slash command and chat command.
-- [wiki/Config-Files.md](../wiki/Config-Files.md) — every file the bot writes next to the repository.
-- [wiki/Permissions.md](../wiki/Permissions.md) — every Discord permission and intent, and what breaks
-  without it.
-
-Version-specific facts appear in `Installation.md` and `Updating.md` (Node version, dependencies, `.env`
-variables); check them whenever `package.json` or the `.env` contract changes.
+Full after-every-change guidance is in [CLAUDE.md](../CLAUDE.md).

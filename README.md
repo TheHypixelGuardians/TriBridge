@@ -43,9 +43,8 @@ all.
 - **Information** — `/online`, `/ping`, `/help` and `/networth`.
 
 *See [Features](docs/FEATURES.md) for what each one does in full, the
-[docs site](https://thehypixelguardians.mintlify.site) (TriBridge product, or the
-[wiki](https://github.com/TheHypixelGuardians/TriBridge/wiki) until cutover) for the same material split by
-audience, and the [change log](CHANGELOG.md) for what's new in each release.*
+[docs site](https://thehypixelguardians.mintlify.site/tribridge) for the same material split by audience, and
+the [change log](CHANGELOG.md) for what's new in each release.*
 
 ## Prerequisites
 
@@ -174,13 +173,11 @@ Then restart the bot. New or changed slash commands take up to an hour to propag
 
 ## Documentation
 
-- **[Docs site](https://thehypixelguardians.mintlify.site)** — org-wide Mintlify site (TriBridge + THG Community
-  products; source in [`site/`](site/), preview with `cd site && npx mint dev`). The
-  [GitHub wiki](https://github.com/TheHypixelGuardians/TriBridge/wiki) still exists until cutover — see
+- **[Docs site](https://thehypixelguardians.mintlify.site)** — canonical public documentation (TriBridge +
+  THG Community products; source in [`site/`](site/), preview with `cd site && npx mint dev`). See
   [site/README.md](site/README.md).
-- [Features](docs/FEATURES.md) — the canonical description of everything the bot does
+- [Features](docs/FEATURES.md) — the canonical in-repo description of everything the bot does
 - [Change log](CHANGELOG.md), and the [Discord change log](DISCORD_CHANGELOG.md) for the announcement channel
 - [Writing the changelog & releasing](docs/RELEASING.md)
 - [Commit structure](docs/COMMIT_STRUCTURE.md)
-- [Maintaining the wiki](docs/WIKI.md)
 - [CLAUDE.md](CLAUDE.md) — the after-every-change checklist and the project's conventions

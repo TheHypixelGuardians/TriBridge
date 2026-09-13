@@ -106,8 +106,8 @@ When the beta line ends, the first stable release is `1.0.0` and ordinary semver
    [CHANGELOG.md](../CHANGELOG.md) and [DISCORD_CHANGELOG.md](../DISCORD_CHANGELOG.md), and add a fresh empty
    `## Unreleased` above it in each.
 3. **Check the version-bearing docs** — [README.md](../README.md) and
-   [wiki/Installation.md](../wiki/Installation.md) name the supported Node version and the dependencies; if
-   the release changed either, they change with it.
+   [site/tribridge/installation.mdx](../site/tribridge/installation.mdx) name the supported Node version and
+   the dependencies; if the release changed either, they change with it.
 4. **Commit** as `Update: X.Y.Z release`.
 5. **Post the new `##` section of `DISCORD_CHANGELOG.md`** to the announcement channel.
 
@@ -123,7 +123,7 @@ npm install
 ```
 
 Then restart it. Config files are outside the repository and survive the pull — see
-[wiki/Config-Files.md](../wiki/Config-Files.md) for what they are.
+[site/tribridge/config-files.mdx](../site/tribridge/config-files.mdx) for what they are.
 
 Slash commands are registered **globally** on startup, and global command propagation can take up to an hour
 on Discord's side. A release that adds or changes a command is not fully visible to users the moment the
