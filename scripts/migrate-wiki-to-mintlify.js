@@ -19,7 +19,6 @@ const PAGE_SLUGS = {
   "Using-the-Bridge": "using-the-bridge",
   "Guild-Tags": "guild-tags",
   "Account-Linking": "account-linking",
-  Networth: "networth",
   "Feature-Requests": "feature-requests",
   Commands: "commands",
   Installation: "installation",
@@ -53,9 +52,8 @@ const DESCRIPTIONS = {
   "guild-tags": "Target one Hypixel guild with !tag prefixes in the bridge channel.",
   "account-linking":
     "Link your Discord account to your Minecraft name for relay attribution.",
-  networth: "Look up SkyBlock networth from chat or slash commands.",
   "feature-requests": "Submit and track feature requests with /request.",
-  commands: "Every slash command and chat command TriBridge supports.",
+  commands: "Every slash command TriBridge supports.",
   installation: "Install TriBridge and connect your first Hypixel guild.",
   configuration: "Environment variables and first-run setup.",
   "config-files": "Runtime config files the bot writes beside the repository.",

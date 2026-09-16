@@ -26,8 +26,6 @@ all.
 - **Account linking** — members link with `/link` on the **THG community bot**; this bot reads the link to
   repost their Discord messages with their Minecraft head and name, and to attribute the guild-chat copy to
   their Minecraft name.
-- **SkyBlock networth** — `!nw <username>` from either side of the bridge, or `/networth`, on a player's
-  richest profile.
 - **Hypixel guild registry** — `/guilds` registers, edits and signs guilds in entirely from Discord; the
   Microsoft device code arrives in a private reply, never the console.
 - **Auto-reconnect** — dropped accounts come back on their own, one guild per ten-second tick so a Hypixel
@@ -40,7 +38,7 @@ all.
 - **Auditing** — every disguised message recorded with a jump link, so the real author is never lost.
 - **Guild management** — `/invite`, `/kick`, `/promote`, `/demote`, `/send` and `/login`, each targeting one
   guild or the default.
-- **Information** — `/online`, `/ping`, `/help` and `/networth`.
+- **Information** — `/online`, `/ping` and `/help`.
 
 *See [Features](docs/FEATURES.md) for what each one does in full, the
 [docs site](https://thehypixelguardians.mintlify.site/tribridge) for the same material split by audience, and
@@ -83,15 +81,17 @@ the [change log](CHANGELOG.md) for what's new in each release.*
    LOG_CHANNEL=your_log_channel_id
    MINECRAFT_USERNAME=you@example.com
    DATABASE_URL=postgres://user:password@host:5432/thg
+   HYPIXEL_API_KEY=
    ```
 
    | Variable             | Description                                                                                          |
-      |----------------------|------------------------------------------------------------------------------------------------------|
+   |----------------------|------------------------------------------------------------------------------------------------------|
    | `DISCORD_TOKEN`      | Bot token from the Discord Developer Portal                                                          |
    | `DISCORD_CHANNEL_ID` | The bridge channel — the one channel wired to guild chat                                             |
    | `LOG_CHANNEL`        | Where connection notices and warnings go. A Hypixel guild can override it with its own channel        |
    | `MINECRAFT_USERNAME` | Microsoft account email for the first Hypixel guild. **Ignored once `guildsConfig.json` exists**       |
    | `DATABASE_URL`       | The community bot's PostgreSQL database. Account links and the bot-admin role list are read from it |
+   | `HYPIXEL_API_KEY`    | *Optional.* Hypixel API key used to learn each guild's Hypixel id on connect                         |
    | `DISCORD_GUILD_ID`   | *Optional.* The only Discord server the bot accepts commands from. Defaults to the bridge channel's server |
 
    > **TriBridge serves a single Discord server**, however many Hypixel guilds it bridges. Commands are
@@ -130,13 +130,11 @@ Full walkthrough: [Installation](https://thehypixelguardians.mintlify.site/tribr
 | `/guilds add/remove/list/edit/default/auth` | Management  | Manage the bridged Hypixel guilds and sign their accounts in (admin only) |
 | `/adminpanel`                               | Management  | Open the admin panel (admin only)                                         |
 | `/auditchannel set/show/clear [guild]`      | Management  | Choose where admin panel actions are recorded (admin only)                |
-| `/networth [username]`                      | Information | A player's SkyBlock networth on their richest profile                     |
 | `/online [guild]`                           | Information | Who is online in every guild, or one                                      |
 | `/ping`                                     | Information | Discord latency and each guild's Minecraft connection status              |
 | `/help`                                     | Information | Browse all commands by category                                           |
 
-Plus the chat commands typed in guild chat or the bridge channel: `!nw <username>` for a networth lookup, and
-`!tag message` to aim at one guild. Full reference:
+Guild tags (`!tag message`) aim a bridge message at one guild. Full reference:
 [Commands](https://thehypixelguardians.mintlify.site/tribridge/commands).
 
 ## Usage

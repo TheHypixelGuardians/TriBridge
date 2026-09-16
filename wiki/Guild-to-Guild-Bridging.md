@@ -37,8 +37,6 @@ a forwarded line from a local one at a glance.
   against its will.
 - **Player chat only.** Join and leave announcements stay in the guild they happened in. They are noise
   elsewhere, and they would spend the per-account chat budget that real messages need.
-- **[Chat commands](Networth) are not forwarded either.** The answer carries the question with it, so nothing
-  is lost.
 - **Real names.** A running [global profile change](Global-Profile-Change) does not rename forwarded chat. Its
   two switches govern the two *Discord* legs of the bridge only.
 

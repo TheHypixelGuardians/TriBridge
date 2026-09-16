@@ -41,29 +41,20 @@ If more than one guild is bridged, start a message with a guild's tag to reach o
 See [Guild tags](Guild-Tags) for the full rules, including how to type a literal `!` and what the ❓ and 📡
 reactions mean.
 
-## Asking the bot something
-
-A couple of things are answered rather than relayed. Type them in the bridge channel or in guild chat:
-
-```
-!nw Notch
-```
-
-See [Networth](Networth).
-
 ## Slash commands
 
-Everything else is a slash command. `/help` browses them by category; [Commands](Commands) lists them all.
+`/help` browses them by category; [Commands](Commands) lists them all.
 The ones you are most likely to want:
 
 | Command                | Does                                                                 |
 |------------------------|----------------------------------------------------------------------|
 | `/link <username>`     | On the community bot — see [Account linking](Account-Linking)        |
 | `/online`              | Who is online in the guild right now                                 |
-| `/networth [username]` | A player's SkyBlock networth                                         |
 | `/ping`                | Whether the bot is actually connected                                |
 | `/request`             | Suggest a feature — on the community bot                             |
 | `/help`                | Every command, by category                                           |
+
+SkyBlock networth is on the **THG community bot** (`/networth`), not TriBridge.
 
 ## If a message does not arrive
 

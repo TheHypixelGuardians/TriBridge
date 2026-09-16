@@ -7,18 +7,13 @@ Discord, one page per category.
 ⛔ marks a command that needs the Discord **Administrator** permission. 🔒 marks one gated on a
 [bot-admin role](Admin-Roles).
 
-## Chat commands
+## Guild tags
 
-Not slash commands. Type these in the bridge channel **or** in guild chat.
+Not slash commands. Typed in the bridge channel (or officer channel): **[guild tags](Guild-Tags)**.
+`!sb hey` sends to one guild only. Double the `!` to send one literally: `!!sb hi` arrives as `!sb hi`.
 
-```
-!nw <username>       — that player's SkyBlock networth
-!networth <username> — the same command
-```
-
-Double the `!` to send one literally: `!!nw x` arrives as the text `!nw x`. See [Networth](Networth).
-
-Also typed rather than slashed: **[guild tags](Guild-Tags)**. `!sb hey` sends to one guild only.
+SkyBlock networth lookups live on the **THG community bot** as `/networth` — TriBridge no longer answers
+`!nw` / `/networth`.
 
 ## Information
 
@@ -27,7 +22,6 @@ Also typed rather than slashed: **[guild tags](Guild-Tags)**. `!sb hey` sends to
 | `/help`                | Browse every command by category, with ◀ / ▶ buttons                        |
 | `/ping`                | Discord latency, roundtrip, and each guild's Minecraft connection status    |
 | `/online [guild]`      | Who is online in every guild, or one                                        |
-| `/networth [username]` | A player's SkyBlock networth. No username uses your [link](Account-Linking) |
 
 `/ping` has no `guild` option on purpose: it is a status readout, so it always covers everything the bot is
 responsible for. `/help`'s buttons stop working after five minutes — run it again.

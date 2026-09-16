@@ -37,18 +37,15 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ### SkyBlock networth
 
-- Type `!nw <username>` in guild chat or here and the bot tells you that player's networth.
-- It picks their richest profile and counts everything — cosmetics and soulbound included.
-- Someone with their inventory API off gets an `(API off)` note — the number will be too low.
-- `/networth` does the same, and with no username it uses your linked account.
+- SkyBlock networth lookups (`!nw` / `/networth`) have moved to the **THG community bot** as `/networth`.
+  TriBridge no longer answers them.
 
 ### Commands have moved to the community bot
 
 - `/link`, `/unlink`, `/links`, `/whois` and `/linkrole` are now on the **THG community bot**. Linking works
   exactly the same, and the bridge still shows your Minecraft head and name once you have linked.
 - `/request` is there too, along with `/adminrole` for staff.
-- Nothing else changes. Guild chat, guild tags, officer chat, `!nw`, `/online` and the admin panel all stay
-  here.
+- Nothing else changes. Guild chat, guild tags, officer chat, `/online` and the admin panel all stay here.
 - If you have already linked, you do not need to link again.
 
 ## Version 1.2.1

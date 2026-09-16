@@ -19,6 +19,7 @@ DISCORD_TOKEN=your_discord_bot_token
 DISCORD_CHANNEL_ID=your_bridge_channel_id
 LOG_CHANNEL=your_log_channel_id
 MINECRAFT_USERNAME=you@example.com
+HYPIXEL_API_KEY=
 ```
 
 | Variable             | Required  | Description                                                                                            |
@@ -27,6 +28,7 @@ MINECRAFT_USERNAME=you@example.com
 | `DISCORD_CHANNEL_ID` | Yes       | The **bridge channel** — the one channel wired to guild chat                                           |
 | `LOG_CHANNEL`        | Yes       | Where connection notices and warnings go. A Hypixel guild can override it with its own channel         |
 | `MINECRAFT_USERNAME` | First run | The Microsoft account email for the first Hypixel guild. **Ignored once `guildsConfig.json` exists**   |
+| `HYPIXEL_API_KEY`    | No        | Hypixel API key. When set, the bot learns each guild's Hypixel id on connect and stores `hypixelGuildId` |
 | `DISCORD_GUILD_ID`   | No        | The only Discord server the bot accepts commands from. Defaults to the server the bridge channel is in |
 
 To get a channel id: enable **Developer Mode** in Discord's Advanced settings, then right-click the channel →

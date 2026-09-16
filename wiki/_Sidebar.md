@@ -7,7 +7,6 @@
 - [Using the bridge](Using-the-Bridge)
 - [Guild tags](Guild-Tags)
 - [Account linking](Account-Linking)
-- [Networth](Networth)
 - [Commands](Commands)
 
 **Running the bot**

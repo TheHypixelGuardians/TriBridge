@@ -74,7 +74,7 @@ serves.** See [Admin roles](Admin-Roles) for why that is not optional.
 | `mc.hypixel.net` | The Minecraft connection                    |
 | Microsoft login  | Device-code sign-in and token refresh       |
 | `api.mojang.com` | Resolving usernames to UUIDs                |
-| `sky.shiiyu.moe` | [Networth](Networth) figures, from SkyCrypt |
+| `api.hypixel.net`| Optional Hypixel API reads (`HYPIXEL_API_KEY`) |
 | `mc-heads.net`   | Player head images in embeds                |
 
 ## Next

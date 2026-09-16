@@ -66,8 +66,8 @@ Everything under `### Technical Details` never appears.
 
 Constraints, all of them load-bearing:
 
-- **Second person, for guild members**, not for server staff. "Type `!nw <username>` and the bot tells you
-  that player's networth."
+- **Second person, for guild members**, not for server staff. "Guild chat from another guild now arrives
+  tagged, like `[SB] Notch: hello`."
 - **One line per change.** No sub-bullets.
 - **Only markdown Discord renders**: `#`/`##`/`###` headings, `**bold**`, `` `code` ``, `-` bullets, `> `
   quotes. No tables, no `+` bullets, no titled links.

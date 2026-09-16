@@ -61,9 +61,8 @@ deal of real conversation.
 
 ## The escape hatch
 
-Double the `!` to send one literally. `!!nw x` arrives as the text `!nw x` and looks up nothing;
-`!!sb hi` arrives as `!sb hi` and routes nowhere special. This works the same way in both directions and for
-both [guild tags](Guild-Tags) and [chat commands](Networth).
+Double the `!` to send one literally. `!!sb hi` arrives as `!sb hi` and routes nowhere special. This works the
+same way in both directions for [guild tags](Guild-Tags).
 
 ## Next
 

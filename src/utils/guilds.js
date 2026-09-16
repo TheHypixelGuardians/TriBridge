@@ -165,22 +165,6 @@ function getDefault() {
 }
 
 /**
- * Whether a tag would collide with a bot chat command such as `!nw`.
- *
- * Required lazily: utils/chatCommands.js reads the registry to let an install
- * that already has a guild tagged `nw` keep it, and requiring it at the top of
- * this file would make that a cycle. This runs only when an admin adds or edits
- * a guild, so the lookup cost is irrelevant.
- *
- * @param {string} tag
- * @returns {boolean}
- */
-function isReservedTag(tag) {
-  const { RESERVED_TAGS } = require("./chatCommands");
-  return RESERVED_TAGS.has(String(tag ?? "").toLowerCase());
-}
-
-/**
  * @param {string} tag
  * @returns {object|null} Matched case-insensitively.
  */
@@ -305,7 +289,6 @@ function add(input) {
 
   const tag = String(input.tag ?? "").trim();
   if (!TAG_PATTERN.test(tag)) return { ok: false, reason: "invalid-tag" };
-  if (isReservedTag(tag)) return { ok: false, reason: "reserved-tag" };
 
   const account = String(input.account ?? "")
     .trim()
@@ -345,6 +328,7 @@ function add(input) {
     crossBridgeOfficer: false,
     mcName: null,
     mcUuid: null,
+    hypixelGuildId: null,
     addedBy: input.addedBy ?? null,
     addedAt: Date.now(),
   };
@@ -368,6 +352,7 @@ const PATCHABLE = new Set([
   "crossBridgeOfficer",
   "mcName",
   "mcUuid",
+  "hypixelGuildId",
 ]);
 
 const BOOLEAN_FIELDS = new Set([
@@ -404,7 +389,6 @@ function update(key, patch) {
     } else if (field === "tag") {
       const tag = String(raw).trim();
       if (!TAG_PATTERN.test(tag)) return { ok: false, reason: "invalid-tag" };
-      if (isReservedTag(tag)) return { ok: false, reason: "reserved-tag" };
       const taken = config.guilds.some(
         (g) =>
           g.key !== guild.key &&

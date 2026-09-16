@@ -27,10 +27,6 @@ module.exports = async (client, jsonMsg) => {
 
   if (isDuplicate(guild.key, parsed.username, parsed.content)) return;
 
-  // Chat commands are not filtered here the way they are for guild chat:
-  // 000chatCommands.js parses guild chat only, so `!nw` typed in officer chat
-  // is never answered and is just something an officer said.
-  //
   // Deliberately the real Minecraft name, even mid global profile change — its
   // switches govern the two Discord legs of the main bridge and nothing else.
   relayOfficerAcrossGuilds(guild, parsed.username, parsed.content);
