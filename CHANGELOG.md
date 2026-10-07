@@ -2,7 +2,22 @@
 
 ## Unreleased
 
+### Removed Features
+
+#### Information
+
++ Removed SkyBlock networth from TriBridge (`!nw` / `!networth` chat commands and `/networth`).
+    + Lookups now live on the **THG community bot** as `/networth`.
+    + `nw` and `networth` are no longer reserved guild tags.
+
 ### Technical Details
+
+#### Core
+
++ Added optional `HYPIXEL_API_KEY` and `utils/hypixel.js` for Hypixel API v2 reads.
++ On Minecraft spawn, `002probeHypixelGuildId.js` learns each guild's Hypixel `_id` when a key is set and
+  persists it as `hypixelGuildId` on the registry entry (skipped when already known, or when the key / UUID
+  is missing).
 
 #### Documentation
 
@@ -39,8 +54,7 @@
     + Linked accounts are used for the name officer chat sees; everyone else appears under their Discord
       name. A global profile change never applies here — a channel that exists to record what officers said
       is the last place to relabel who said it.
-    + Officer chat never touches the main bridge channel, and the bot's chat commands such as `!nw` are not
-      answered in it.
+    + Officer chat never touches the main bridge channel.
 + Officer chat can also be **shared between guilds** in-game, into each other's officer chat, with
   `/guilds edit guild:sb crossbridgeofficer:True`.
     + Independent of `crossbridge`: officers can be put in touch with another guild's officers without

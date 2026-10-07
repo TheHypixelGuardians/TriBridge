@@ -87,12 +87,6 @@ delivered minutes late. Each account can only speak about once every 600ms, so a
 otherwise push every other guild's bridge further and further behind. See
 [Guild-to-guild bridging](Guild-to-Guild-Bridging).
 
-## Networth lookups fail for one player
-
-If SkyCrypt has never loaded that player, they cannot be looked up until their page there is opened once. The
-bot says so and gives the link. Everything else — an unknown name, no profiles, SkyCrypt busy — is temporary.
-See [Networth](Networth).
-
 ## A message with a `!` prefix went everywhere with the prefix still on it
 
 That tag is not registered. The message is delivered rather than dropped, deliberately: silently swallowing a

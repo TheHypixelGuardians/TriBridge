@@ -28,7 +28,6 @@ watching Discord.
 | [Guild-to-guild bridging](Guild-to-Guild-Bridging) | Chat shared between the bridged guilds, in-game, opt-in per guild        |
 | [Officer chat](Officer-Chat)                       | A two-way Discord channel for officer chat, shared or per guild, opt-in  |
 | [Account linking](Account-Linking)                 | Your messages wear your Minecraft head and name on both sides            |
-| [Networth](Networth)                               | `!nw <username>` in chat, or `/networth`, from either side of the bridge |
 | [Hypixel guilds](Hypixel-Guilds)                   | Register, edit and sign in guilds entirely from Discord with `/guilds`   |
 | [Reconnection](Reconnection)                       | Dropped accounts come back on their own, one at a time                   |
 | [Admin roles](Admin-Roles)                         | A flat list of Discord roles that hold bot-admin, shared with the community bot |
@@ -42,7 +41,7 @@ watching Discord.
 
 ## Quick reference
 
-- **[Commands](Commands)** — every slash command and chat command, in one table.
+- **[Commands](Commands)** — every slash command, in one table.
 - **[Config files](Config-Files)** — what the bot writes next to the repository, and what is in each file.
 - **[Permissions](Permissions)** — every Discord permission and intent, and what breaks without it.
 - **[FAQ](FAQ)** and **[Troubleshooting](Troubleshooting)** — when something is not behaving.

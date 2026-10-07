@@ -66,8 +66,7 @@ Both markers need the **Add Reactions** permission in the bridge channel. Withou
 delivered; only the marker is lost.
 
 A tag is 2–8 letters or digits. The two-character minimum is deliberate: `!a` as a routing prefix would
-swallow far too much ordinary chat. `nw` and `networth` are reserved for the
-[networth chat command](#chat-commands).
+swallow far too much ordinary chat.
 
 ## Hypixel guilds
 
@@ -85,6 +84,7 @@ managed entirely from Discord with **`/guilds`**. You should not need to edit th
 | `auditChannelId` | Optional per-guild audit channel. Falls back to the channel set by `/auditchannel`                        |
 | `enabled`        | `false` disconnects a guild without removing it                                                           |
 | `crossBridge`    | `true` shares guild chat with the other cross-bridged guilds — see [below](#guild-to-guild-bridging)      |
+| `hypixelGuildId` | Learned automatically when `HYPIXEL_API_KEY` is set — Hypixel's guild `_id` for this bot's account        |
 
 **`key` and `account` cannot be changed.** `account` is the key prismarine-auth hashes for its token cache, so
 editing it later silently starts a fresh device-code flow against a different cache file. Renaming means
@@ -184,8 +184,6 @@ uses behaves exactly as it did when that was the only option.
 - **No fan-out from Discord.** A reply reaches the guilds it was addressed to and no further, even with
   officer sharing on below — cross-bridging is a Minecraft to Minecraft path, and the copy the bot speaks is
   dropped by its own loop guard before it can be forwarded.
-- **Chat commands are not answered.** `!nw` typed in officer chat or in the officer channel is just something
-  an officer said. It does look like a tag, so it collects a ❓; `!!nw` avoids that.
 - **No global fallback.** Unlike the log and audit channels, a guild with no officer channel set has the
   feature off rather than pointing somewhere shared — sharing a channel has to be asked for, because officer
   chat arriving somewhere nobody chose is exactly the mistake worth refusing to make quietly.
@@ -210,54 +208,6 @@ switching on where officer channels are actually busy rather than everywhere by 
 
 Note this is separate from sharing a Discord channel. Two guilds can share one officer channel without
 `crossbridgeofficer`: their officers then read each other in Discord, but nothing crosses in-game.
-
-## Chat commands
-
-Some things are asked for from either side of the bridge rather than through a slash command. Type them in
-guild chat or in the bridge channel:
-
-```
-!nw Notch
-```
-
-- **`!nw <username>`** — that player's SkyBlock networth. `!networth` is the same command.
-- **A command is answered, not relayed.** Asking in guild chat does not put the question into Discord or into
-  the cross-bridged guilds — the answer carries the question with it, and forwarding it would spend every
-  other guild's per-account chat budget on a line none of them asked for. Asked in guild chat, the answer goes
-  back into that guild *and* appears in Discord as an embed; asked in Discord, it stays there.
-- **Double the `!` to send it literally.** `!!nw x` reaches guild chat as the text `!nw x` and runs nothing —
-  the same escape guild tags use, honoured in both directions.
-- **`nw` and `networth` are reserved guild tags.** `/guilds add` and `/guilds edit` refuse them, because
-  `!nw hi` would otherwise mean both "look up hi's networth" and "send hi to the guild tagged NW". A guild
-  registered with one of them before this existed keeps it, and keeps its routing.
-
-The command name is matched against a closed list, not against any `!word`. Both Minecraft relays suppress
-exactly what this dispatches, so the two must agree perfectly: if an unregistered name matched, an ordinary
-line that happens to start with `!` would be swallowed and never answered.
-
-## SkyBlock networth
-
-`!nw <username>` in chat, or `/networth [username]` as a slash command, reports a player's SkyBlock networth.
-With no username, `/networth` uses your [linked account](#account-linking).
-
-- It reports the player's **richest profile**, named in the reply.
-- The total counts **everything** — cosmetics and soulbound items included — and the unsoulbound figure is
-  shown next to it. The Discord embed breaks it down by inventory, purse and bank.
-- A player whose **inventory API is off** is flagged `(API off)`, because their number is an undercount rather
-  than a low score.
-- **Answers are cached for ten minutes**, and a miss is cached for five — a mistyped name repeated twenty
-  times must cost one request, not twenty. A transient failure is cached for thirty seconds so a blip does not
-  stick around.
-- **One lookup per person every twenty seconds.** The cooldown is checked *before* the cache, not after: even
-  a cache hit costs a guild-chat packet, and Hypixel mutes accounts that talk too fast.
-
-Figures come from [SkyCrypt](https://sky.shiiyu.moe)'s public API, which serves from its own cache. A player
-SkyCrypt has never loaded cannot be looked up until their page there has been opened once — the bot says so
-and links it rather than reporting a wrong number. The bot needs outbound access to `sky.shiiyu.moe` and
-`api.mojang.com`.
-
-Only one module in the bot knows SkyCrypt exists; everything above it talks to a provider interface, so moving
-to the Hypixel API later is a sibling file and one changed `require`.
 
 ## Account linking
 
@@ -342,7 +292,6 @@ which is the only thing stopping two concurrent commands from eating each other'
 - **`/help`** — every command, one page per category, with ◀ / ▶ buttons. The categories are the folder names
   under `src/commands/`, so adding a folder adds a page. Commands needing a Discord permission are marked ⛔.
   The buttons stop working after five minutes.
-- **`/networth [username]`** — see [SkyBlock networth](#skyblock-networth).
 
 ## Admin panel
 

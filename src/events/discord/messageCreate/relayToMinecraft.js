@@ -10,8 +10,6 @@ const { buildGuildChatCommand } = require("../../../utils/sanitizeForChat");
 const { routeMessage } = require("../../../utils/chatRouting");
 const mcBots = require("../../../utils/mcBots");
 const { sendChat } = require("../../../utils/chatQueue");
-const { parseChatCommand } = require("../../../utils/chatCommands");
-const { answerChatCommand } = require("../../../utils/networthReply");
 
 /**
  * Relays a message to every Hypixel guild it is addressed to.
@@ -79,26 +77,6 @@ module.exports = async (client, message) => {
   // bot, so this guard is also what stops the repost loop.
   if (message.author.bot || message.channel.id !== bridge.discordChannelId)
     return;
-
-  // Before routeMessage, which is the whole point of the position: `!nw Notch`
-  // matches chatRouting's TAG_PREFIX, so leaving it to the router would
-  // broadcast the literal text to every guild and mark it with a ❓.
-  //
-  // A command deliberately gets none of the treatment below it. It is not
-  // reposted or disguised — that would delete the asker's message, spend a
-  // webhook call and, mid global-profile-change, write an audit entry claiming
-  // somebody was impersonated. It is not reacted to, because ❓ and 📡 are
-  // routing markers and this was not routed. And it reaches no guild chat,
-  // because nobody in-game asked.
-  const command = parseChatCommand(message.content);
-  if (command) {
-    void answerChatCommand(command, {
-      requesterKey: `d:${message.author.id}`,
-      asker: message.member?.displayName ?? message.author.username,
-      guild: null,
-    });
-    return;
-  }
 
   const { targets, body, unknownTag, targeted } = routeMessage(message.content);
 

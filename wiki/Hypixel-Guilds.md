@@ -22,6 +22,7 @@ repair a broken registry — which is why Discord comes up even when no Minecraf
 | `enabled`            | `false` disconnects the guild without removing it                                                               |
 | `crossBridge`        | `true` shares chat with the other cross-bridged guilds — see [Guild-to-guild bridging](Guild-to-Guild-Bridging) |
 | `crossBridgeOfficer` | `true` shares [officer chat](Officer-Chat) in-game with the other guilds that have it on                        |
+| `hypixelGuildId`     | Learned when `HYPIXEL_API_KEY` is set — Hypixel's guild `_id` for this bot's account                                       |
 
 > **`key` and `account` cannot be changed.** `account` is the key prismarine-auth hashes for its token cache,
 > so editing it later silently starts a fresh device-code flow against a different cache file. Renaming means

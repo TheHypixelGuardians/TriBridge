@@ -92,8 +92,6 @@ To start a message with a literal `!`, type it twice: `!!sb` comes out as `!sb`.
 - **No fan-out beyond the tag.** A reply reaches the guilds it was addressed to and no further, even when
   officer sharing is on below. That matches the main bridge, where a Discord message also only reaches the
   guilds it was addressed to.
-- **[Chat commands](Networth) are not answered.** `!nw Notch` typed here, or in officer chat in-game, is just
-  something an officer said. It does look like a tag, so it collects a ❓ — `!!nw Notch` avoids that.
 - **Real names.** A running [global profile change](Global-Profile-Change) does not apply in the officer
   channel, in either direction. A channel that exists to record what officers said is the last place to
   relabel who said it.

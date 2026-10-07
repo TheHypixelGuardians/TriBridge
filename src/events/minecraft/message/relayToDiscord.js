@@ -12,7 +12,6 @@ const {
   parseGuildPresence,
 } = require("../../../utils/guildChat");
 const { createRelayDedupe } = require("../../../utils/relayDedupe");
-const { isChatCommand } = require("../../../utils/chatCommands");
 
 // Two accounts sitting in the same Hypixel guild — a misconfiguration — would
 // each relay the other's chat, doubling every line. This module is
@@ -76,13 +75,6 @@ module.exports = async (client, jsonMsg) => {
     // one: with a bot per guild, checking only the emitting account would
     // let two bots sharing a guild relay each other into a loop.
     if (mcBots.isOwnAccountName(username)) return;
-
-    // A bot command is an instruction to TriBridge, not something the player
-    // said, and 000chatCommands.js is already answering it here. Relaying it
-    // too would put the question and the answer in Discord as two messages.
-    // Same predicate the dispatcher uses, so a line is suppressed if and
-    // only if it is going to be answered.
-    if (isChatCommand(content)) return;
 
     if (isDuplicate(guild.key, username, content)) return;
 
