@@ -1,4 +1,9 @@
 const { chain } = require("./serialQueue");
+const {
+  parseGuildChat,
+  parseGuildPresence,
+  parseOfficerChat,
+} = require("./guildChat");
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -17,6 +22,27 @@ const DEFAULTS = {
   // Give up rather than leave a user on a spinner behind a queue of queries.
   waitMs: 10_000,
 };
+
+/**
+ * Whether a line is somebody talking rather than the server answering.
+ *
+ * The collector hears everything the account hears, and its lines end up in
+ * Discord replies — some of them public. Without this, officer chat spoken
+ * during the window was echoed into whichever channel an admin ran `/send` or
+ * `/invite` in, and a member saying "invited" in guild chat could make a
+ * failed invite read as a success.
+ *
+ * @param {object} jsonMsg
+ * @returns {boolean}
+ */
+function isPlayerChat(jsonMsg) {
+  const plain = jsonMsg.toString().replace(/§./g, "");
+  return Boolean(
+    parseGuildChat(plain) ||
+    parseOfficerChat(plain) ||
+    parseGuildPresence(plain),
+  );
+}
 
 /**
  * Runs a chat command on one guild's bot and collects the server's reply.
@@ -69,6 +95,7 @@ async function queryGuild(record, chatCommand, options = {}) {
       });
 
       const listener = (jsonMsg) => {
+        if (isPlayerChat(jsonMsg)) return;
         lines.push(format === "motd" ? jsonMsg.toMotd() : jsonMsg.toString());
         if (idleTimer) clearTimeout(idleTimer);
         idleTimer = setTimeout(() => resolveCollector(), idleMs);
@@ -103,3 +130,4 @@ async function queryGuild(record, chatCommand, options = {}) {
 
 module.exports = queryGuild;
 module.exports.DEFAULTS = DEFAULTS;
+module.exports.isPlayerChat = isPlayerChat;

@@ -225,7 +225,8 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   Never hand-roll a `message` listener again — Hypixel gives no request/response correlation,
   so `queryGuild` serialises every query per bot and holds a settle window afterwards, which is
   the only thing stopping two concurrent commands from eating each other's output. It also owns
-  listener and timer cleanup. `format: 'motd'` when the colour codes matter.
+  listener and timer cleanup, and leaves player chat (guild, officer, presence) out of the lines it
+  returns — they end up in Discord replies, some public. `format: 'motd'` when the colour codes matter.
 - **Sending to guild chat:** use `sendChat(record, text)` from `utils/chatQueue.js`, which
   spaces packets per account. Calling `bot.chat` directly for relayed traffic will get accounts
   muted by Hypixel's spam filter, and a broadcast multiplies the rate by the guild count.

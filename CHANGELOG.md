@@ -181,6 +181,9 @@
 
 #### Management
 
++ `/send`, `/invite`, `/kick`, `/promote`, `/demote` and `/online` no longer pick up chat that happened
+  while they waited for Hypixel's answer. Officer chat said in those few seconds could be echoed into the
+  (public) reply, and a member saying "invited" in guild chat could make a failed invite read as a success.
 + Changing an option nested inside a subcommand — like the channel on `/auditchannel set` — now updates the
   command with Discord instead of being silently ignored.
 + `nw` and `networth` are refused as guild tags, since `!nw hi` would otherwise mean both "look up hi's
