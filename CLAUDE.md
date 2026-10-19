@@ -99,7 +99,9 @@ about — who is linked, and who is staff — and that contract is written down 
 `utils/linkedAccounts.js` or `utils/adminRoles.js`.
 
 - CommonJS (`"type": "commonjs"`) — use `require`/`module.exports`, not ESM.
-- No build step, no test suite, no linter — there is no `test` script, so `npm test` reports a missing one.
+- No build step and no linter. Unit tests live in `test/` and run with `npm test` (Node's built-in
+  `node:test`, no dependencies); `npm run format:check` runs Prettier. CI runs both, plus a syntax check, on
+  every pull request. Add a test with any change to a parser, the sanitiser or routing.
 - Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`. `nodemon` is the only
   dev dependency, used by `npm run dev` and needed by nothing that runs the bot.
 - Documentation lives in [docs/](docs/) (canonical in-repo reference in [FEATURES.md](docs/FEATURES.md) and
@@ -128,8 +130,9 @@ Discord by `/guilds add|auth`, and always echoed to the console; tokens are cach
 account in `.minecraft-auth/` (gitignored).
 
 Running the bot connects to live Discord and Hypixel — don't start it to "verify" a change
-unless the user asks. There is no test suite, but a good deal *is* testable offline against
-fakes: `utils/chatRouting.js`, `utils/guilds.js`, `utils/queryGuild.js` (drive it with a bare
+unless the user asks. Test offline against fakes instead — `test/` has examples, and a good deal
+more is testable the same way: `utils/chatRouting.js`, `utils/guilds.js`,
+`utils/queryGuild.js` (drive it with a bare
 `EventEmitter` whose `chat()` emits stub messages), `retireBot`, `utils/chatQueue.js` and
 `utils/areCommandsDifferent.js` are all pure or injectable. Prefer that over a live run.
 
@@ -225,7 +228,8 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   Never hand-roll a `message` listener again — Hypixel gives no request/response correlation,
   so `queryGuild` serialises every query per bot and holds a settle window afterwards, which is
   the only thing stopping two concurrent commands from eating each other's output. It also owns
-  listener and timer cleanup. `format: 'motd'` when the colour codes matter.
+  listener and timer cleanup, and leaves player chat (guild, officer, presence) out of the lines it
+  returns — they end up in Discord replies, some public. `format: 'motd'` when the colour codes matter.
 - **Sending to guild chat:** use `sendChat(record, text)` from `utils/chatQueue.js`, which
   spaces packets per account. Calling `bot.chat` directly for relayed traffic will get accounts
   muted by Hypixel's spam filter, and a broadcast multiplies the rate by the guild count.
@@ -241,7 +245,10 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   brittle. It lives in `utils/guildChat.js` — `parseGuildChat()`, `parseGuildPresence()` and
   `parseOfficerChat()` — because several relays read the same lines; don't re-inline the pattern
   in a handler. Keep the documented format comment next to any regex you add or change, and keep
-  the officer pattern separate from `CHAT_PATTERN`.
+  the officer pattern separate from `CHAT_PATTERN`. **Every pattern is anchored with `^`.** The
+  line prefix (`Guild > `, `Officer > `) is the only part a player cannot type; unanchored, a DM,
+  party chat or a guild member quoting `Officer > Boss: …` was relayed as that player, straight
+  into the officer channel.
 - **Relay loops:** `relayToDiscord.js` drops messages whose author matches *any* registered
   bot account, via `mcBots.isOwnAccountName()` — not just the emitting bot's own name, because
   two accounts that ended up in the same Hypixel guild would otherwise relay each other
@@ -311,7 +318,9 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   `utils/sanitizeForChat.js` rather than interpolating a string. Minecraft 1.8 caps chat at
   100 characters, and mineflayer's `bot.chat` splits on newlines — so an un-flattened
   multi-line Discord message would send its second line at *command* position, letting anyone
-  in the bridge channel run commands as the bot.
+  in the bridge channel run commands as the bot. It also strips every `§` and control
+  character, from the body *and* the display name: a 1.8 server disconnects a client that sends
+  one, so a single message could knock a guild's bot offline.
 - **Interpolating into `bot.chat`:** commands that build a chat command by hand (`/invite`,
   `/kick`, `/promote`, `/demote`) bypass `buildGuildChatCommand`, so they must validate the
   username with `isValidMinecraftName()` from `utils/minecraftName.js` and run any free-text
@@ -326,7 +335,8 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   server output.
 - Style: Prettier's default style — 2-space indent, double quotes, semicolons, trailing commas, 80
   columns. `.prettierrc` records the settings; reformat with
-  `npx prettier --write "src/**/*.js"`. JSDoc on non-trivial helper functions.
+  `npx prettier@3.8.1 --write "src/**/*.js" "test/**/*.js"` (CI checks with the same version).
+  JSDoc on non-trivial helper functions.
 
 ## Account linking and the shared database
 

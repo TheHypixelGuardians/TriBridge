@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts: nothing here needs install scripts, and a PR should
+      # not get to run arbitrary dependency code with the repository token.
+      - run: npm ci --ignore-scripts
+
+      - name: Syntax check
+        run: find src test -name '*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Formatting
+        run: npm run format:check
+
+      - name: Unit tests
+        run: npm test

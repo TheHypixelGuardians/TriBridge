@@ -152,6 +152,17 @@
 
 #### Bridge
 
++ Lines that only *quote* guild or officer chat are no longer relayed as the real thing.
+    + A guild member typing `Officer > Boss: …` in guild chat used to land in the officer channel and in
+      every officer-bridged guild as if Boss had said it — and the same worked from the Discord bridge
+      channel, since the bot speaks those messages into guild chat.
+    + A private message or party chat containing `Guild > Notch: …` was posted to Discord and forwarded to
+      the other guilds as Notch, and `… Guild > Notch left.` produced a fake leave notice.
+    + Only lines that *start* with `Guild > ` or `Officer > ` count now; that prefix is the one part of a
+      line a player cannot type themselves.
++ A message containing a lone `§` or a control character no longer reaches Hypixel, which disconnects a
+  client that sends one ("Illegal characters in chat"). One such message in the bridge channel could knock
+  a guild's bot offline. Display names get the same cleaning, since a nickname can contain them too.
 + A guild tag is no longer left in the message Discord shows. Sending `!sb hello` as a linked user reposted
   it as "!sb hello" while guild chat correctly received "hello", so the two sides disagreed about what was
   said and the tag looked like it had been ignored. `!!sb hi` now shows as `!sb hi` in Discord too.
@@ -170,6 +181,9 @@
 
 #### Management
 
++ `/send`, `/invite`, `/kick`, `/promote`, `/demote` and `/online` no longer pick up chat that happened
+  while they waited for Hypixel's answer. Officer chat said in those few seconds could be echoed into the
+  (public) reply, and a member saying "invited" in guild chat could make a failed invite read as a success.
 + Changing an option nested inside a subcommand — like the channel on `/auditchannel set` — now updates the
   command with Discord instead of being silently ignored.
 + `nw` and `networth` are refused as guild tags, since `!nw hi` would otherwise mean both "look up hi's
@@ -180,6 +194,14 @@
 
 #### Core
 
++ Added a unit test suite (`npm test`, Node's built-in runner, no new dependencies) under `test/`, covering
+  the chat parsers, the chat sanitiser, routing, `queryGuild`, the officer relay and a few small helpers.
++ Added a GitHub Actions workflow that runs a syntax check, `prettier --check` and the tests on every pull
+  request and on pushes to `master`.
++ `package-lock.json` now includes `pg`; it had not been updated since `pg` was added, so `npm ci` failed and
+  every install resolved fresh versions.
++ The Hypixel API key is sent in the `API-Key` header instead of the URL, so it stays out of anything that
+  logs URLs.
 + `bridge.mcBot` and its connection flags are replaced by a registry of one bot record per Hypixel guild.
   Minecraft event handlers identify their guild from the bot they were called with.
 + The collector idiom that was copied into seven commands is now `utils/queryGuild.js`, serialised per bot
