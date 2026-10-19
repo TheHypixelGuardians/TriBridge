@@ -10,6 +10,7 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 ### Fixes
 
 - Typing something that looks like officer chat (`Officer > Boss: …`) no longer shows up in the officer channel as if Boss said it. The same goes for fake guild chat sent in a private message.
+- A stray `§` in a message no longer kicks the bridge bot off Hypixel.
 
 ### Officer chat
 

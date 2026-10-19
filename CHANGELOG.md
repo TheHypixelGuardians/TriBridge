@@ -160,6 +160,9 @@
       the other guilds as Notch, and `… Guild > Notch left.` produced a fake leave notice.
     + Only lines that *start* with `Guild > ` or `Officer > ` count now; that prefix is the one part of a
       line a player cannot type themselves.
++ A message containing a lone `§` or a control character no longer reaches Hypixel, which disconnects a
+  client that sends one ("Illegal characters in chat"). One such message in the bridge channel could knock
+  a guild's bot offline. Display names get the same cleaning, since a nickname can contain them too.
 + A guild tag is no longer left in the message Discord shows. Sending `!sb hello` as a linked user reposted
   it as "!sb hello" while guild chat correctly received "hello", so the two sides disagreed about what was
   said and the tag looked like it had been ignored. `!!sb hi` now shows as `!sb hi` in Discord too.

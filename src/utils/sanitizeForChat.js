@@ -10,13 +10,19 @@ const MAX_CHAT_LENGTH = 100;
  * a two-line Discord message would send the second line at command position —
  * letting anyone in the bridge channel run commands as the bot.
  *
+ * So is removing every `§` and control character, not just `§x` pairs. A 1.8
+ * server disconnects a client that sends either ("Illegal characters in
+ * chat"), so a lone trailing `§` or a pasted control character would let
+ * anyone in the bridge channel knock a guild's bot offline with one message.
+ *
  * @param {string} text Raw Discord message content.
  * @returns {string} Single-line text with formatting codes removed.
  */
 function sanitizeForChat(text) {
   return String(text ?? "")
     .replace(/§./g, "")
-    .replace(/[\r\n]+/g, " ")
+    .replace(/§/g, "")
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -60,7 +66,12 @@ function buildChatCommand(command, displayName, text) {
   const body = sanitizeForChat(text);
   if (!body) return null;
 
-  const prefix = `${command} ${displayName}: `;
+  // The name goes into the same packet as the body, so it gets the same
+  // treatment: a Discord nickname may contain `§` or worse, and during a global
+  // profile change the name is somebody else's nickname entirely.
+  const name = sanitizeForChat(displayName) || "Member";
+
+  const prefix = `${command} ${name}: `;
   const budget = MAX_CHAT_LENGTH - prefix.length;
   if (budget <= 0) return null;
 

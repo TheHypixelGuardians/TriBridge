@@ -314,7 +314,9 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   `utils/sanitizeForChat.js` rather than interpolating a string. Minecraft 1.8 caps chat at
   100 characters, and mineflayer's `bot.chat` splits on newlines — so an un-flattened
   multi-line Discord message would send its second line at *command* position, letting anyone
-  in the bridge channel run commands as the bot.
+  in the bridge channel run commands as the bot. It also strips every `§` and control
+  character, from the body *and* the display name: a 1.8 server disconnects a client that sends
+  one, so a single message could knock a guild's bot offline.
 - **Interpolating into `bot.chat`:** commands that build a chat command by hand (`/invite`,
   `/kick`, `/promote`, `/demote`) bypass `buildGuildChatCommand`, so they must validate the
   username with `isValidMinecraftName()` from `utils/minecraftName.js` and run any free-text
