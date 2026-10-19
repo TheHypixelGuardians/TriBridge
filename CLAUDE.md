@@ -99,7 +99,9 @@ about — who is linked, and who is staff — and that contract is written down 
 `utils/linkedAccounts.js` or `utils/adminRoles.js`.
 
 - CommonJS (`"type": "commonjs"`) — use `require`/`module.exports`, not ESM.
-- No build step, no test suite, no linter — there is no `test` script, so `npm test` reports a missing one.
+- No build step and no linter. Unit tests live in `test/` and run with `npm test` (Node's built-in
+  `node:test`, no dependencies); `npm run format:check` runs Prettier. CI runs both, plus a syntax check, on
+  every pull request. Add a test with any change to a parser, the sanitiser or routing.
 - Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`. `nodemon` is the only
   dev dependency, used by `npm run dev` and needed by nothing that runs the bot.
 - Documentation lives in [docs/](docs/) (canonical in-repo reference in [FEATURES.md](docs/FEATURES.md) and
@@ -128,8 +130,9 @@ Discord by `/guilds add|auth`, and always echoed to the console; tokens are cach
 account in `.minecraft-auth/` (gitignored).
 
 Running the bot connects to live Discord and Hypixel — don't start it to "verify" a change
-unless the user asks. There is no test suite, but a good deal *is* testable offline against
-fakes: `utils/chatRouting.js`, `utils/guilds.js`, `utils/queryGuild.js` (drive it with a bare
+unless the user asks. Test offline against fakes instead — `test/` has examples, and a good deal
+more is testable the same way: `utils/chatRouting.js`, `utils/guilds.js`,
+`utils/queryGuild.js` (drive it with a bare
 `EventEmitter` whose `chat()` emits stub messages), `retireBot`, `utils/chatQueue.js` and
 `utils/areCommandsDifferent.js` are all pure or injectable. Prefer that over a live run.
 
@@ -332,7 +335,8 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   server output.
 - Style: Prettier's default style — 2-space indent, double quotes, semicolons, trailing commas, 80
   columns. `.prettierrc` records the settings; reformat with
-  `npx prettier --write "src/**/*.js"`. JSDoc on non-trivial helper functions.
+  `npx prettier@3.8.1 --write "src/**/*.js" "test/**/*.js"` (CI checks with the same version).
+  JSDoc on non-trivial helper functions.
 
 ## Account linking and the shared database
 

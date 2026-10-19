@@ -21,7 +21,11 @@ let cache = null;
  * @returns {Promise<string[]|null>} null when the list could not be read at all.
  */
 async function getRoles(guildId) {
-  if (cache && cache.guildId === guildId && Date.now() - cache.readAt < TTL_MS) {
+  if (
+    cache &&
+    cache.guildId === guildId &&
+    Date.now() - cache.readAt < TTL_MS
+  ) {
     return cache.roleIds;
   }
 

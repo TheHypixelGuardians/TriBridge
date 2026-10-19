@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js --ext js --watch src --watch .env"
+    "dev": "nodemon src/index.js --ext js --watch src --watch .env",
+    "test": "node --test \"test/**/*.test.js\"",
+    "format:check": "npx --yes prettier@3.8.1 --check \"src/**/*.js\" \"test/**/*.js\""
   },
   "private": true,
   "keywords": [],

@@ -11,7 +11,8 @@ Two rules shape everything below:
 2. **There is no "current bot".** Every Hypixel guild is addressed by key. A scalar "the bot" would silently
    act on the wrong guild the moment a call site forgot to say which one it meant.
 
-CommonJS throughout (`require`/`module.exports`). No build step, no test suite, no linter. Node v22+.
+CommonJS throughout (`require`/`module.exports`). No build step and no linter; unit tests live in `test/` and run
+with `npm test`. Node v22+.
 
 ## Startup
 

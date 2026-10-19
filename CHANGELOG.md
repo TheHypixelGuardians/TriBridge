@@ -194,6 +194,10 @@
 
 #### Core
 
++ Added a unit test suite (`npm test`, Node's built-in runner, no new dependencies) under `test/`, covering
+  the chat parsers, the chat sanitiser, routing, `queryGuild`, the officer relay and a few small helpers.
++ Added a GitHub Actions workflow that runs a syntax check, `prettier --check` and the tests on every pull
+  request and on pushes to `master`.
 + `package-lock.json` now includes `pg`; it had not been updated since `pg` was added, so `npm ci` failed and
   every install resolved fresh versions.
 + The Hypixel API key is sent in the `API-Key` header instead of the URL, so it stays out of anything that

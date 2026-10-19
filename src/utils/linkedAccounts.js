@@ -61,7 +61,9 @@ async function getLink(discordId) {
 
   if (rows === null) return null;
 
-  const link = rows[0] ? { discordId, uuid: rows[0].uuid, name: rows[0].name } : null;
+  const link = rows[0]
+    ? { discordId, uuid: rows[0].uuid, name: rows[0].name }
+    : null;
   return writeCache(byDiscordId, discordId, link);
 }
 
