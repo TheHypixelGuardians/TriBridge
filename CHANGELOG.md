@@ -194,6 +194,8 @@
 
 #### Core
 
++ The Hypixel API key is sent in the `API-Key` header instead of the URL, so it stays out of anything that
+  logs URLs.
 + `bridge.mcBot` and its connection flags are replaced by a registry of one bot record per Hypixel guild.
   Minecraft event handlers identify their guild from the bot they were called with.
 + The collector idiom that was copied into seven commands is now `utils/queryGuild.js`, serialised per bot

@@ -1,6 +1,7 @@
 const BASE_URL = "https://api.hypixel.net/v2";
 const TIMEOUT_MS = 8_000;
-const USER_AGENT = "TriBridge (+https://github.com/Trilleo/THGBridge)";
+const USER_AGENT =
+  "TriBridge (+https://github.com/TheHypixelGuardians/TriBridge)";
 
 /**
  * @returns {string|null}
@@ -14,7 +15,7 @@ function getApiKey() {
 
 /**
  * @param {string} path Path under /v2, e.g. "/guild".
- * @param {Record<string, string>} params Query params (key is added automatically).
+ * @param {Record<string, string>} params Query params. The key is sent as a header.
  * @returns {Promise<
  *   | {ok: true, data: object}
  *   | {ok: false, code: 'no-key'|'http'|'rate-limit'|'invalid-key'|'upstream'}
@@ -25,7 +26,6 @@ async function hypixelGet(path, params = {}) {
   if (!key) return { ok: false, code: "no-key" };
 
   const url = new URL(BASE_URL + path);
-  url.searchParams.set("key", key);
   for (const [name, value] of Object.entries(params)) {
     if (value != null && value !== "") url.searchParams.set(name, value);
   }
@@ -33,7 +33,9 @@ async function hypixelGet(path, params = {}) {
   let response;
   try {
     response = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT },
+      // A header rather than `?key=`: a key in the URL ends up wherever URLs
+      // get logged — proxies, error messages, stack traces.
+      headers: { "User-Agent": USER_AGENT, "API-Key": key },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch {
