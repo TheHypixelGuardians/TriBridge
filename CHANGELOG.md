@@ -194,6 +194,8 @@
 
 #### Core
 
++ `package-lock.json` now includes `pg`; it had not been updated since `pg` was added, so `npm ci` failed and
+  every install resolved fresh versions.
 + The Hypixel API key is sent in the `API-Key` header instead of the URL, so it stays out of anything that
   logs URLs.
 + `bridge.mcBot` and its connection flags are replaced by a registry of one bot record per Hypixel guild.
