@@ -7,6 +7,10 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Fixes
+
+- Typing something that looks like officer chat (`Officer > Boss: …`) no longer shows up in the officer channel as if Boss said it. The same goes for fake guild chat sent in a private message.
+
 ### Officer chat
 
 - Officer chat can now have a Discord channel, both ways — what you type there goes into officer chat

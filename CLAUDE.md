@@ -241,7 +241,10 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   brittle. It lives in `utils/guildChat.js` — `parseGuildChat()`, `parseGuildPresence()` and
   `parseOfficerChat()` — because several relays read the same lines; don't re-inline the pattern
   in a handler. Keep the documented format comment next to any regex you add or change, and keep
-  the officer pattern separate from `CHAT_PATTERN`.
+  the officer pattern separate from `CHAT_PATTERN`. **Every pattern is anchored with `^`.** The
+  line prefix (`Guild > `, `Officer > `) is the only part a player cannot type; unanchored, a DM,
+  party chat or a guild member quoting `Officer > Boss: …` was relayed as that player, straight
+  into the officer channel.
 - **Relay loops:** `relayToDiscord.js` drops messages whose author matches *any* registered
   bot account, via `mcBots.isOwnAccountName()` — not just the emitting bot's own name, because
   two accounts that ended up in the same Hypixel guild would otherwise relay each other

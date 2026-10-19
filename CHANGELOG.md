@@ -152,6 +152,14 @@
 
 #### Bridge
 
++ Lines that only *quote* guild or officer chat are no longer relayed as the real thing.
+    + A guild member typing `Officer > Boss: …` in guild chat used to land in the officer channel and in
+      every officer-bridged guild as if Boss had said it — and the same worked from the Discord bridge
+      channel, since the bot speaks those messages into guild chat.
+    + A private message or party chat containing `Guild > Notch: …` was posted to Discord and forwarded to
+      the other guilds as Notch, and `… Guild > Notch left.` produced a fake leave notice.
+    + Only lines that *start* with `Guild > ` or `Officer > ` count now; that prefix is the one part of a
+      line a player cannot type themselves.
 + A guild tag is no longer left in the message Discord shows. Sending `!sb hello` as a linked user reposted
   it as "!sb hello" while guild chat correctly received "hello", so the two sides disagreed about what was
   said and the tag looked like it had been ignored. `!!sb hi` now shows as `!sb hi` in Discord too.

@@ -17,15 +17,22 @@
 // same lines — Minecraft → Discord and Minecraft → other guilds — and two
 // copies of a fragile pattern is two things to remember to fix when Hypixel
 // changes the format.
-const CHAT_PATTERN = /Guild > (?:\[.+?\] )?(\w{1,16})(?: \[.+?\])?: (.+)/;
-const PRESENCE_PATTERN = /Guild > (\w{1,16}) (joined|left)\./;
+//
+// Every pattern is anchored to the start of the line. Unanchored, they matched
+// "Guild > " or "Officer > " *anywhere*, so a private message (`From Stranger:
+// Guild > Notch: hi`), party chat, or a guild member typing `Officer > Boss: hi`
+// in ordinary guild chat was relayed as a genuine line from that player — the
+// last one straight into the officer channel and every officer-bridged guild.
+// The prefix is the only part of a line a player cannot write themselves.
+const CHAT_PATTERN = /^Guild > (?:\[.+?\] )?(\w{1,16})(?: \[.+?\])?: (.+)/;
+const PRESENCE_PATTERN = /^Guild > (\w{1,16}) (joined|left)\./;
 
 // Kept as its own pattern rather than widening CHAT_PATTERN to `(?:Guild|
 // Officer) > `. Officer chat is privileged, and everything that reads
 // CHAT_PATTERN — the bridge channel, the guild-to-guild relay, the chat-command
 // dispatcher — would immediately start carrying it. The duplication is what
 // makes moving officer chat somewhere new an explicit decision.
-const OFFICER_PATTERN = /Officer > (?:\[.+?\] )?(\w{1,16})(?: \[.+?\])?: (.+)/;
+const OFFICER_PATTERN = /^Officer > (?:\[.+?\] )?(\w{1,16})(?: \[.+?\])?: (.+)/;
 
 /**
  * Parses a guild-chat line spoken by a player.
