@@ -18,6 +18,20 @@ command without `@Category` still works but is invisible in `/help`.
 | `/info [user]` | Discord user information |
 | `/profile action:view\|update` | View or refresh your community profile row |
 
+## Skyblock
+
+Both commands need a valid `HYPIXEL_API_KEY` on the host. Without it, the bot replies that the key is not
+configured. SkyBlock networth moved here from [TriBridge](/tribridge) — the bridge no longer answers `!nw` or
+`/networth`.
+
+| Command | Description |
+|---------|-------------|
+| `/skyblock <username>` | Hypixel SkyBlock profile summary for the player's selected profile — profile name, mode, SkyBlock level, skill average, purse, bank, and guild when Hypixel returns it |
+| `/networth <username>` | Richest-profile networth via the Hypixel API and `skyhelper-networth`, with purse, bank, personal bank, a category breakdown, and other profiles when there are several |
+
+`/skyblock` and `/networth` are deferred before any database work so a slow first query after a restart does
+not miss Discord's three-second acknowledgement window.
+
 ## Linking
 
 | Command | Description |

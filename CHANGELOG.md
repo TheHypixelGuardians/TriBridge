@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Technical Details
+
+#### Documentation
+
++ Updated THG Community Mintlify pages (`site/community/`) for `/skyblock` and `/networth`, English-only
+  behaviour, trimmed Discord intents and env vars, and template cleanup aligned with thg-community PRs #4 and
+  #5.
+
 ### Removed Features
 
 #### Information

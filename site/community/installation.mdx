@@ -18,9 +18,11 @@ Enable these in the Developer Portal (they match `src/bot.ts`):
 
 | Intent | Privileged | Why |
 |--------|------------|-----|
-| Server Members | yes | Member lookups and profile data |
-| Message Content | yes | Prefix commands (`!`) via discordx `simpleCommand` |
-| Guilds, Messages, Reactions, Voice States | no | Standard guild / message / voice handling |
+| Server Members | yes | Link role: resolving members and keeping cached roles current |
+| Guilds | no | Servers, channels, and roles |
+
+The bot has **no prefix commands**, so it does not need **Message Content** — you can leave that off in the
+Developer Portal. **Presence**, **Message Reactions**, and **Voice States** are not used either.
 
 Slash commands register **per guild** (`botGuilds`), so changes show up immediately rather than after
 Discord's global propagation delay.
@@ -59,15 +61,16 @@ Discord's global propagation delay.
 |----------|----------|-------------|
 | `DISCORD_TOKEN` | yes | Bot token from the Developer Portal |
 | `DATABASE_URL` | yes | PostgreSQL connection string (also read by `prisma.config.ts`) |
+| `HYPIXEL_API_KEY` | no | Hypixel public API key — required for `/skyblock` and `/networth` |
 | `ERROR_LOG_CHANNEL_ID` | no | Channel that receives error embeds from the global error handler |
 | `LOG_CHANNEL_ID` | no | Fallback general log channel — account links and link-role sync. A per-server `logChannelId` in the database wins over it |
-| `SHEETDB_API_URL` | no | SheetDB base URL for moderation-sheet helpers |
-| `SHEETDB_API_KEY` | no | SheetDB API key |
 | `NODE_ENV` | no | `development` includes stack traces in user-facing error replies |
-| `DISCORD_CLIENT_ID` | no | Present in `.env.example`; not read by the bot today |
-| `DISCORD_GUILD_ID` | no | Present in `.env.example`; not read by the bot today |
 
 Keep `.env`, `src/generated/`, and `build/` out of git. Never commit tokens or database URLs.
+
+Two secret scans back that up, both with [gitleaks](https://github.com/gitleaks/gitleaks): a pre-commit hook
+in `.githooks/` (enabled by `yarn install` unless you already have a `core.hooksPath`; needs `gitleaks` on your
+PATH) and the **Secret scan** GitHub Actions workflow on every push and pull request.
 
 ## Scripts
 
@@ -77,7 +80,7 @@ Keep `.env`, `src/generated/`, and `build/` out of git. Never commit tokens or d
 | `yarn setup:prod` | Same, omitting devDependencies |
 | `yarn dev` | Run `src/dev.ts` with hot reload |
 | `yarn watch` | Nodemon wrapper around `yarn dev` |
-| `yarn build` | `tsc` → `build/` |
+| `yarn build` | Empty `build/`, `prisma generate`, then `tsc` → `build/` |
 | `yarn start` | `node build/main.js` |
 | `yarn start:prod` | Build then start |
 | `yarn lint` | Biome check |
@@ -87,18 +90,24 @@ Keep `.env`, `src/generated/`, and `build/` out of git. Never commit tokens or d
 
 ```plaintext
 src/
-├── main.ts                 # Production entry — error handlers, shutdown hooks
-├── dev.ts                  # Development entry — hot reload
+├── main.ts                 # Production entry — error handlers, graceful shutdown
+├── dev.ts                  # Development entry — hot reload (no global error handlers)
 ├── bot.ts                  # Shared discordx Client, intents, botGuilds
-├── commands/categories/    # Slash commands by category
+├── commands/
+│   └── categories/         # Slash commands, one file per command
+│       ├── utility/        # /help, /ping, /info, /profile
+│       ├── skyblock/       # /skyblock, /networth
+│       ├── linking/        # /link, /unlink, /links, /whois, /linkrole
+│       ├── requests/       # /request, /requestchannel, /requeststatus
+│       └── management/     # /adminrole
 ├── events/                 # @On / @Once handlers
-├── utils/                  # prisma, userManager, localization, …
-└── generated/prisma/       # Prisma client (gitignored)
+├── utils/                  # prisma, userManager, hypixel, networth, …
+└── generated/prisma/       # Prisma client (gitignored — run yarn prisma:generate)
 prisma/schema.prisma        # User, Setup, MinecraftLink, AdminRole, FeatureRequest
 ```
 
 There are **two entry points** (`main.ts` and `dev.ts`) and they are not equivalent — production installs
-global error handlers and closes Prisma on shutdown; development does neither.
+global error handlers and closes Prisma on shutdown; development does not.
 
 ## Related
 

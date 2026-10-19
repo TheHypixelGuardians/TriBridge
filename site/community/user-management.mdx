@@ -8,11 +8,18 @@ sign-up step — registration happens transparently before the command handler r
 
 ## How it works
 
-1. **Event handler integration** — user management runs from the main event handlers in `src/events/common.ts`.
-2. **Automatic check** — every slash command (and prefix command) checks whether the caller exists in the
-   database.
-3. **Automatic creation** — if not, a new `User` row is created.
+1. **Event handler** — user management runs from `src/events/interactionCreate.ts` before slash commands,
+   component presses, and modal submits. Bots are skipped (`!interaction.user.bot`).
+2. **Automatic check** — the handler calls `ensureUserExists(discordId, username)` for the caller.
+3. **Automatic creation** — if no row has that `discordId`, one is created.
 4. **Username updates** — if the row exists but the Discord username changed, it is updated.
+
+Sending a normal channel message does **not** register anyone — the old `messageCreate` path served prefix
+commands the bot no longer has. `/link` also calls `ensureUserExists` itself so a link can always relate to a
+row.
+
+`/skyblock` and `/networth` are **deferred** (`deferReply`) before `ensureUserExists`, because the first
+Prisma query after a restart can take long enough to expire Discord's three-second acknowledgement window.
 
 ## Database model
 
@@ -28,7 +35,8 @@ model User {
 }
 ```
 
-The internal `User.id` UUID is what foreign keys use — not the Discord snowflake.
+The internal `User.id` UUID is what foreign keys use — not the Discord snowflake. `language` remains in the
+schema with a default of `nl` but is **never read**; the bot is English-only.
 
 ## Key functions
 
@@ -45,7 +53,7 @@ Retrieves a user by Discord id without creating one.
 
 ## Event integration
 
-Slash commands call `ensureUserExists` before dispatch:
+Slash interactions call `ensureUserExists` before dispatch:
 
 ```typescript
 if (interaction.user) {
@@ -53,12 +61,14 @@ if (interaction.user) {
 }
 ```
 
-Prefix commands do the same for `message.author`.
+For `/skyblock` and `/networth`, the defer happens in `interactionCreate` **before** this call.
 
 ## Error handling
 
-Database errors are logged. If user creation fails, the existing error handler surfaces it to the caller.
-Production (`main.ts`) closes the Prisma connection on SIGINT/SIGTERM; development (`dev.ts`) does not.
+Database errors are logged and rethrown. In `interactionCreate` they land in the same try/catch as the
+command, so the error handler reports them and the member gets an ephemeral error reply instead of a command
+that silently does nothing. Production (`main.ts`) closes the Prisma connection on SIGINT/SIGTERM;
+development (`dev.ts`) does not.
 
 ## Using it in commands
 

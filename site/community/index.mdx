@@ -4,8 +4,8 @@ description: "The Discord community bot for The Hypixel Guardians — profiles, 
 ---
 
 **THG Community** is the Discord bot for the **THG** Hypixel SkyBlock guild community. It owns the Discord
-side of community life: member profiles, localization, server setup data, and (as they land) moderation,
-tickets, and SkyBlock lookups.
+side of community life: member profiles, account linking, SkyBlock lookups, feature requests, server setup
+data, and (as they land) moderation and tickets.
 
 It is **not** a Minecraft bridge. There is no in-game account and no guild-chat relay — that is
 [TriBridge](/tribridge). SkyBlock features here talk to HTTP APIs only.
@@ -15,8 +15,8 @@ linked and who is staff. This bot owns the schema; TriBridge reads it. See
 [Shared database](/community/shared-database).
 
 <Note>
-  Status: early alpha (`0.0.1-alpha.1`). Utility commands, account linking, and feature requests work today;
-  moderation, tickets, and automod are scaffolded in the schema and locale tables but not yet shipped as
+  Status: early alpha (`0.0.1-alpha.1`). Utility commands, account linking, feature requests, and SkyBlock
+  lookups work today; moderation, tickets, and automod are scaffolded in the schema but not yet shipped as
   commands.
 </Note>
 
@@ -34,12 +34,14 @@ See [Features](/community/features) for the full list. Highlights:
 
 - **Member profiles** — `/profile` views or updates the database row created for every member who runs a
   command.
+- **SkyBlock** — `/skyblock` and `/networth` use the Hypixel API (and `skyhelper-networth` for networth).
+  Set `HYPIXEL_API_KEY` on the host. Networth lookups moved here from TriBridge.
 - **Account linking** — `/link` binds Minecraft to Discord; [TriBridge](/tribridge) uses the same link for
   guild-chat attribution.
 - **Feature requests** — `/request` opens a form; admins move submissions through a status with
   `/requeststatus`.
 - **Bot-admin roles** — `/adminrole` names staff roles shared with TriBridge.
-- **Localization** — Dutch (`nl`, default), English, and Spanish via `t()`.
+- **English-only** — no per-user language setting; strings are plain English in the commands that send them.
 
 ## Documentation map
 

@@ -10,10 +10,11 @@ Early alpha (`0.0.1-alpha.1`). The items below reflect what ships today unless m
 | Feature | Summary |
 |---------|---------|
 | **Member profiles** | `/profile` views or updates the database row created for every member who runs a command |
+| **SkyBlock lookup** | `/skyblock <username>` — selected profile summary via the Hypixel public API (`HYPIXEL_API_KEY`) |
+| **SkyBlock networth** | `/networth <username>` — richest-profile networth via Hypixel + `skyhelper-networth` (`HYPIXEL_API_KEY`). TriBridge no longer provides networth lookups |
 | **Help** | `/help` lists slash commands by category with a Components V2 select menu |
 | **User info & ping** | `/info` and `/ping` |
-| **Automatic user registration** | Every non-bot command ensures a `User` row exists first — see [User management](/community/user-management) |
-| **Localization** | Dutch (`nl`, default), English, and Spanish via `t()` / `tWithUser()` |
+| **Automatic user registration** | Every non-bot slash interaction ensures a `User` row exists first — see [User management](/community/user-management) |
 | **Account linking** | `/link`, `/unlink`, `/whois`, `/links`, `/linkrole` — shared with [TriBridge](/tribridge) via PostgreSQL |
 | **Feature requests** | `/request`, `/requestchannel`, `/requeststatus` |
 | **Bot-admin roles** | `/adminrole` — the same role list TriBridge uses for staff commands |
@@ -21,11 +22,13 @@ Early alpha (`0.0.1-alpha.1`). The items below reflect what ships today unless m
 | **Error reporting** | Unhandled errors can post to a Discord channel when `ERROR_LOG_CHANNEL_ID` is set |
 | **Hot reload** | `yarn dev` reloads commands and events without a full process restart |
 
+User-facing text is **English-only** — plain strings in each command, with no localization module.
+
 ## Database models
 
 | Model | Purpose |
 |-------|---------|
-| `User` | One row per Discord user; `language` defaults to `nl` |
+| `User` | One row per Discord user (`discordId` unique). The `language` column still defaults to `nl` in the schema but is not read |
 | `Setup` | Per-Discord-server configuration |
 | `MinecraftLink` | Minecraft name and UUID, related to `User.id` — **read by TriBridge** |
 | `AdminRole` | Discord roles that count as bot-admin — **shared with TriBridge** |
@@ -35,7 +38,7 @@ See [Shared database](/community/shared-database) before renaming columns on `Mi
 
 ## Scaffolded (not yet commands)
 
-Moderation, tickets, and automod have schema and locale hooks but no shipped slash commands yet.
+Moderation, tickets, and automod have schema columns in `Setup` but no shipped slash commands yet.
 
 ## Not in this bot
 
