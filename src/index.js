@@ -6,6 +6,8 @@ const bridge = require("./bridge");
 const guilds = require("./utils/guilds");
 const globalProfile = require("./utils/globalProfile");
 const auditChannel = require("./utils/auditChannel");
+const configStore = require("./utils/configStore");
+const db = require("./utils/db");
 
 async function start() {
   const discordClient = new Client({
@@ -73,12 +75,26 @@ const LOAD_RETRY_MS = 10_000;
  * synchronous, from memory.
  *
  * One at a time: creating the table races if run in parallel. Retried for a
- * while because the weekly updater restarts the bot unattended, and a database
- * that is briefly away at that moment should not cost a week of downtime.
- * After that it throws — running on defaults instead would let the next admin
- * action save over the real settings.
+ * while because the panel restarts the bot unattended, and a database that is
+ * briefly away (or waking from scale-to-zero) should not stop the bridge.
+ *
+ * If the database stays unreachable through every retry, the bot starts from
+ * the local snapshots instead: the last copy of each config the database
+ * confirmed. Settings changes then fail until the database is back, because
+ * every change is saved there first. Anything else (a corrupt legacy file with
+ * no row, a missing snapshot) still stops startup: running on defaults would
+ * let the next admin action save over the real settings.
  */
 async function loadSettings() {
+  // A missing DATABASE_URL is a configuration mistake, not an outage, so it
+  // never falls back to the snapshots: the bot would come up unable to save
+  // any setting, and nothing would ever fix it on its own.
+  if (!db.isConfigured()) {
+    throw new Error(
+      "DATABASE_URL is not set; TriBridge's settings live there.",
+    );
+  }
+
   for (let attempt = 1; ; attempt++) {
     try {
       await guilds.load();
@@ -86,7 +102,13 @@ async function loadSettings() {
       await auditChannel.load();
       return;
     } catch (error) {
-      if (attempt === LOAD_ATTEMPTS) throw error;
+      if (attempt === LOAD_ATTEMPTS) {
+        if (!(error instanceof configStore.DatabaseUnavailableError)) {
+          throw error;
+        }
+        await loadSnapshots();
+        return;
+      }
       console.error(
         `Could not load settings (attempt ${attempt} of ${LOAD_ATTEMPTS}), ` +
           `retrying in ${LOAD_RETRY_MS / 1000}s: ${error.message}`,
@@ -94,6 +116,18 @@ async function loadSettings() {
       await new Promise((resolve) => setTimeout(resolve, LOAD_RETRY_MS));
     }
   }
+}
+
+async function loadSnapshots() {
+  const options = { fromSnapshot: true };
+  await guilds.load(options);
+  await globalProfile.load(options);
+  await auditChannel.load(options);
+  console.error(
+    "The database is unreachable, so the bot started from its local settings " +
+      "snapshots. The bridge runs normally; settings changes will fail until " +
+      "the database is back.",
+  );
 }
 
 start().catch((error) => {

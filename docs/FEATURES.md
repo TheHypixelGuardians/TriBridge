@@ -72,8 +72,9 @@ swallow far too much ordinary chat.
 
 The bridged guilds are stored in the shared PostgreSQL database (`tribridge.config`, see
 [The shared database](SHARED_DATABASE.md)) and managed entirely from Discord with **`/guilds`**. An install that
-still has a `guildsConfig.json` from an older version has it imported on the first start; after that the file is
-no longer read and is left in place as a backup.
+still has a `guildsConfig.json` from an older version has it imported on the first start. From then on the file is
+a snapshot of the database, rewritten after every change, and only read if the database is unreachable when the bot
+starts. Then the bridge runs from the snapshot, and settings changes fail until the database is back.
 
 | Field            | Meaning                                                                                                   |
 |------------------|-----------------------------------------------------------------------------------------------------------|

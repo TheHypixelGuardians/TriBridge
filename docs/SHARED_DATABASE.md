@@ -41,9 +41,15 @@ schema and table created by hand beforehand by an owner instead.
 
 Each module reads its document once at startup and serves every read from memory, so none of this adds a query
 to the message path. Writes replace the whole document. When a document is missing and the matching JSON file
-exists in the project root, that file is imported on startup and logged; afterwards the file is never read again
-and is left in place as a backup. A file that is not valid JSON, with no row to fall back on,
-stops startup: running on defaults would let the first saved change create the row and strand the file.
+exists in the project root, that file is imported on startup and logged. A file that is not valid JSON, with no row
+to fall back on, stops startup: running on defaults would let the first saved change create the row and strand the
+file.
+
+From then on each file is a **snapshot** of its row: rewritten (temp file, then rename) after every successful save
+and on every start. If the database cannot be reached at startup, after the retries, the bot starts from the
+snapshots instead and warns in the log channel. Every write still goes to the database first, so while it is down
+settings changes fail cleanly and nothing exists only in memory or only on disk. `npm run config:import` imports
+files by hand (see [config files](https://thehypixelguardians.mintlify.site/tribridge/config-files)).
 
 ## Failure behaviour
 

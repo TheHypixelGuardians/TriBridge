@@ -13,8 +13,17 @@ const db = require("./db");
  *
  * Each config used to be a JSON file at the repository root. The first start
  * after upgrading finds no row and imports the file; from then on the row is
- * authoritative and the file is never read again. The file is left where it
- * is, as a backup.
+ * authoritative.
+ *
+ * The file stays, as a **snapshot**: every successful save, and every load
+ * from the database, rewrites it (atomically, via a temp file and a rename).
+ * It is only read in two cases: to import it when the database has no row, and
+ * at startup when the database cannot be reached at all. The second case is
+ * what keeps a Postgres outage from becoming a bridge outage. The relay and
+ * every guild connection only need the registry in memory, and the snapshot is
+ * the last copy the database confirmed. While running from it, every settings
+ * change still goes to the database first and fails cleanly, so nothing that
+ * was never saved can end up in memory or on disk.
  */
 
 const SCHEMA_STATEMENTS = [
@@ -27,6 +36,59 @@ const SCHEMA_STATEMENTS = [
 ];
 
 /**
+ * Thrown when Postgres cannot be queried at all, as opposed to a config that
+ * cannot be parsed. Only this one lets startup fall back to the snapshots: a
+ * corrupt legacy file with no row must still stop the bot.
+ */
+class DatabaseUnavailableError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "DatabaseUnavailableError";
+  }
+}
+
+// Which file each config snapshots to, recorded by load() so save() needs no
+// path from its callers.
+const snapshotPaths = new Map();
+
+let degraded = false;
+
+/**
+ * @returns {boolean} Whether the settings came from the local snapshots
+ *   because the database could not be reached at startup.
+ */
+function isDegraded() {
+  return degraded;
+}
+
+/**
+ * Writes a config's snapshot file. Never throws: the database is the source of
+ * truth and has already accepted the change, so a full disk must not turn a
+ * saved change into a reported failure.
+ *
+ * Temp file and rename, so a crash mid-write leaves the previous snapshot
+ * intact instead of a truncated file. A plain writeFileSync could leave invalid
+ * JSON behind, which would be the only copy during the next outage.
+ *
+ * @param {string} name
+ * @param {object} data
+ */
+function writeSnapshot(name, data) {
+  const filePath = snapshotPaths.get(name);
+  if (!filePath) return;
+
+  const tmp = `${filePath}.tmp`;
+  try {
+    fs.writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`);
+    fs.renameSync(tmp, filePath);
+  } catch (error) {
+    console.error(
+      `Could not write the ${path.basename(filePath)} snapshot: ${error.message}`,
+    );
+  }
+}
+
+/**
  * Creates the table on the first start only. Creating a schema needs the
  * CREATE privilege on the whole database even when it already exists, which a
  * role tightened after setup may no longer have.
@@ -36,7 +98,9 @@ async function ensureSchema() {
     "SELECT to_regclass('tribridge.config') IS NOT NULL AS present",
   );
   if (found === null) {
-    throw new Error("Could not check for the tribridge.config table.");
+    throw new DatabaseUnavailableError(
+      "Could not check for the tribridge.config table.",
+    );
   }
   if (found[0].present) return;
 
@@ -103,13 +167,30 @@ function describe(data) {
  * @param {string} filePath The JSON file this config used to live in.
  * @param {(raw: object|undefined) => object} normalise The module's loader
  *   rules, applied to whatever comes back from either source.
+ * @param {{fromSnapshot?: boolean}} [options] `fromSnapshot` skips the
+ *   database and reads the snapshot file. Startup uses it only after the
+ *   database has been unreachable for every retry.
  * @returns {Promise<{data: object, stored: boolean}>} `stored` is false when
  *   neither the database nor the file had anything and `data` is defaults.
- * @throws When the database cannot be read, or there is no row and the legacy
- *   file cannot be parsed. Running on defaults instead would let the next write
- *   overwrite the real config.
+ * @throws When the database cannot be read (a `DatabaseUnavailableError`), or
+ *   there is no row and the legacy file cannot be parsed. Running on defaults
+ *   instead would let the next write overwrite the real config.
  */
-async function load(name, filePath, normalise) {
+async function load(name, filePath, normalise, { fromSnapshot = false } = {}) {
+  snapshotPaths.set(name, filePath);
+
+  if (fromSnapshot) {
+    const snapshot = readLegacyFile(filePath);
+    if (!snapshot) {
+      throw new Error(
+        `The database is unreachable and there is no ${path.basename(filePath)} ` +
+          "snapshot to start from.",
+      );
+    }
+    degraded = true;
+    return { data: normalise(snapshot), stored: true };
+  }
+
   await ensureSchema();
 
   const rows = await db.query(
@@ -117,9 +198,17 @@ async function load(name, filePath, normalise) {
     [name],
   );
   if (rows === null) {
-    throw new Error(`Could not read the ${name} config from the database.`);
+    throw new DatabaseUnavailableError(
+      `Could not read the ${name} config from the database.`,
+    );
   }
-  if (rows.length > 0) return { data: normalise(rows[0].data), stored: true };
+  if (rows.length > 0) {
+    const data = normalise(rows[0].data);
+    // Refreshed on every start, so the snapshot matches the database even when
+    // the file was edited, deleted or restored from an older copy meanwhile.
+    writeSnapshot(name, data);
+    return { data, stored: true };
+  }
 
   const legacy = readLegacyFile(filePath);
   if (!legacy) return { data: normalise(undefined), stored: false };
@@ -131,15 +220,19 @@ async function load(name, filePath, normalise) {
     [name, JSON.stringify(data)],
   );
   if (inserted === null) {
-    throw new Error(`Could not import ${path.basename(filePath)}.`);
+    throw new DatabaseUnavailableError(
+      `Could not import ${path.basename(filePath)}.`,
+    );
   }
   // Somebody else stored it first; theirs wins.
   if (inserted.length === 0) return load(name, filePath, normalise);
 
   console.log(
     `Imported ${path.basename(filePath)} into the database: ${describe(data)}. ` +
-      "The file is no longer read; keep it as a backup or delete it.",
+      "From now on the file is a snapshot of the database, rewritten on every " +
+      "save and only read if the database is unreachable at startup.",
   );
+  writeSnapshot(name, data);
   return { data, stored: true };
 }
 
@@ -153,6 +246,7 @@ async function save(name, data) {
   if (rows === null) {
     throw new Error(`Could not save the ${name} config to the database.`);
   }
+  writeSnapshot(name, data);
 }
 
 // One chain per config, so each change starts from the document the previous
@@ -195,4 +289,14 @@ function commit(name, current, edit, apply) {
   return next;
 }
 
-module.exports = { load, commit };
+module.exports = {
+  load,
+  commit,
+  isDegraded,
+  DatabaseUnavailableError,
+  // For scripts/import-config.js.
+  ensureSchema,
+  readLegacyFile,
+  describe,
+  save,
+};

@@ -4,19 +4,26 @@ const store = require("./configStore");
 
 const CONFIG_NAME = "auditChannel";
 
-// Only read once, to import it into the database — see configStore.js.
+// The import source and the local snapshot of the database row — see
+// configStore.js.
 const CONFIG_PATH = path.join(__dirname, "..", "..", "auditChannelConfig.json");
 
 let cachedConfig = { channelId: null };
 
+function normalise(raw) {
+  return raw ?? { channelId: null };
+}
+
 /**
- * Loads the setting from the database. Must finish before anything reads it.
+ * Loads the setting from the database (or, with `{ fromSnapshot: true }`,
+ * from its local snapshot). Must finish before anything reads it.
  */
-async function load() {
+async function load(options) {
   ({ data: cachedConfig } = await store.load(
     CONFIG_NAME,
     CONFIG_PATH,
-    (raw) => raw ?? { channelId: null },
+    normalise,
+    options,
   ));
 }
 
@@ -87,4 +94,10 @@ async function logAudit(payload, { guildKey } = {}) {
   }
 }
 
-module.exports = { load, getAuditChannelId, setAuditChannelId, logAudit };
+module.exports = {
+  load,
+  normalise,
+  getAuditChannelId,
+  setAuditChannelId,
+  logAudit,
+};

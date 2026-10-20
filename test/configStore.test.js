@@ -61,6 +61,7 @@ function fakeLegacyFile(filePath, content) {
 }
 
 let tmpDir;
+let repoWrites;
 const identity = (raw) => ({ ...raw });
 const REPO_ROOT = path.join(__dirname, "..");
 
@@ -77,6 +78,24 @@ beforeEach(() => {
       throw Object.assign(new Error("ENOENT"), { code: "ENOENT" });
     }
     return realRead(p, ...rest);
+  });
+  // ...and their snapshots are never written either. Recorded instead, so a
+  // test can check what would have landed there.
+  repoWrites = new Map();
+  const isRepoConfig = (p) =>
+    typeof p === "string" &&
+    path.dirname(p) === REPO_ROOT &&
+    /Config\.json(\.tmp)?$/.test(p);
+  const realWrite = fs.writeFileSync;
+  const realRename = fs.renameSync;
+  mock.method(fs, "writeFileSync", (p, data, ...rest) => {
+    if (!isRepoConfig(p)) return realWrite(p, data, ...rest);
+    repoWrites.set(p, String(data));
+  });
+  mock.method(fs, "renameSync", (from, to) => {
+    if (!isRepoConfig(from)) return realRename(from, to);
+    repoWrites.set(to, repoWrites.get(from));
+    repoWrites.delete(from);
   });
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "tribridge-config-"));
   mock.method(console, "log", () => {});
@@ -116,8 +135,10 @@ test("empty database and a legacy file: the file is imported once", async () => 
   assert.deepEqual(second.data, { channelId: "123" });
   assert.equal(table.inserts().length, 1);
 
-  // The file is left where it was.
-  assert.ok(fs.existsSync(file));
+  // The file stays, now as a snapshot of the row rather than its own copy.
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf-8")), {
+    channelId: "123",
+  });
 });
 
 test("a stored config wins: the legacy file is ignored", async () => {
@@ -407,4 +428,158 @@ test("global profile: a lapsed effect is cleared on read and the end saved", asy
   assert.equal(globalProfile.getState().mode, "off");
   assert.equal(table.rows.globalProfile.mode, "off");
   assert.equal(table.rows.globalProfile.target, null);
+});
+
+test("snapshot: every save rewrites the file, through a temp file", async () => {
+  const table = fakeTable({ auditChannel: { channelId: "1" } });
+  mock.method(db, "query", table.query);
+  const file = writeLegacy("auditChannelConfig.json", { channelId: "1" });
+  const renames = [];
+  const realRename = fs.renameSync;
+  mock.method(fs, "renameSync", (from, to) => {
+    renames.push([from, to]);
+    return realRename(from, to);
+  });
+
+  let cache = (await store.load("auditChannel", file, identity)).data;
+  await store.commit(
+    "auditChannel",
+    () => cache,
+    (draft) => {
+      draft.channelId = "2";
+    },
+    (saved) => {
+      cache = saved;
+    },
+  );
+
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf-8")), {
+    channelId: "2",
+  });
+  assert.deepEqual(renames.at(-1), [`${file}.tmp`, file]);
+  assert.equal(fs.existsSync(`${file}.tmp`), false);
+});
+
+test("snapshot: a load from the database refreshes a stale file", async () => {
+  const table = fakeTable({ auditChannel: { channelId: "from-db" } });
+  mock.method(db, "query", table.query);
+  const file = writeLegacy("auditChannelConfig.json", { channelId: "old" });
+
+  await store.load("auditChannel", file, identity);
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf-8")), {
+    channelId: "from-db",
+  });
+});
+
+test("snapshot: a failed snapshot write does not fail a saved change", async () => {
+  const table = fakeTable({ auditChannel: { channelId: "1" } });
+  mock.method(db, "query", table.query);
+  const file = path.join(tmpDir, "missing-dir", "auditChannelConfig.json");
+
+  let cache = (await store.load("auditChannel", file, identity)).data;
+  await store.commit(
+    "auditChannel",
+    () => cache,
+    (draft) => {
+      draft.channelId = "2";
+    },
+    (saved) => {
+      cache = saved;
+    },
+  );
+
+  assert.equal(table.rows.auditChannel.channelId, "2");
+  assert.equal(cache.channelId, "2");
+  assert.ok(
+    console.error.mock.calls.some((call) =>
+      /Could not write the auditChannelConfig\.json snapshot/.test(
+        call.arguments[0],
+      ),
+    ),
+  );
+});
+
+test("an unreachable database is a DatabaseUnavailableError", async () => {
+  mock.method(db, "query", async () => null);
+  await assert.rejects(
+    store.load("guilds", path.join(tmpDir, "none.json"), identity),
+    store.DatabaseUnavailableError,
+  );
+});
+
+test("a corrupt legacy file is not a DatabaseUnavailableError", async () => {
+  mock.method(db, "query", fakeTable().query);
+  const file = writeLegacy("broken.json", "{ not json");
+  await assert.rejects(store.load("broken", file, identity), (error) => {
+    assert.ok(!(error instanceof store.DatabaseUnavailableError));
+    return true;
+  });
+});
+
+test("fromSnapshot: starts from the file without touching the database", async () => {
+  const query = mock.fn(async () => null);
+  mock.method(db, "query", query);
+  const file = writeLegacy("auditChannelConfig.json", { channelId: "7" });
+
+  const result = await store.load("auditChannel", file, identity, {
+    fromSnapshot: true,
+  });
+  assert.deepEqual(result, { data: { channelId: "7" }, stored: true });
+  assert.equal(query.mock.callCount(), 0);
+  assert.equal(store.isDegraded(), true);
+});
+
+test("fromSnapshot: with no snapshot the start still fails", async () => {
+  mock.method(db, "query", async () => null);
+  await assert.rejects(
+    store.load("auditChannel", path.join(tmpDir, "none.json"), identity, {
+      fromSnapshot: true,
+    }),
+    /no none\.json snapshot/,
+  );
+});
+
+test("fromSnapshot: a change while the database is down fails and changes nothing", async () => {
+  mock.method(db, "query", async () => null);
+  const file = writeLegacy("auditChannelConfig.json", { channelId: "7" });
+  let cache = (
+    await store.load("auditChannel", file, identity, { fromSnapshot: true })
+  ).data;
+
+  await assert.rejects(
+    store.commit(
+      "auditChannel",
+      () => cache,
+      (draft) => {
+        draft.channelId = "8";
+      },
+      (saved) => {
+        cache = saved;
+      },
+    ),
+    /Could not save/,
+  );
+  assert.equal(cache.channelId, "7");
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf-8")), {
+    channelId: "7",
+  });
+});
+
+test("guilds: a registry write is snapshotted to guildsConfig.json", async () => {
+  const table = fakeTable();
+  mock.method(db, "query", table.query);
+  const previous = process.env.MINECRAFT_USERNAME;
+  process.env.MINECRAFT_USERNAME = "seed-account";
+  try {
+    await guilds.load();
+    const seeded = await guilds.ensureSeeded();
+    assert.equal(seeded.seeded, true);
+  } finally {
+    if (previous === undefined) delete process.env.MINECRAFT_USERNAME;
+    else process.env.MINECRAFT_USERNAME = previous;
+  }
+
+  const snapshot = repoWrites.get(path.join(REPO_ROOT, "guildsConfig.json"));
+  assert.ok(snapshot, "a saved registry is snapshotted");
+  assert.deepEqual(JSON.parse(snapshot), table.rows.guilds);
 });

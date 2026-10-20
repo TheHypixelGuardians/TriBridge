@@ -68,6 +68,15 @@ module keeps its `normalise()` â€” the guards a hand-edited file used to need â€
 loaded, from the database or from a legacy JSON file being imported. Reads stay synchronous on purpose: they
 run on every relayed message, and a database round trip there would put the relay at the mercy of the network.
 
+Every successful save, and every load from the database, also rewrites the matching `*Config.json` as a
+**snapshot** (temp file, then rename, so a crash leaves the previous one intact). The snapshot is written only
+*after* the database accepted the document, which is what makes it safe to start from: it never holds a setting
+the database rejected. When every startup retry fails with a `DatabaseUnavailableError`, `index.js` loads all
+three modules with `{ fromSnapshot: true }`, `configStore.isDegraded()` turns true, and the ready handler warns in
+the log channel. Writes still go to the database first, so in that mode they fail cleanly, and once the database
+is back they succeed again with nothing to reconcile. Other startup errors (a corrupt legacy file with no row, an
+unset `DATABASE_URL`) still stop the bot, because those are not outages that fix themselves.
+
 A write that fails rejects. Two callers deliberately don't wait for it:
 `createMcBot` and `002probeHypixelGuildId` record the Minecraft profile and Hypixel guild id with a logged
 `.catch()`, because a save failure must not block a connect (the value is then simply learned again on the next connect), and a rejected event handler is an unhandled

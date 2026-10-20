@@ -3,7 +3,8 @@ const store = require("./configStore");
 
 const CONFIG_NAME = "guilds";
 
-// Only read once, to import it into the database — see configStore.js.
+// The import source and the local snapshot of the database row — see
+// configStore.js.
 const CONFIG_PATH = path.join(__dirname, "..", "..", "guildsConfig.json");
 
 // A key is the stable identity of a Hypixel guild: the autocomplete value, the
@@ -51,13 +52,15 @@ function normalise(raw) {
 }
 
 /**
- * Loads the registry from the database. Must finish before anything reads it.
+ * Loads the registry from the database (or, with `{ fromSnapshot: true }`,
+ * from its local snapshot). Must finish before anything reads it.
  */
-async function load() {
+async function load(options) {
   ({ data: cachedConfig, stored } = await store.load(
     CONFIG_NAME,
     CONFIG_PATH,
     normalise,
+    options,
   ));
 }
 
@@ -527,6 +530,7 @@ async function ensureSeeded() {
 
 module.exports = {
   load,
+  normalise,
   getAll,
   getEnabled,
   getCrossBridged,

@@ -123,8 +123,8 @@ npm run dev               # nodemon, restarts on any source or .env change
 ```
 
 Requires a `.env` (gitignored) with `DISCORD_TOKEN`, `DISCORD_CHANNEL_ID`, `LOG_CHANNEL`,
-`MINECRAFT_USERNAME` and `DATABASE_URL` — the bot does not start without a readable database,
-because its settings live there. `MINECRAFT_USERNAME` only seeds the first Hypixel guild on a
+`MINECRAFT_USERNAME` and `DATABASE_URL`. Its settings live in the database; if that is unreachable
+at startup it runs from the local snapshot files (see the shared database section). `MINECRAFT_USERNAME` only seeds the first Hypixel guild on a
 fresh install; once a registry exists it is authoritative and the env var is ignored. A first
 sign-in for an account opens a Microsoft device-code flow — surfaced in Discord by
 `/guilds add|auth`, and always echoed to the console; tokens are cached per account in
@@ -393,7 +393,12 @@ a time; a failed save rejects and leaves memory untouched. Never mutate a cached
 directly — memory would then hold a setting the database does not. `await` writes, except
 in an event handler, where a rejection is unhandled and ends the process; there, `.catch()` and
 log. On a first start with no row for a setting, `configStore` imports the matching
-`*Config.json` once and leaves the file in place; the file is never read again after that. Schema in
+`*Config.json` once. From then on that file is a **snapshot**: `configStore` rewrites it (temp file +
+rename) after every successful save and on every load from the database, and reads it only when the
+database is unreachable through every startup retry (`{ fromSnapshot: true }`, `isDegraded()`). Only a
+`DatabaseUnavailableError` may trigger that fallback; a corrupt legacy file with no row must still stop
+startup. Never write a snapshot before the database save succeeds: the snapshot is only safe to start
+from because it never holds anything the database did not accept. Schema in
 `public` is the community bot's, and its `prisma db push` would drop a table it does not define —
 keep TriBridge tables in `tribridge`.
 
@@ -445,8 +450,8 @@ whoever holds the code can complete the sign-in with *their own* Microsoft accou
 
 `.env`, `.minecraft-auth/`, `guildsConfig.json`, `globalProfileConfig.json`,
 `auditChannelConfig.json`, `.idea/` — local/secret state. The three `*Config.json` files are
-only read once, to import them into the database, and are then kept as a backup; never delete or
-rewrite them from code. Never print or commit token,
+the import source and the database snapshots. Only `configStore.js` writes them; nothing else may
+delete or rewrite them. Never print or commit token,
 auth-cache, database-URL or account-address contents.
 
 The config files the migrated features used — `adminRolesConfig.json`,

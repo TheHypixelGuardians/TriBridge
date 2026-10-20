@@ -34,8 +34,23 @@ the same database.
 Older versions kept those three settings in `guildsConfig.json`, `globalProfileConfig.json` and
 `auditChannelConfig.json` in the project root. On the first start after upgrading, each setting that is not in
 the database yet is imported from its file, and the console says which. After that the database is
-authoritative: the file is never read again, and it is left where it is as a backup. Nothing needs doing by
-hand, and restarting again does not import twice.
+authoritative, and nothing needs doing by hand. Restarting again does not import twice.
+
+The files stay, as **snapshots** of the database: the bot rewrites each one after every saved change and on
+every start, so they always hold the last settings the database confirmed. They are written through a
+temporary file and a rename, so a crash mid-write leaves the previous snapshot intact. Don't edit them by hand
+expecting an effect: the database wins, and the next start overwrites the file.
+
+To import files from somewhere else (a copy taken off another server), or to check them first, use the import
+script. It prints only key names and list lengths, never the ids themselves:
+
+```bash
+npm run config:import -- --dry-run --dir path/to/folder   # check the files, no database needed
+npm run config:import -- --dir path/to/folder             # import whatever the database doesn't have yet
+npm run config:import -- --dir path/to/folder --force     # overwrite what the database has
+```
+
+Restart the bot afterwards to load what was imported.
 
 **A file that is not valid JSON stops the bot at startup**, as long as the database has no copy of that setting
 yet. Fix the file and restart, or move it out of the project root to start without it. Starting on defaults
@@ -48,13 +63,15 @@ from features that moved to the community bot. Nothing reads them.
 
 ## Things worth knowing
 
-**The bot does not start without its database.** If `DATABASE_URL` is unset or the database cannot be reached
-at startup, it retries for about 40 seconds and then exits with a non-zero code, rather than coming up on empty
-settings — an admin action taken then would save over the real registry. Run it under a supervisor that restarts
-it on failure (`systemd` `Restart=on-failure`, Docker `restart: on-failure`).
+**A database outage doesn't take the bridge down.** If the database cannot be reached at startup, the bot
+retries for about 40 seconds, then starts from the snapshot files and posts a warning in the log channel. The
+relay and every guild connection work as normal. Settings changes (`/guilds`, `/auditchannel`, the admin panel)
+fail with an error until the database is back, because every change is saved there first. That's what stops a
+change from existing only in memory, or only on disk, and then being lost or overwritten later. The bot still
+refuses to start without `DATABASE_URL` set at all, or with neither a database nor a snapshot to start from, rather
+than coming up on empty settings that the next admin action would save over the real ones.
 
-**Back up the database**, not the JSON files: after the first start they are a snapshot of the day you
-upgraded. `.minecraft-auth/` is worth keeping too: losing it does not lose anything permanent, but every account
+**Back up the database** as the primary copy. The snapshot files are a second copy on the server, kept current. `.minecraft-auth/` is worth keeping too: losing it does not lose anything permanent, but every account
 has to go through a device-code sign-in again.
 
 **`key` and `account` in the registry are immutable**, and the commands enforce it. `account` is the key

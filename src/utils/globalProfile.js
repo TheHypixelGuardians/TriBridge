@@ -4,7 +4,8 @@ const store = require("./configStore");
 
 const CONFIG_NAME = "globalProfile";
 
-// Only read once, to import it into the database — see configStore.js.
+// The import source and the local snapshot of the database row — see
+// configStore.js.
 const CONFIG_PATH = path.join(
   __dirname,
   "..",
@@ -62,13 +63,15 @@ function normalise(raw) {
 }
 
 /**
- * Loads the state from the database. Must finish before anything reads it.
+ * Loads the state from the database (or, with `{ fromSnapshot: true }`, from
+ * its local snapshot). Must finish before anything reads it.
  */
-async function load() {
+async function load(options) {
   ({ data: cachedConfig } = await store.load(
     CONFIG_NAME,
     CONFIG_PATH,
     normalise,
+    options,
   ));
 }
 
@@ -368,6 +371,7 @@ function logSaveError(error) {
 
 module.exports = {
   load,
+  normalise,
   getState,
   getTarget,
   isActive,

@@ -169,17 +169,27 @@
 
 + The guild registry, the global profile change and the audit channel are now stored in the shared PostgreSQL
   database instead of `guildsConfig.json`, `globalProfileConfig.json` and `auditChannelConfig.json`.
-    + **`DATABASE_URL` is now required.** If it is unset or the database cannot be read, the bot retries for
-      about 40 seconds and then exits with a non-zero code, rather than coming up on empty settings that the
-      next admin action would save over the real ones. A supervisor set to restart on failure will retry it.
-    + Upgrading needs no manual step: on the first start each file is imported once, the console names what
-      was imported, and the file is left in place as a backup. After that the file is no longer read.
+    + **`DATABASE_URL` is now required.**
+    + Upgrading needs no manual step: on the first start each file is imported once, and the console names
+      what was imported.
+    + The JSON files stay as snapshots of the database, rewritten safely (temp file, then rename) after every
+      saved change and on every start.
+    + If the database cannot be reached at startup, the bot retries for about 40 seconds and then runs from
+      the snapshots, with a warning in the log channel. The bridge keeps working; settings changes fail until
+      the database is back.
+    + Added `npm run config:import` to check (`--dry-run`) or import JSON config files by hand. It prints only
+      key names and counts.
     + A file that is not valid JSON stops startup until it is fixed or moved away, as long as the database
       has no copy of that setting yet. Starting on defaults would let the first change saved from Discord
       create the setting and leave the file never imported.
-    + Downgrading to an older version brings back the files as they were on the day of the upgrade.
+    + Downgrading to an older version picks up the snapshot files, so it starts with current settings.
 
 ### Fixes
+
+#### Core
+
++ Fixed the bot exiting right after login when it could not post its "now online" message in the bridge
+  channel (for example, missing permissions).
 
 #### Bridge
 
