@@ -16,7 +16,8 @@ with `npm test`. Node v22+.
 
 ## Startup
 
-`src/index.js` seeds the guild registry, builds the Discord client, populates the shared `bridge` object,
+`src/index.js` loads the bot's settings from the database (stopping there if it cannot), seeds the guild
+registry, builds the Discord client, populates the shared `bridge` object,
 wires the Discord event handler and logs in.
 
 It deliberately does **not** create any Minecraft bot. `events/discord/clientReady/002autoReconnect.js` owns
@@ -51,15 +52,26 @@ subtle:
 
 ## The guild registry
 
-`src/utils/guilds.js` is the registry over `guildsConfig.json`; `src/utils/mcBots.js` holds the accessors for
+`src/utils/guilds.js` is the guild registry; `src/utils/mcBots.js` holds the accessors for
 `bridge.mcBots`. Between them they answer every "which guild?" question.
 
 **Resolve a user-supplied guild with `guilds.resolveKey()`.** Autocomplete values are attacker-controlled;
 never index `bridge.mcBots` with a raw option value.
 
-Config modules — `guilds`, `adminRoles`, `linkedAccounts`, `linkRole`, `auditChannel`, `globalProfile`,
-`featureRequests` — all share one shape: lazy read, in-memory cache, `writeFileSync` on change, and a
-`defaults()` that a malformed file degrades to rather than throwing.
+The three settings modules — `guilds`, `globalProfile`, `auditChannel` — share one shape over
+`utils/configStore.js`: an `async load()` that `index.js` awaits before login, synchronous reads from an in-memory
+cache after that, and `async` writes through `configStore.commit()`: the change is made to a copy, the copy is saved
+whole to the `tribridge.config` table, and only then does it replace the cache. A save that fails leaves memory
+as it was, so a disguise that was never saved can't run unaudited, and a failed guild edit can't ride along on a
+later save. Changes are queued per setting, so each starts from the last saved document and none is lost. Each
+module keeps its `normalise()` — the guards a hand-edited file used to need — and applies it to whatever is
+loaded, from the database or from a legacy JSON file being imported. Reads stay synchronous on purpose: they
+run on every relayed message, and a database round trip there would put the relay at the mercy of the network.
+
+A write that fails rejects. Two callers deliberately don't wait for it:
+`createMcBot` and `002probeHypixelGuildId` record the Minecraft profile and Hypixel guild id with a logged
+`.catch()`, because a save failure must not block a connect (the value is then simply learned again on the next connect), and a rejected event handler is an unhandled
+rejection that would end the process.
 
 ## The event handler
 
@@ -251,13 +263,14 @@ code can complete the sign-in with their own Microsoft account.
 ## Conventions
 
 - **"Guild" means two things — keep them apart.** A *Hypixel guild* has a `guildKey` and lives in
-  `guildsConfig.json`. A *Discord server* is `bridge.discordServerId`. discord.js calls a server a "guild", so
+  the guild registry. A *Discord server* is `bridge.discordServerId`. discord.js calls a server a "guild", so
   `interaction.guildId` is a Discord server id — that is the library's word, not ours. Never introduce a bare
   `guildId` in new code.
 - **Picking a guild in a command:** `resolveTarget(interaction)` from `utils/commandGuild.js`, with
   `GUILD_OPTION` in `options` and `guildOptionAutocomplete()` as the `autocomplete` export. Use
   `guildPhrase(guild)` / `inGuild(guild)` in reply text so a single-guild install keeps its original wording.
-- **Replies:** `deferReply()` first for anything touching a Minecraft bot, then `editReply()`. User-facing
+- **Replies:** `deferReply()` (`deferUpdate()` for panel components) first for anything touching a Minecraft bot or
+  saving a setting, then `editReply()`. User-facing
   strings use ✅ / ⚠️ / ❌ prefixes and `>` blockquotes.
 - **Minecraft text:** strip formatting with `.replace(/§./g, '')`. `jsonMsg.toString()` for plain text,
   `jsonMsg.toMotd()` when the colour codes carry meaning.

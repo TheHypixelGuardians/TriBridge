@@ -70,8 +70,10 @@ swallow far too much ordinary chat.
 
 ## Hypixel guilds
 
-The bridged guilds live in `guildsConfig.json` in the project root — gitignored, created on demand — and are
-managed entirely from Discord with **`/guilds`**. You should not need to edit the file by hand.
+The bridged guilds are stored in the shared PostgreSQL database (`tribridge.config`, see
+[The shared database](SHARED_DATABASE.md)) and managed entirely from Discord with **`/guilds`**. An install that
+still has a `guildsConfig.json` from an older version has it imported on the first start; after that the file is
+no longer read and is left in place as a backup.
 
 | Field            | Meaning                                                                                                   |
 |------------------|-----------------------------------------------------------------------------------------------------------|
@@ -113,9 +115,10 @@ falls back to the global one — or, for the officer channel, switches it off. `
 commands act on when none is given. `/guilds remove` unregisters a guild and disconnects its bot; removing the
 default guild requires `confirm:True`. Account addresses are masked in every reply.
 
-On a fresh install with no `guildsConfig.json`, the account in `MINECRAFT_USERNAME` is registered as the first
-guild automatically. Once the file exists the registry is authoritative and the environment variable is
-ignored.
+On a fresh install with no registry in the database and no `guildsConfig.json` to import, the account in
+`MINECRAFT_USERNAME` is registered as the first guild automatically. Once a registry exists it is authoritative
+and the environment variable is ignored. A `guildsConfig.json` that cannot be parsed stops the bot at startup
+instead — fix the file and restart, rather than have a broken registry silently replaced by a seeded one.
 
 ## Guild-to-guild bridging
 
@@ -345,7 +348,7 @@ is therefore recorded in the channel set with `/auditchannel set`, with a jump l
 entry whenever a global profile change starts or ends.
 
 A Hypixel guild can be given its own audit channel with `/auditchannel set channel:#x guild:sb`; per-guild
-overrides live in `guildsConfig.json` rather than in the audit config, so removing a guild cannot leave an
+overrides live in the guild registry rather than in the audit setting, so removing a guild cannot leave an
 orphaned channel setting behind. `/auditchannel show` lists the default and every override, and `/auditchannel
 clear` drops one.
 

@@ -149,10 +149,15 @@ async function createMcBot(guildKey, options = {}) {
     record.awaitingDeviceCode = false;
 
     if (token?.profile?.name) {
-      guilds.update(guildKey, {
-        mcName: token.profile.name,
-        mcUuid: token.profile.id ?? null,
-      });
+      // A failed save must not block the connect; the next connect retries it.
+      guilds
+        .update(guildKey, {
+          mcName: token.profile.name,
+          mcUuid: token.profile.id ?? null,
+        })
+        .catch((error) =>
+          console.error("Failed to save the Minecraft profile:", error),
+        );
     }
 
     bot = mineflayer.createBot({

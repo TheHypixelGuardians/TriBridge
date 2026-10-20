@@ -18,6 +18,23 @@
 + On Minecraft spawn, `002probeHypixelGuildId.js` learns each guild's Hypixel `_id` when a key is set and
   persists it as `hypixelGuildId` on the registry entry (skipped when already known, or when the key / UUID
   is missing).
++ Added `utils/configStore.js`: one `tribridge.config` table (JSONB document per setting) in its own
+  `tribridge` schema, created on the first start that finds it missing (checked with `to_regclass`, so later
+  starts need no `CREATE` privilege). The `public` schema stays the
+  community bot's, whose `prisma db push` would drop a table it does not define.
+    + `guilds`, `globalProfile` and `auditChannel` each gained an `async load()` that `index.js` awaits before
+      login; reads stay synchronous from memory. Their write functions are now `async` and every caller
+      awaits them, except the two Minecraft-side metadata writes, which log a failed save instead.
+    + Writes save a copy first and update memory only once the save succeeded, so a failed save changes
+      nothing: a global profile change that could not be saved never starts, and a failed guild edit is not
+      saved later by an unrelated one. Changes are queued per setting, each starting from the last saved one.
+    + `/guilds`, `/auditchannel` and the admin panel acknowledge the interaction before saving, so a slow
+      database cannot make Discord time the click or command out. A deferred command that then fails now says
+      so, instead of being left on "thinking…".
++ Added `pg` and its dependencies to `package-lock.json`, which listed `pg` in `package.json` only.
++ Added `npm test`, a `node:test` suite in `test/` with no new dependency. It covers the one-time import (empty
+  database and a JSON file present imports it; a stored setting ignores the file), corrupt files, save ordering
+  and the modules' normalisation, with `db.query` mocked so no database is needed.
 
 #### Documentation
 
@@ -147,6 +164,20 @@
 
 + `/link` now accepts a member of **any** bridged guild. It still refuses only when every roster was read
   successfully and the name was in none of them.
+
+#### Core
+
++ The guild registry, the global profile change and the audit channel are now stored in the shared PostgreSQL
+  database instead of `guildsConfig.json`, `globalProfileConfig.json` and `auditChannelConfig.json`.
+    + **`DATABASE_URL` is now required.** If it is unset or the database cannot be read, the bot retries for
+      about 40 seconds and then exits with a non-zero code, rather than coming up on empty settings that the
+      next admin action would save over the real ones. A supervisor set to restart on failure will retry it.
+    + Upgrading needs no manual step: on the first start each file is imported once, the console names what
+      was imported, and the file is left in place as a backup. After that the file is no longer read.
+    + A file that is not valid JSON stops startup until it is fixed or moved away, as long as the database
+      has no copy of that setting yet. Starting on defaults would let the first change saved from Discord
+      create the setting and leave the file never imported.
+    + Downgrading to an older version brings back the files as they were on the day of the upgrade.
 
 ### Fixes
 

@@ -4,6 +4,8 @@ const { Client, GatewayIntentBits } = require("discord.js");
 const eventHandler = require("./handlers/eventHandler");
 const bridge = require("./bridge");
 const guilds = require("./utils/guilds");
+const globalProfile = require("./utils/globalProfile");
+const auditChannel = require("./utils/auditChannel");
 
 async function start() {
   const discordClient = new Client({
@@ -18,9 +20,11 @@ async function start() {
   const token = process.env.DISCORD_TOKEN;
   if (!token) throw new Error("Missing DISCORD_TOKEN");
 
+  await loadSettings();
+
   // Before login, so 000resolveServer and 001registerCommands both see a
-  // populated registry. Only fires on an install that predates guildsConfig.json.
-  const seeded = guilds.ensureSeeded();
+  // populated registry. Only fires on an install with no registry at all.
+  const seeded = await guilds.ensureSeeded();
   if (seeded.seeded) {
     console.log(
       `Seeded Hypixel guild "${seeded.guild.key}" from MINECRAFT_USERNAME. ` +
@@ -35,7 +39,7 @@ async function start() {
       );
     if (!known) {
       console.log(
-        "MINECRAFT_USERNAME is set but is not one of the accounts in guildsConfig.json. " +
+        "MINECRAFT_USERNAME is set but is not one of the accounts in the guild registry. " +
           "The registry is authoritative; the environment variable is ignored.",
       );
     }
@@ -61,6 +65,40 @@ async function start() {
   await discordClient.login(token);
 }
 
+const LOAD_ATTEMPTS = 5;
+const LOAD_RETRY_MS = 10_000;
+
+/**
+ * Loads every setting from the database. Every config read after this is
+ * synchronous, from memory.
+ *
+ * One at a time: creating the table races if run in parallel. Retried for a
+ * while because the weekly updater restarts the bot unattended, and a database
+ * that is briefly away at that moment should not cost a week of downtime.
+ * After that it throws — running on defaults instead would let the next admin
+ * action save over the real settings.
+ */
+async function loadSettings() {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await guilds.load();
+      await globalProfile.load();
+      await auditChannel.load();
+      return;
+    } catch (error) {
+      if (attempt === LOAD_ATTEMPTS) throw error;
+      console.error(
+        `Could not load settings (attempt ${attempt} of ${LOAD_ATTEMPTS}), ` +
+          `retrying in ${LOAD_RETRY_MS / 1000}s: ${error.message}`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, LOAD_RETRY_MS));
+    }
+  }
+}
+
 start().catch((error) => {
   console.error("Startup error:", error);
+  // Non-zero so a supervisor's restart-on-failure sees it. Exit outright: an
+  // idle database pool would otherwise keep the process alive for a while.
+  process.exit(1);
 });

@@ -17,9 +17,13 @@ npm start
 
 ## What survives
 
-Everything. Every file the bot writes is [gitignored](/tribridge/config-files) and lives next to the repository rather
-than inside it — the guild registry, the account links, the admin roles, the cached Microsoft tokens. A pull
-cannot touch them.
+Everything. The settings you change from Discord — the guild registry, the global profile change, the audit
+channel — are in the [database](/tribridge/config-files), and the cached Microsoft tokens are in a gitignored folder
+next to the repository. A pull cannot touch either.
+
+Upgrading from a version that kept those settings in `*Config.json` files needs no manual step: the first start
+imports each file into the database and logs it, and the files are left in place. Make sure `DATABASE_URL` is
+set before that restart — the bot will not start without it.
 
 The one thing to read before restarting is the release's entry in the
 [changelog](https://github.com/TheHypixelGuardians/TriBridge/blob/master/CHANGELOG.md). A **major** version bump means a
@@ -42,10 +46,13 @@ anything that changes a config file rather than relying on the number.
 
 ## Downgrading
 
-`git checkout` an earlier commit and reinstall. Config files written by a newer version are read by an older
-one on a best-effort basis: unknown fields are ignored, and a file that cannot be parsed degrades to defaults
-rather than crashing — which for `guildsConfig.json` means an empty registry. Back that file up before going
-backwards.
+`git checkout` an earlier commit and reinstall. Settings written by a newer version are read by an older one on a
+best-effort basis: unknown fields are ignored.
+
+Going back to a version from before the settings moved into the database is different: that version reads the
+`*Config.json` files again, and they hold whatever they held on the day of the upgrade. Anything changed since —
+a guild added, an audit channel set — is not in them. Changing a setting there and then upgrading again does
+not carry it over either, because the database already has that setting and the file is not imported twice.
 
 ## Next
 

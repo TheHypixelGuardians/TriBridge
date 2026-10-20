@@ -52,7 +52,7 @@ the [change log](CHANGELOG.md) for what's new in each release.*
 | **npm**               | Included with Node.js                                                                                                                                |
 | **Discord bot**       | An application at the [Discord Developer Portal](https://discord.com/developers/applications) with the **Message Content** privileged intent enabled |
 | **Minecraft account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net`                                   |
-| **PostgreSQL**        | The database the [THG community bot](https://github.com/TheHypixelGuardians/thg-community) owns. This bot reads account links and the bot-admin role list from it |
+| **PostgreSQL**        | The database the [THG community bot](https://github.com/TheHypixelGuardians/thg-community) owns. This bot reads account links and the bot-admin role list from it, and keeps its own settings there. **Required** — the bot does not start without it |
 
 ## Installation
 
@@ -89,8 +89,8 @@ the [change log](CHANGELOG.md) for what's new in each release.*
    | `DISCORD_TOKEN`      | Bot token from the Discord Developer Portal                                                          |
    | `DISCORD_CHANNEL_ID` | The bridge channel — the one channel wired to guild chat                                             |
    | `LOG_CHANNEL`        | Where connection notices and warnings go. A Hypixel guild can override it with its own channel        |
-   | `MINECRAFT_USERNAME` | Microsoft account email for the first Hypixel guild. **Ignored once `guildsConfig.json` exists**       |
-   | `DATABASE_URL`       | The community bot's PostgreSQL database. Account links and the bot-admin role list are read from it |
+   | `MINECRAFT_USERNAME` | Microsoft account email for the first Hypixel guild. **Ignored once a guild registry exists**          |
+   | `DATABASE_URL`       | The community bot's PostgreSQL database. Account links and the bot-admin role list are read from it, and the guild registry, global profile change and audit channel are stored in it. **Required** |
    | `HYPIXEL_API_KEY`    | *Optional.* Hypixel API key used to learn each guild's Hypixel id on connect                         |
    | `DISCORD_GUILD_ID`   | *Optional.* The only Discord server the bot accepts commands from. Defaults to the bridge channel's server |
 

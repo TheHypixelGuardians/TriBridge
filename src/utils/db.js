@@ -1,17 +1,17 @@
 const { Pool } = require("pg");
 
 /**
- * Read-only access to the THG community bot's Postgres database.
+ * Access to the Postgres database shared with the THG community bot.
  *
  * The community bot owns account links and the bot-admin role list; this bot
  * reads both so the two agree about who is who and who is staff, and never
- * writes either. Everything else the bridge needs is still local — the global
- * profile change and the audit channel live in this repository's own config
- * files.
+ * writes either. TriBridge's own settings live in the same database, in its own
+ * `tribridge` schema — see `configStore.js`.
  *
  * `DATABASE_URL` is the same connection string the community bot uses. Without
- * it every read here fails, and each caller decides what that means: link
- * lookups behave as "not linked", and `isAdmin` refuses.
+ * it every query here fails, and each caller decides what that means: link
+ * lookups behave as "not linked", `isAdmin` refuses, and startup stops because
+ * the bot's settings cannot be loaded.
  */
 
 let pool = null;
@@ -61,9 +61,9 @@ async function query(text, params = []) {
     if (!warnedUnconfigured) {
       warnedUnconfigured = true;
       console.error(
-        "DATABASE_URL is not set. Account links, bot-admin roles and the global " +
-          "profile change all live in the community bot's database, so those " +
-          "features are inert until it is.",
+        "DATABASE_URL is not set. Account links, bot-admin roles and TriBridge's " +
+          "own settings all live in the shared database, so the bot cannot " +
+          "start until it is.",
       );
     }
     return null;

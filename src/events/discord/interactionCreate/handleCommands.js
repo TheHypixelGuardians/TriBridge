@@ -55,5 +55,12 @@ module.exports = async (client, interaction) => {
     await commandObject.callback(client, interaction);
   } catch (error) {
     console.error(error);
+    // A command that deferred and then failed (a save that did not go
+    // through) would otherwise sit on "thinking…" until Discord gives up.
+    if (interaction.deferred && !interaction.replied) {
+      await interaction
+        .editReply("❌ Something went wrong handling that. Check the console.")
+        .catch(() => {});
+    }
   }
 };

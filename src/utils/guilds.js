@@ -1,6 +1,9 @@
-const fs = require("fs");
 const path = require("path");
+const store = require("./configStore");
 
+const CONFIG_NAME = "guilds";
+
+// Only read once, to import it into the database — see configStore.js.
 const CONFIG_PATH = path.join(__dirname, "..", "..", "guildsConfig.json");
 
 // A key is the stable identity of a Hypixel guild: the autocomplete value, the
@@ -17,8 +20,6 @@ const COLOR_PATTERN = /^#?[0-9a-fA-F]{6}$/;
 // Today's relay embed colour, so a seeded single-guild install looks unchanged.
 const DEFAULT_COLOR = "#2ECC71";
 
-let cachedConfig = null;
-
 function defaults() {
   return {
     version: 1,
@@ -28,37 +29,63 @@ function defaults() {
   };
 }
 
-function loadConfig() {
-  if (cachedConfig) return cachedConfig;
+let cachedConfig = defaults();
+let stored = false;
 
-  try {
-    const data = fs.readFileSync(CONFIG_PATH, "utf-8");
-    cachedConfig = { ...defaults(), ...JSON.parse(data) };
-  } catch {
-    cachedConfig = defaults();
-  }
+/**
+ * @param {object|undefined} raw A stored document or a legacy file.
+ * @returns {object}
+ */
+function normalise(raw) {
+  const config = { ...defaults(), ...raw };
 
   // Guard against a hand-edited file: everything downstream assumes an array
   // of objects and a boolean, and a bad type here would surface far away.
-  if (!Array.isArray(cachedConfig.guilds)) cachedConfig.guilds = [];
-  cachedConfig.guilds = cachedConfig.guilds.filter(
-    (g) => g && typeof g === "object",
-  );
-  if (typeof cachedConfig.broadcastByDefault !== "boolean") {
-    cachedConfig.broadcastByDefault = true;
+  if (!Array.isArray(config.guilds)) config.guilds = [];
+  config.guilds = config.guilds.filter((g) => g && typeof g === "object");
+  if (typeof config.broadcastByDefault !== "boolean") {
+    config.broadcastByDefault = true;
   }
 
+  return config;
+}
+
+/**
+ * Loads the registry from the database. Must finish before anything reads it.
+ */
+async function load() {
+  ({ data: cachedConfig, stored } = await store.load(
+    CONFIG_NAME,
+    CONFIG_PATH,
+    normalise,
+  ));
+}
+
+function loadConfig() {
   return cachedConfig;
 }
 
-function saveConfig(config) {
-  cachedConfig = config;
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
+/**
+ * Saves a change, then applies it — see `configStore.commit`.
+ *
+ * @template T
+ * @param {(draft: object) => T} edit
+ * @returns {Promise<T>}
+ */
+function change(edit) {
+  return store.commit(CONFIG_NAME, loadConfig, edit, (saved) => {
+    cachedConfig = saved;
+    stored = true;
+  });
 }
 
-/** @returns {boolean} Whether the registry file exists on disk. */
+/**
+ * @returns {boolean} Whether a registry is stored in the database. A legacy
+ *   file that cannot be imported stops `load()` instead, so it is never papered
+ *   over by seeding a fresh registry.
+ */
 function configExists() {
-  return fs.existsSync(CONFIG_PATH);
+  return stored;
 }
 
 function copy(guild) {
@@ -276,9 +303,10 @@ function shouldShowTags() {
  *
  * @param {{key: string, name: string, tag: string, account: string,
  *   color?: string, addedBy?: string|null}} input
- * @returns {{ok: true, guild: object} | {ok: false, reason: string}}
+ * @returns {Promise<{ok: true, guild: object} | {ok: false, reason: string}>}
+ *   Rejects when the registry could not be saved.
  */
-function add(input) {
+async function add(input) {
   const key = String(input.key ?? "")
     .trim()
     .toLowerCase();
@@ -300,44 +328,45 @@ function add(input) {
   const color = input.color ? normalizeColor(input.color) : DEFAULT_COLOR;
   if (!color) return { ok: false, reason: "invalid-color" };
 
-  const config = loadConfig();
-  if (config.guilds.some((g) => g.key === key))
-    return { ok: false, reason: "duplicate-key" };
-  if (
-    config.guilds.some((g) => String(g.tag).toLowerCase() === tag.toLowerCase())
-  ) {
-    return { ok: false, reason: "duplicate-tag" };
-  }
-  // Two mineflayer bots cannot hold a Hypixel session on one account.
-  if (config.guilds.some((g) => g.account === account)) {
-    return { ok: false, reason: "duplicate-account" };
-  }
+  return change((config) => {
+    if (config.guilds.some((g) => g.key === key))
+      return { ok: false, reason: "duplicate-key" };
+    if (
+      config.guilds.some(
+        (g) => String(g.tag).toLowerCase() === tag.toLowerCase(),
+      )
+    ) {
+      return { ok: false, reason: "duplicate-tag" };
+    }
+    // Two mineflayer bots cannot hold a Hypixel session on one account.
+    if (config.guilds.some((g) => g.account === account)) {
+      return { ok: false, reason: "duplicate-account" };
+    }
 
-  const guild = {
-    key,
-    name,
-    tag,
-    account,
-    color,
-    logChannelId: null,
-    auditChannelId: null,
-    bridgeChannelId: null,
-    officerChannelId: null,
-    enabled: true,
-    crossBridge: false,
-    crossBridgeOfficer: false,
-    mcName: null,
-    mcUuid: null,
-    hypixelGuildId: null,
-    addedBy: input.addedBy ?? null,
-    addedAt: Date.now(),
-  };
+    const guild = {
+      key,
+      name,
+      tag,
+      account,
+      color,
+      logChannelId: null,
+      auditChannelId: null,
+      bridgeChannelId: null,
+      officerChannelId: null,
+      enabled: true,
+      crossBridge: false,
+      crossBridgeOfficer: false,
+      mcName: null,
+      mcUuid: null,
+      hypixelGuildId: null,
+      addedBy: input.addedBy ?? null,
+      addedAt: Date.now(),
+    };
 
-  config.guilds.push(guild);
-  if (!config.defaultKey) config.defaultKey = key;
-  saveConfig(config);
-
-  return { ok: true, guild: copy(guild) };
+    config.guilds.push(guild);
+    if (!config.defaultKey) config.defaultKey = key;
+    return { ok: true, guild: copy(guild) };
+  });
 }
 
 const PATCHABLE = new Set([
@@ -367,120 +396,123 @@ const BOOLEAN_FIELDS = new Set([
  *
  * @param {string} key
  * @param {object} patch
- * @returns {{ok: true, guild: object} | {ok: false, reason: string}}
+ * @returns {Promise<{ok: true, guild: object} | {ok: false, reason: string}>}
+ *   Rejects when the registry could not be saved.
  */
-function update(key, patch) {
-  const config = loadConfig();
-  const guild = config.guilds.find(
-    (g) => g.key === String(key ?? "").toLowerCase(),
-  );
-  if (!guild) return { ok: false, reason: "unknown-key" };
+async function update(key, patch) {
+  return change((config) => {
+    const guild = config.guilds.find(
+      (g) => g.key === String(key ?? "").toLowerCase(),
+    );
+    if (!guild) return { ok: false, reason: "unknown-key" };
 
-  const changes = {};
+    const changes = {};
 
-  for (const [field, raw] of Object.entries(patch ?? {})) {
-    if (!PATCHABLE.has(field) || raw === undefined) continue;
+    for (const [field, raw] of Object.entries(patch ?? {})) {
+      if (!PATCHABLE.has(field) || raw === undefined) continue;
 
-    if (field === "name") {
-      const name = String(raw).trim();
-      if (!name || name.length > 64)
-        return { ok: false, reason: "invalid-name" };
-      changes.name = name;
-    } else if (field === "tag") {
-      const tag = String(raw).trim();
-      if (!TAG_PATTERN.test(tag)) return { ok: false, reason: "invalid-tag" };
-      const taken = config.guilds.some(
-        (g) =>
-          g.key !== guild.key &&
-          String(g.tag).toLowerCase() === tag.toLowerCase(),
-      );
-      if (taken) return { ok: false, reason: "duplicate-tag" };
-      changes.tag = tag;
-    } else if (field === "color") {
-      const color = normalizeColor(raw);
-      if (!color) return { ok: false, reason: "invalid-color" };
-      changes.color = color;
-    } else if (BOOLEAN_FIELDS.has(field)) {
-      changes[field] = Boolean(raw);
-    } else {
-      changes[field] = raw === null ? null : String(raw);
+      if (field === "name") {
+        const name = String(raw).trim();
+        if (!name || name.length > 64)
+          return { ok: false, reason: "invalid-name" };
+        changes.name = name;
+      } else if (field === "tag") {
+        const tag = String(raw).trim();
+        if (!TAG_PATTERN.test(tag)) return { ok: false, reason: "invalid-tag" };
+        const taken = config.guilds.some(
+          (g) =>
+            g.key !== guild.key &&
+            String(g.tag).toLowerCase() === tag.toLowerCase(),
+        );
+        if (taken) return { ok: false, reason: "duplicate-tag" };
+        changes.tag = tag;
+      } else if (field === "color") {
+        const color = normalizeColor(raw);
+        if (!color) return { ok: false, reason: "invalid-color" };
+        changes.color = color;
+      } else if (BOOLEAN_FIELDS.has(field)) {
+        changes[field] = Boolean(raw);
+      } else {
+        changes[field] = raw === null ? null : String(raw);
+      }
     }
-  }
 
-  if (Object.keys(changes).length === 0)
-    return { ok: false, reason: "no-changes" };
+    if (Object.keys(changes).length === 0)
+      return { ok: false, reason: "no-changes" };
 
-  Object.assign(guild, changes);
-  saveConfig(config);
-
-  return { ok: true, guild: copy(guild) };
+    Object.assign(guild, changes);
+    return { ok: true, guild: copy(guild) };
+  });
 }
 
 /**
  * @param {string} key
- * @returns {{ok: true, guild: object} | {ok: false, reason: string}}
+ * @returns {Promise<{ok: true, guild: object} | {ok: false, reason: string}>}
+ *   Rejects when the registry could not be saved.
  */
-function remove(key) {
-  const config = loadConfig();
-  const wanted = String(key ?? "").toLowerCase();
-  const index = config.guilds.findIndex((g) => g.key === wanted);
-  if (index === -1) return { ok: false, reason: "unknown-key" };
+async function remove(key) {
+  return change((config) => {
+    const wanted = String(key ?? "").toLowerCase();
+    const index = config.guilds.findIndex((g) => g.key === wanted);
+    if (index === -1) return { ok: false, reason: "unknown-key" };
 
-  const [removed] = config.guilds.splice(index, 1);
+    const [removed] = config.guilds.splice(index, 1);
 
-  // Never leave `defaultKey` pointing at a guild that is gone.
-  if (config.defaultKey === removed.key) {
-    config.defaultKey =
-      config.guilds.find((g) => g.enabled !== false)?.key ??
-      config.guilds[0]?.key ??
-      null;
-  }
+    // Never leave `defaultKey` pointing at a guild that is gone.
+    if (config.defaultKey === removed.key) {
+      config.defaultKey =
+        config.guilds.find((g) => g.enabled !== false)?.key ??
+        config.guilds[0]?.key ??
+        null;
+    }
 
-  saveConfig(config);
-  return { ok: true, guild: copy(removed) };
+    return { ok: true, guild: copy(removed) };
+  });
 }
 
 /**
  * @param {string} key
- * @returns {{ok: true, guild: object} | {ok: false, reason: string}}
+ * @returns {Promise<{ok: true, guild: object} | {ok: false, reason: string}>}
+ *   Rejects when the registry could not be saved.
  */
-function setDefault(key) {
-  const config = loadConfig();
-  const guild = config.guilds.find(
-    (g) => g.key === String(key ?? "").toLowerCase(),
-  );
-  if (!guild) return { ok: false, reason: "unknown-key" };
+async function setDefault(key) {
+  return change((config) => {
+    const guild = config.guilds.find(
+      (g) => g.key === String(key ?? "").toLowerCase(),
+    );
+    if (!guild) return { ok: false, reason: "unknown-key" };
 
-  config.defaultKey = guild.key;
-  saveConfig(config);
-  return { ok: true, guild: copy(guild) };
+    config.defaultKey = guild.key;
+    return { ok: true, guild: copy(guild) };
+  });
 }
 
 /**
  * @param {boolean} enabled
+ * @returns {Promise<void>} Rejects when the registry could not be saved.
  */
-function setBroadcastByDefault(enabled) {
-  const config = loadConfig();
-  config.broadcastByDefault = Boolean(enabled);
-  saveConfig(config);
+async function setBroadcastByDefault(enabled) {
+  await change((config) => {
+    config.broadcastByDefault = Boolean(enabled);
+  });
 }
 
 /**
  * Seeds a single guild from `MINECRAFT_USERNAME` on an install that predates
  * the registry, so an existing deployment keeps working with no config edits.
  *
- * Only ever runs when the registry file is absent — an existing file is
+ * Only ever runs when there is no registry at all — an existing one is
  * authoritative and is never rewritten from the environment.
  *
- * @returns {{seeded: boolean, guild?: object, reason?: string}}
+ * @returns {Promise<{seeded: boolean, guild?: object, reason?: string}>}
  */
-function ensureSeeded() {
+async function ensureSeeded() {
   if (configExists()) return { seeded: false, reason: "already-configured" };
 
   const account = String(process.env.MINECRAFT_USERNAME ?? "").trim();
   if (!account) return { seeded: false, reason: "no-account" };
 
-  const result = add({
+  const result = await add({
     key: "main",
     name: "Guild",
     tag: "MAIN",
@@ -494,6 +526,7 @@ function ensureSeeded() {
 }
 
 module.exports = {
+  load,
   getAll,
   getEnabled,
   getCrossBridged,

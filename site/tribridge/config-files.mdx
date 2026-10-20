@@ -1,59 +1,77 @@
 ---
 title: "Config Files"
-description: "Runtime config files the bot writes beside the repository."
+description: "Where TriBridge keeps its settings: two local files, and the shared database."
 ---
-Everything TriBridge remembers lives in the project root, next to the repository. All of it is **gitignored**,
-so a `git pull` never touches it and nothing secret can be committed by accident.
+TriBridge keeps two things in the project root, next to the repository, and everything else in the shared
+PostgreSQL database. The local files are **gitignored**, so a `git pull` never touches them and nothing secret
+can be committed by accident.
 
-Each file is created on demand the first time it is needed. A missing file is not an error — it means the
-feature has not been configured yet.
+`.env` is the one file you write yourself, and the bot will not start without it. Copy the `.env.example`
+template in the repository and fill it in — that copy is tracked in git, the `.env` it produces is not.
 
-`.env` is the exception: it is the one file you write yourself, and the bot will not start without it. Copy
-the `.env.example` template in the repository and fill it in — that copy is tracked in git, the `.env` it
-produces is not.
+| File               | Holds                                                     | Managed with                                               |
+|--------------------|-----------------------------------------------------------|------------------------------------------------------------|
+| `.env`             | Token, bridge channel, log channel, database, first account | Editing it — see [Configuration](/tribridge/configuration) |
+| `.minecraft-auth/` | Cached Microsoft tokens, one entry per account            | The bot                                                    |
 
-| File                         | Holds                                               | Managed with                                     |
-|------------------------------|-----------------------------------------------------|--------------------------------------------------|
-| `.env`                       | Token, bridge channel, log channel, first account   | Editing it — see [Configuration](/tribridge/configuration)  |
-| `.minecraft-auth/`           | Cached Microsoft tokens, one entry per account      | The bot                                          |
-| `guildsConfig.json`          | The Hypixel guild registry                          | [`/guilds`](/tribridge/hypixel-guilds)                      |
-| `adminRolesConfig.json`      | Discord role ids that hold bot-admin                | [`/adminrole`](/tribridge/admin-roles)                      |
-| `linkedAccountsConfig.json`  | Discord user → Minecraft name and UUID              | [`/link`, `/unlink`](/tribridge/account-linking)            |
-| `linkRoleConfig.json`        | The role given to linked users                      | [`/linkrole`](/tribridge/link-role)                         |
-| `auditChannelConfig.json`    | The default audit channel                           | [`/auditchannel`](/tribridge/auditing)                      |
-| `globalProfileConfig.json`   | The running global profile change, and its scope    | [`/adminpanel`](/tribridge/global-profile-change)           |
-| `featureRequestsConfig.json` | The request channel, the next id, and every request | [`/request`, `/requeststatus`](/tribridge/feature-requests) |
+## Settings in the database
 
-## Back these up
+The settings you change from Discord are stored in the database `DATABASE_URL` points at, in one table,
+`tribridge.config`, which the bot creates the first time it starts. It sits in its own `tribridge` schema, apart from the
+community bot's tables.
 
-`guildsConfig.json` and `linkedAccountsConfig.json` are the two that cost real work to rebuild — the registry
-is the whole bridge setup, and the links are something every member did by hand. Back them up alongside
-`.env`.
+| Setting           | Holds                                            | Managed with                                      |
+|-------------------|--------------------------------------------------|---------------------------------------------------|
+| `guilds`          | The Hypixel guild registry                       | [`/guilds`](/tribridge/hypixel-guilds)            |
+| `globalProfile`   | The running global profile change, and its scope | [`/adminpanel`](/tribridge/global-profile-change) |
+| `auditChannel`    | The default audit channel                        | [`/auditchannel`](/tribridge/auditing)            |
 
-`.minecraft-auth/` is worth keeping too: losing it does not lose anything permanent, but every account has to
-go through a device-code sign-in again.
+Account links and bot-admin roles are not TriBridge's — they belong to the community bot and are only read from
+the same database.
+
+## Upgrading from the JSON files
+
+Older versions kept those three settings in `guildsConfig.json`, `globalProfileConfig.json` and
+`auditChannelConfig.json` in the project root. On the first start after upgrading, each setting that is not in
+the database yet is imported from its file, and the console says which. After that the database is
+authoritative: the file is never read again, and it is left where it is as a backup. Nothing needs doing by
+hand, and restarting again does not import twice.
+
+**A file that is not valid JSON stops the bot at startup**, as long as the database has no copy of that setting
+yet. Fix the file and restart, or move it out of the project root to start without it. Starting on defaults
+instead would strand the file: the first change saved from Discord would create the setting in the database,
+and the file would never be imported after that. Once the database has the setting, the file is ignored
+whatever is in it.
+
+`adminRolesConfig.json`, `linkedAccountsConfig.json`, `linkRoleConfig.json` and `featureRequestsConfig.json` are
+from features that moved to the community bot. Nothing reads them.
 
 ## Things worth knowing
 
-**A malformed file degrades to defaults rather than crashing.** A `guildsConfig.json` that will not parse is
-read as an empty registry, and the bot starts anyway with a warning — `/guilds` is the only way to repair the
-registry, so Discord has to come up even when the registry is broken.
+**The bot does not start without its database.** If `DATABASE_URL` is unset or the database cannot be reached
+at startup, it retries for about 40 seconds and then exits with a non-zero code, rather than coming up on empty
+settings — an admin action taken then would save over the real registry. Run it under a supervisor that restarts
+it on failure (`systemd` `Restart=on-failure`, Docker `restart: on-failure`).
 
-**`key` and `account` in `guildsConfig.json` are immutable**, and the commands enforce it. `account` is the
-key prismarine-auth hashes for its token cache: editing it by hand silently starts a fresh device-code flow
-against a different cache file, against an account nothing is signed in to. Remove the guild and add it again
-instead.
+**Back up the database**, not the JSON files: after the first start they are a snapshot of the day you
+upgraded. `.minecraft-auth/` is worth keeping too: losing it does not lose anything permanent, but every account
+has to go through a device-code sign-in again.
 
-**Per-guild channel overrides live in `guildsConfig.json`**, not in `auditChannelConfig.json` — so removing a
-guild cannot leave an orphaned channel setting behind. `officerChannelId` and `crossBridgeOfficer` live there
-too, alongside `crossBridge`; see [Officer chat](/tribridge/officer-chat). `officerChannelId` is the one channel field
+**`key` and `account` in the registry are immutable**, and the commands enforce it. `account` is the key
+prismarine-auth hashes for its token cache: changing it silently starts a fresh device-code flow against a
+different cache file, against an account nothing is signed in to. Remove the guild and add it again instead.
+
+**Per-guild channel overrides live in the registry**, not in the audit channel setting — so removing a guild
+cannot leave an orphaned channel setting behind. `officerChannelId` and `crossBridgeOfficer` live there too,
+alongside `crossBridge`; see [Officer chat](/tribridge/officer-chat). `officerChannelId` is the one channel field
 guilds may deliberately share — replies typed there are routed by [guild tag](/tribridge/guild-tags).
 
-**Each file is cached in memory** after its first read and written back whole on a change. Hand-editing a file
-while the bot is running will be overwritten by the next write; stop the process first.
+**Settings are read once at startup** and held in memory; each change is written back whole. Editing a row by
+hand while the bot is running will be overwritten by the next change; stop the process first.
 
-**Never print or share these.** `.env` holds a bot token, `.minecraft-auth/` holds live Microsoft credentials,
-and `guildsConfig.json` holds account addresses — which is why `/guilds` masks them in every reply.
+**Never print or share these.** `.env` holds a bot token and the database password, `.minecraft-auth/` holds
+live Microsoft credentials, and the registry holds account addresses — which is why `/guilds` masks them in every
+reply.
 
 ## Next
 
