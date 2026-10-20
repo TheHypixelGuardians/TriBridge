@@ -34,8 +34,8 @@ Three consequences for anyone changing those tables:
 
 ## What TriBridge does not read
 
-The admin panel, global profile change, and audit channel live in TriBridge's own config files
-(`globalProfileConfig.json`, `auditChannelConfig.json`). Nothing in this bot starts, stops, or records a
+The admin panel, global profile change, and audit channel are TriBridge's own settings, stored in its own
+`tribridge` schema in the same database. This bot neither reads nor writes them. Nothing in this bot starts, stops, or records a
 disguise.
 
 ## Failure behaviour

@@ -28,6 +28,7 @@ const {
   setExcludedChannels,
 } = require("../../../utils/globalProfile");
 const { isAllowedServer } = require("../../../utils/serverGuard");
+const { refuseIfBlacklisted } = require("../../../utils/blacklist");
 const { getLink } = require("../../../utils/linkedAccounts");
 const { resolveMember } = require("../../../utils/serverMember");
 
@@ -62,10 +63,14 @@ async function startEffect(interaction, mode, invokerId) {
     });
   }
 
+  // Acknowledged before the link lookup and the save: either can take longer
+  // than the three seconds Discord allows, and the click would then fail.
+  await interaction.deferUpdate();
+
   // Snapshotted here rather than looked up per message: the gate runs on
   // every message in the server and must not make API calls.
   const link = await getLink(member.id);
-  const state = start({
+  const state = await start({
     target: {
       userId: member.id,
       name: member.displayName,
@@ -81,14 +86,15 @@ async function startEffect(interaction, mode, invokerId) {
   armExpiry((previous) => announceEnded(previous, "the time ran out"));
   clearDraft(invokerId);
 
-  await interaction.update(mainView(invokerId));
+  await interaction.editReply(mainView(invokerId));
   await announceStarted(state, invokerId);
 }
 
 async function stopEffect(interaction, invokerId) {
-  const previous = stop();
+  await interaction.deferUpdate();
+  const previous = await stop();
 
-  await interaction.update(mainView(invokerId));
+  await interaction.editReply(mainView(invokerId));
 
   // The button is disabled when nothing is running, but a panel left open
   // from an earlier effect can still send this.
@@ -169,8 +175,9 @@ async function handleProfile(interaction, action, invokerId) {
       action === "toggleMinecraft"
         ? "disguiseToMinecraft"
         : "disguiseToDiscord";
-    setDirection(key, !getState()[key]);
-    return interaction.update(profileView(invokerId));
+    await interaction.deferUpdate();
+    await setDirection(key, !getState()[key]);
+    return interaction.editReply(profileView(invokerId));
   }
 
   if (action === "startTest")
@@ -184,14 +191,18 @@ async function handleProfile(interaction, action, invokerId) {
 async function handleScope(interaction, action, invokerId) {
   // The select menus hand back the whole selection, so each one is written
   // through wholesale rather than diffed.
-  if (action === "testers") setTesters(interaction.values);
-  else if (action === "testChannels") setTestChannels(interaction.values);
-  else if (action === "excludedChannels")
-    setExcludedChannels(interaction.values);
-  else if (action === "back") return interaction.update(profileView(invokerId));
-  else return;
+  const setters = {
+    testers: setTesters,
+    testChannels: setTestChannels,
+    excludedChannels: setExcludedChannels,
+  };
 
-  return interaction.update(scopeView(invokerId));
+  if (action === "back") return interaction.update(profileView(invokerId));
+  if (!Object.hasOwn(setters, action)) return;
+
+  await interaction.deferUpdate();
+  await setters[action](interaction.values);
+  return interaction.editReply(scopeView(invokerId));
 }
 
 module.exports = async (client, interaction) => {
@@ -214,6 +225,8 @@ module.exports = async (client, interaction) => {
       ephemeral: true,
     });
   }
+
+  if (await refuseIfBlacklisted(interaction)) return;
 
   // Re-checked on every click, not just when the panel was opened — an admin
   // role can be taken away while the panel sits there.
@@ -241,13 +254,16 @@ module.exports = async (client, interaction) => {
   } catch (error) {
     console.error("Admin panel interaction failed:", error);
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction
-        .reply({
-          content: "❌ Something went wrong handling that. Check the console.",
-          ephemeral: true,
-        })
-        .catch(() => {});
-    }
+    const notice = {
+      content: "❌ Something went wrong handling that. Check the console.",
+      ephemeral: true,
+    };
+    // Deferred before a save that then failed: the click is already
+    // acknowledged, so the notice has to be a follow-up.
+    await (
+      interaction.replied || interaction.deferred
+        ? interaction.followUp(notice)
+        : interaction.reply(notice)
+    ).catch(() => {});
   }
 };

@@ -9,6 +9,10 @@ module.exports = async (client) => {
 
     for (const localCommand of localCommands) {
       const { name, description, options } = localCommand;
+      // Sent as null, not left out, so removing it from a command clears it
+      // on Discord's side too.
+      const defaultMemberPermissions =
+        localCommand.defaultMemberPermissions ?? null;
 
       const existingCommand = applicationCommands.cache.find(
         (cmd) => cmd.name === name,
@@ -25,6 +29,7 @@ module.exports = async (client) => {
           await applicationCommands.edit(existingCommand.id, {
             description,
             options,
+            defaultMemberPermissions,
           });
 
           console.log(`Edited command ${name}.`);
@@ -39,6 +44,7 @@ module.exports = async (client) => {
           name,
           description,
           options,
+          defaultMemberPermissions,
         });
 
         console.log(`Registered command ${name}.`);

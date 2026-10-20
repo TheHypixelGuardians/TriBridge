@@ -5,6 +5,7 @@ const { sendChat } = require("../../../utils/chatQueue");
 const { buildOfficerChatCommand } = require("../../../utils/sanitizeForChat");
 const { routeMessage } = require("../../../utils/chatRouting");
 const { getLink } = require("../../../utils/linkedAccounts");
+const { isBlacklisted } = require("../../../utils/blacklist");
 
 /**
  * Speaks a message in the officer chat of every guild it is addressed to.
@@ -74,6 +75,13 @@ module.exports = async (client, message) => {
     .getAllByOfficerChannel(message.channel.id)
     .filter((g) => g.enabled !== false);
   if (candidates.length === 0) return;
+
+  // Same rule as the bridge channel: not relayed, marked so it is visibly
+  // refused rather than silently lost.
+  if (await isBlacklisted(message.guildId, message.author.id)) {
+    await message.react("⛔").catch(() => {});
+    return;
+  }
 
   const { targets, body, unknownTag } = routeMessage(message.content, {
     candidates,

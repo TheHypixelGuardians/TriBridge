@@ -1,5 +1,6 @@
 const getLocalCommands = require("../../../utils/getLocalCommands");
 const { isAllowedServer } = require("../../../utils/serverGuard");
+const { refuseIfBlacklisted } = require("../../../utils/blacklist");
 
 module.exports = async (client, interaction) => {
   // `isCommand()` is a strict type check for ApplicationCommand, so autocomplete
@@ -26,6 +27,10 @@ module.exports = async (client, interaction) => {
       });
       return;
     }
+
+    // Before the permission checks, so a blacklisted member learns why, not
+    // just that they lack a permission.
+    if (await refuseIfBlacklisted(interaction)) return;
 
     if (commandObject.permissionsRequired?.length) {
       for (const permission of commandObject.permissionsRequired) {
@@ -55,5 +60,12 @@ module.exports = async (client, interaction) => {
     await commandObject.callback(client, interaction);
   } catch (error) {
     console.error(error);
+    // A command that deferred and then failed (a save that did not go
+    // through) would otherwise sit on "thinking…" until Discord gives up.
+    if (interaction.deferred && !interaction.replied) {
+      await interaction
+        .editReply("❌ Something went wrong handling that. Check the console.")
+        .catch(() => {});
+    }
   }
 };

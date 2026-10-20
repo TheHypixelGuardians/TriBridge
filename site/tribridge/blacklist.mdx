@@ -1,0 +1,50 @@
+---
+title: "Blacklist"
+description: "Bar a member from both bots' commands and from relaying into guild chat."
+---
+`/blacklist` bars a member from **both bots** — TriBridge and the THG community bot. It is bot-admin only and
+every reply is private.
+
+```
+/blacklist add user:@Someone reason:Spamming the bridge
+/blacklist remove user:@Someone
+/blacklist list
+```
+
+## What it does
+
+A blacklisted member:
+
+- has every command, button, menu and autocomplete refused, on both bots;
+- no longer reaches Minecraft from the bridge channel or an [officer channel](/tribridge/officer-chat). Their
+  message stays in Discord with a ⛔ reaction, so they can see it was not sent rather than it disappearing.
+
+What they type **in-game** is not affected, because the blacklist is about Discord accounts. Use `/mute` for
+guild chat.
+
+## Rules
+
+- **Bots, yourself and other bot admins cannot be blacklisted.** Take the
+  [admin role](/tribridge/admin-roles) away first. Otherwise one admin could lock another out of both bots.
+- **A change applies here at once**, and on the community bot within about 15 seconds.
+- **It fails open.** If the database cannot be read, nobody counts as blacklisted. Failing closed would refuse
+  every command and stop the whole bridge for everyone during an outage, to keep out a handful of members. The
+  admin check still fails closed, so nothing privileged opens up.
+- The reason is for the other admins and is never shown to the member.
+- Every add and remove is recorded in the [audit channel](/tribridge/auditing).
+
+## Where it is stored
+
+In the database shared with the community bot, in its `Blacklist` table, per Discord server. TriBridge writes
+it — the only table in the community bot's schema it does — and the community bot reads it. The table is
+created by the community bot's migrations, so **update the community bot first**: until its migration has run,
+`/blacklist add` reports a database error and nobody is blacklisted.
+
+The ⛔ needs **Add Reactions** in the channel. Without it the message is still held back, just without the
+marker. See [Permissions](/tribridge/permissions).
+
+## Next
+
+- [Commands](/tribridge/commands)
+- [Admin roles](/tribridge/admin-roles)
+- [Auditing](/tribridge/auditing)

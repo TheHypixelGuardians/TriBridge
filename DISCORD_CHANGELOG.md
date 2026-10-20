@@ -7,6 +7,11 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Moderation
+
+- Admins can now mute and unmute guild members from Discord with `/mute` and `/unmute`.
+- Admins can blacklist a member from both bots. A blacklisted member's commands are refused, and their messages here get a ⛔ and no longer reach guild chat.
+
 ### Fixes
 
 - Typing something that looks like officer chat (`Officer > Boss: …`) no longer shows up in the officer channel as if Boss said it. The same goes for fake guild chat sent in a private message.

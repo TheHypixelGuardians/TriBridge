@@ -16,7 +16,8 @@ const MAX_RELAY_AGE_MS = 10_000;
  * The guilds a line spoken in `sourceKey` should be forwarded to.
  *
  * Reads the registry rather than taking it as an argument, like
- * `chatRouting.routeMessage` — drive it in a test by writing `guildsConfig.json`.
+ * `chatRouting.routeMessage` — drive it in a test by mocking `db.query` and
+ * calling `guilds.load()`, as `test/configStore.test.js` does.
  *
  * @param {string} sourceKey The Hypixel guild the line came from.
  * @returns {object[]} Registry records, never including the source itself.

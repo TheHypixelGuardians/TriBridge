@@ -5,9 +5,11 @@ serving one Discord server. The community bot owns the community half — member
 bot-admin roles, feature requests — and TriBridge owns the bridge. Two of the things the community bot owns
 are *needed* by the bridge, so the two share one PostgreSQL database rather than each keeping its own copy.
 
-**The community bot owns the schema.** It runs the migrations, and both tables below are defined in its
-`prisma/schema.prisma`. TriBridge reads them with plain SQL through `src/utils/db.js`, holds no schema of its
-own, and **never writes**.
+**The community bot owns the `public` schema.** It runs the migrations, and every table below is defined in its
+`prisma/schema.prisma`. TriBridge reads them with plain SQL through `src/utils/db.js` and **never writes them** —
+with the one exception of `Blacklist`, because `/blacklist` lives here. See
+[What TriBridge writes](#what-tribridge-writes).
+TriBridge's own settings live in a separate `tribridge` schema — see [What TriBridge stores](#what-tribridge-stores).
 
 Set `DATABASE_URL` here to the same connection string the community bot uses.
 
@@ -21,9 +23,51 @@ Set `DATABASE_URL` here to the same connection string the community bot uses.
 `MinecraftLink` relates to `User.id` rather than to the Discord id — the community bot's schema convention —
 so both link lookups join through `"User"`.
 
-Everything else the bridge needs stays local. The global profile change lives in `globalProfileConfig.json`,
-the audit channel in `auditChannelConfig.json`, and the Hypixel guild registry in `guildsConfig.json`, all
-managed from Discord by this bot's own commands.
+## What TriBridge writes
+
+| Table       | Used for                                                                              | Module               |
+|-------------|---------------------------------------------------------------------------------------|----------------------|
+| `Blacklist` | `/blacklist`, and the check every command, button and Discord→Minecraft relay makes   | `utils/blacklist.js` |
+
+`/blacklist` is a TriBridge command, so the writes are here and the community bot only reads. One writer per
+table is the rule both bots keep; two writing one table is how they would start to disagree.
+
+The table is still the community bot's: its migration creates it, with database-side defaults for `id` and
+`updatedAt`. Those defaults are what lets a plain `INSERT` from here work at all — Prisma fills both in
+application code, and this side has no Prisma. Rows are keyed per Discord server (`guildId`) and member
+(`discordId`), unique together, which `INSERT … ON CONFLICT DO NOTHING` relies on. **Deploy the community bot's
+migration before this side's `/blacklist`**, or every add reports a database error and every check lets
+everyone through.
+
+## What TriBridge stores
+
+TriBridge owns one table, `tribridge.config`, which `src/utils/configStore.js` creates on the first start that
+finds it missing (checked with `to_regclass`, then `CREATE SCHEMA`/`CREATE TABLE IF NOT EXISTS`). It holds one JSONB document per setting, all managed from Discord by this
+bot's own commands:
+
+| `name`          | Holds                          | Module                   | Imported once from          |
+|-----------------|--------------------------------|--------------------------|-----------------------------|
+| `guilds`        | The Hypixel guild registry     | `utils/guilds.js`        | `guildsConfig.json`         |
+| `globalProfile` | The global profile change      | `utils/globalProfile.js` | `globalProfileConfig.json`  |
+| `auditChannel`  | The default audit channel      | `utils/auditChannel.js`  | `auditChannelConfig.json`   |
+
+The table is in its own schema rather than `public` on purpose: the community bot runs `prisma db push`, which
+treats any `public` table its schema does not define as one to drop. The database role needs the `CREATE`
+privilege on the database for that first start only — the role the community bot runs `prisma db push` with
+normally has it. Later starts only read and write the table, so the privilege can be revoked afterwards, or the
+schema and table created by hand beforehand by an owner instead.
+
+Each module reads its document once at startup and serves every read from memory, so none of this adds a query
+to the message path. Writes replace the whole document. When a document is missing and the matching JSON file
+exists in the project root, that file is imported on startup and logged. A file that is not valid JSON, with no row
+to fall back on, stops startup: running on defaults would let the first saved change create the row and strand the
+file.
+
+From then on each file is a **snapshot** of its row: rewritten (temp file, then rename) after every successful save
+and on every start. If the database cannot be reached at startup, after the retries, the bot starts from the
+snapshots instead and warns in the log channel. Every write still goes to the database first, so while it is down
+settings changes fail cleanly and nothing exists only in memory or only on disk. `npm run config:import` imports
+files by hand (see [config files](https://thehypixelguardians.mintlify.site/tribridge/config-files)).
 
 ## Failure behaviour
 
@@ -34,9 +78,12 @@ message path, where an exception would take the relay down with it.
 |--------------|-----------------------------------------------------------------------------------------------------|
 | Account link | Behaves as **not linked** — the message relays under the Discord name rather than not relaying       |
 | Admin roles  | **Fails closed.** `isAdmin` refuses. `/send` runs arbitrary commands as the Minecraft account and `/adminpanel` can impersonate everybody in the server, so handing either out during an outage is worse than the outage |
+| Blacklist    | **Fails open** — nobody counts as blacklisted. Failing closed would refuse every command and stop the whole bridge during an outage; the admin check still fails closed |
 
-Without `DATABASE_URL` the pool is never created, one line is logged, and both take their failure branch
-permanently — which means **no admin command works at all** until it is set.
+Without `DATABASE_URL` the pool is never created and one line is logged. TriBridge's own settings cannot be loaded
+then, so **the bot does not start**: it retries for about 40 seconds and exits with a non-zero code. The same
+goes for a database that cannot be reached at startup: running on
+empty settings instead would let the next admin action save over the real ones.
 
 ## Staleness
 
@@ -47,6 +94,7 @@ being invalidated:
 |---------------|-----|------------------------------------------------------------------------------------|
 | Account links | 15s | A member who has just run `/link` expects their next message attributed correctly   |
 | Admin roles   | 15s | A revoked admin role should stop working in seconds, not at the next restart        |
+| Blacklist     | 15s | Cleared on every write here, so it only lags on the community bot's side            |
 
 Those numbers are the deliberate trade for not querying Postgres once per relayed message. Shortening them
 costs a query per message on a busy bridge; lengthening them makes `/link` look broken.

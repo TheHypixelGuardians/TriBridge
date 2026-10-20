@@ -16,7 +16,7 @@ const TAG_PREFIX = /^!([A-Za-z0-9]{2,8})\s+([\s\S]+)$/;
  *    possible failure for a chat bridge: the sender believes it was delivered,
  *    and `!` is far too common in ordinary chat to reserve.
  *  - anything else — broadcast (or the default guild, when an admin has turned
- *    `broadcastByDefault` off in guildsConfig.json).
+ *    `broadcastByDefault` off in the guild registry).
  *
  * `body` is what should be sent *and* what should be shown: a reposted message
  * has to display the same text guild chat was given, or Discord and the guild

@@ -18,6 +18,28 @@
 + On Minecraft spawn, `002probeHypixelGuildId.js` learns each guild's Hypixel `_id` when a key is set and
   persists it as `hypixelGuildId` on the registry entry (skipped when already known, or when the key / UUID
   is missing).
++ Added `utils/configStore.js`: one `tribridge.config` table (JSONB document per setting) in its own
+  `tribridge` schema, created on the first start that finds it missing (checked with `to_regclass`, so later
+  starts need no `CREATE` privilege). The `public` schema stays the
+  community bot's, whose `prisma db push` would drop a table it does not define.
+    + `guilds`, `globalProfile` and `auditChannel` each gained an `async load()` that `index.js` awaits before
+      login; reads stay synchronous from memory. Their write functions are now `async` and every caller
+      awaits them, except the two Minecraft-side metadata writes, which log a failed save instead.
+    + Writes save a copy first and update memory only once the save succeeded, so a failed save changes
+      nothing: a global profile change that could not be saved never starts, and a failed guild edit is not
+      saved later by an unrelated one. Changes are queued per setting, each starting from the last saved one.
+    + `/guilds`, `/auditchannel` and the admin panel acknowledge the interaction before saving, so a slow
+      database cannot make Discord time the click or command out. A deferred command that then fails now says
+      so, instead of being left on "thinking…".
++ Added `pg` and its dependencies to `package-lock.json`, which listed `pg` in `package.json` only.
++ Added `utils/blacklist.js`, which reads and writes the community bot's `Blacklist` table — the one table in
+  its schema TriBridge writes. Every interaction handler and both Discord→Minecraft relays check it after the
+  server guard. The table and its migration live in the community bot's repository.
++ Commands can set `defaultMemberPermissions`. It is sent on create and edit, and `areCommandsDifferent` now
+  compares it and each option's `maxLength`, so a change to either is re-registered.
++ Added `npm test`, a `node:test` suite in `test/` with no new dependency. It covers the one-time import (empty
+  database and a JSON file present imports it; a stored setting ignores the file), corrupt files, save ordering
+  and the modules' normalisation, with `db.query` mocked so no database is needed.
 
 #### Documentation
 
@@ -112,6 +134,21 @@
     + Naming a channel another guild already uses is allowed and says so, since sharing one officer channel
       between guilds is usually what is wanted.
     + `/guilds list` shows each guild's officer channel and marks the ones sharing officer chat with 🛡️.
++ Added `/blacklist add|remove|list` to bar a member from **both bots**, admin-only and private.
+    + A blacklisted member's commands, buttons and menus are refused on TriBridge and on the THG community bot.
+    + Their messages in the bridge and officer channels are no longer relayed into Minecraft. The message stays
+      in Discord with a ⛔ reaction, so they can see it did not go through.
+    + Bots, yourself and other bot admins cannot be blacklisted — take the admin role away first.
+    + Applies here at once and on the community bot within 15 seconds. If the database is unreachable, nobody
+      counts as blacklisted, so an outage cannot lock the whole server out.
+    + Every add and remove is recorded in the audit channel.
++ Added `/mute <username> <duration> [guild]` and `/unmute <username> [guild]` to mute guild members in-game,
+  admin-only.
+    + The duration is a number and one unit — `30m`, `12h`, `7d` — up to Hypixel's 30 days.
+    + Replies are private, and every successful mute or unmute is recorded in that guild's audit channel.
++ Added `/pingdiamond`, which pings one configured member and deletes the ping straight away.
+    + Needs **Manage Roles**, and is hidden from members without it.
+    + The member is set with `PINGDIAMOND_USER_ID` in `.env`. Only that member can ever be pinged by it.
 
 #### Information
 
@@ -148,7 +185,31 @@
 + `/link` now accepts a member of **any** bridged guild. It still refuses only when every roster was read
   successfully and the name was in none of them.
 
+#### Core
+
++ The guild registry, the global profile change and the audit channel are now stored in the shared PostgreSQL
+  database instead of `guildsConfig.json`, `globalProfileConfig.json` and `auditChannelConfig.json`.
+    + **`DATABASE_URL` is now required.**
+    + Upgrading needs no manual step: on the first start each file is imported once, and the console names
+      what was imported.
+    + The JSON files stay as snapshots of the database, rewritten safely (temp file, then rename) after every
+      saved change and on every start.
+    + If the database cannot be reached at startup, the bot retries for about 40 seconds and then runs from
+      the snapshots, with a warning in the log channel. The bridge keeps working; settings changes fail until
+      the database is back.
+    + Added `npm run config:import` to check (`--dry-run`) or import JSON config files by hand. It prints only
+      key names and counts.
+    + A file that is not valid JSON stops startup until it is fixed or moved away, as long as the database
+      has no copy of that setting yet. Starting on defaults would let the first change saved from Discord
+      create the setting and leave the file never imported.
+    + Downgrading to an older version picks up the snapshot files, so it starts with current settings.
+
 ### Fixes
+
+#### Core
+
++ Fixed the bot exiting right after login when it could not post its "now online" message in the bridge
+  channel (for example, missing permissions).
 
 #### Bridge
 

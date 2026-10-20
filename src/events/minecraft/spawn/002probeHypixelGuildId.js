@@ -42,7 +42,13 @@ module.exports = async (client) => {
   const hypixelName =
     typeof result.guild.name === "string" ? result.guild.name.trim() : null;
 
-  guilds.update(guild.key, { hypixelGuildId });
+  // Not awaited into a throw: nothing catches a rejected event handler, and an
+  // unhandled rejection would take the process down over a cached id.
+  guilds
+    .update(guild.key, { hypixelGuildId })
+    .catch((error) =>
+      console.error("Failed to save the Hypixel guild id:", error),
+    );
 
   const record = mcBots.getRecord(guild.key);
   if (record && hypixelName) {

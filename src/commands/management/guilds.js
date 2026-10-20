@@ -367,7 +367,7 @@ async function handleList(interaction) {
 async function handleAdd(interaction) {
   await interaction.deferReply({ ephemeral: true });
 
-  const result = guilds.add({
+  const result = await guilds.add({
     key: interaction.options.getString("key"),
     name: interaction.options.getString("name"),
     tag: interaction.options.getString("tag"),
@@ -409,26 +409,26 @@ async function handleRemove(interaction) {
     });
   }
 
+  // Acknowledged before the save, which can outlast Discord's three seconds.
+  await interaction.deferReply({ ephemeral: true });
+
   const record = mcBots.getRecord(key);
   if (record) {
     createMcBot.retireBot(record);
     bridge.mcBots.delete(key);
   }
 
-  const result = guilds.remove(key);
-  if (!result.ok)
-    return interaction.reply({ content: fail(result.reason), ephemeral: true });
+  const result = await guilds.remove(key);
+  if (!result.ok) return interaction.editReply(fail(result.reason));
 
   const next = guilds.getDefault();
-  return interaction.reply({
-    content:
-      `✅ Removed **${guild.name}** and disconnected its bot.\n` +
+  return interaction.editReply(
+    `✅ Removed **${guild.name}** and disconnected its bot.\n` +
       (next
         ? `> **${next.name}** is now the default guild.\n`
         : "> No guilds remain.\n") +
       "> The account's cached Microsoft token is left in `.minecraft-auth/`; delete it by hand if you want it gone.",
-    ephemeral: true,
-  });
+  );
 }
 
 async function handleEdit(interaction) {
@@ -485,9 +485,11 @@ async function handleEdit(interaction) {
     patch[field] = channel.id;
   }
 
-  const result = guilds.update(key, patch);
-  if (!result.ok)
-    return interaction.reply({ content: fail(result.reason), ephemeral: true });
+  // Acknowledged before the save, which can outlast Discord's three seconds.
+  await interaction.deferReply({ ephemeral: true });
+
+  const result = await guilds.update(key, patch);
+  if (!result.ok) return interaction.editReply(fail(result.reason));
 
   // A guild switched off should stop talking now, not at the next restart.
   if (patch.enabled === false) {
@@ -547,7 +549,7 @@ async function handleEdit(interaction) {
     }
   }
 
-  return interaction.reply({
+  return interaction.editReply({
     content:
       `✅ Updated **${guild.name}** \`${guild.key}\` [${guild.tag}].\n` +
       `> ${guild.enabled === false ? "Disabled" : "Enabled"} · ${guild.color} · ` +
@@ -557,7 +559,6 @@ async function handleEdit(interaction) {
       `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : "global"} · ` +
       `Officer: ${guild.officerChannelId ? `<#${guild.officerChannelId}>` : "off"}` +
       notes.map((note) => `\n> ${note}`).join(""),
-    ephemeral: true,
   });
 }
 
@@ -566,16 +567,16 @@ async function handleDefault(interaction) {
   if (!key)
     return interaction.reply({ content: fail("unknown-key"), ephemeral: true });
 
-  const result = guilds.setDefault(key);
-  if (!result.ok)
-    return interaction.reply({ content: fail(result.reason), ephemeral: true });
+  // Acknowledged before the save, which can outlast Discord's three seconds.
+  await interaction.deferReply({ ephemeral: true });
 
-  return interaction.reply({
-    content:
-      `✅ **${result.guild.name}** is now the default guild.\n` +
+  const result = await guilds.setDefault(key);
+  if (!result.ok) return interaction.editReply(fail(result.reason));
+
+  return interaction.editReply(
+    `✅ **${result.guild.name}** is now the default guild.\n` +
       "> Commands with no `guild` option will act on it.",
-    ephemeral: true,
-  });
+  );
 }
 
 async function handleAuth(interaction) {

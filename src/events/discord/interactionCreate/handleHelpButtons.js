@@ -3,6 +3,7 @@ const {
   buildEmbed,
   buildButtons,
 } = require("../../../commands/information/help");
+const { refuseIfBlacklisted } = require("../../../utils/blacklist");
 
 module.exports = async (client, interaction) => {
   if (!interaction.isButton()) return;
@@ -11,6 +12,8 @@ module.exports = async (client, interaction) => {
     !interaction.customId.startsWith("help_next_")
   )
     return;
+
+  if (await refuseIfBlacklisted(interaction)) return;
 
   // Custom ID format: help_{direction}_{userId}_{currentPage}
   const parts = interaction.customId.split("_");

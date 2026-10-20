@@ -1,7 +1,11 @@
-const fs = require("fs");
 const path = require("path");
 const { getLinkByName } = require("./linkedAccounts");
+const store = require("./configStore");
 
+const CONFIG_NAME = "globalProfile";
+
+// The import source and the local snapshot of the database row — see
+// configStore.js.
 const CONFIG_PATH = path.join(
   __dirname,
   "..",
@@ -32,37 +36,60 @@ function defaults() {
   };
 }
 
-let cachedConfig = null;
+let cachedConfig = defaults();
 let expiryTimer = null;
+let ending = null;
 
-function loadConfig() {
-  if (cachedConfig) return cachedConfig;
-
-  try {
-    const data = fs.readFileSync(CONFIG_PATH, "utf-8");
-    cachedConfig = { ...defaults(), ...JSON.parse(data) };
-  } catch {
-    cachedConfig = defaults();
-  }
+/**
+ * @param {object|undefined} raw A stored document or a legacy file.
+ * @returns {object}
+ */
+function normalise(raw) {
+  const config = { ...defaults(), ...raw };
 
   // The gate indexes these on every message, so a hand-edited file must not
   // be able to turn `.includes` into a TypeError.
   for (const key of ["testerIds", "testChannelIds", "excludedChannelIds"]) {
-    if (!Array.isArray(cachedConfig[key])) cachedConfig[key] = [];
+    if (!Array.isArray(config[key])) config[key] = [];
   }
 
   // Same for the two bridge switches: a hand-edited `"false"` is a truthy
   // string, which would read as "on" and quietly do the opposite of the file.
   for (const key of ["disguiseToMinecraft", "disguiseToDiscord"]) {
-    if (typeof cachedConfig[key] !== "boolean") cachedConfig[key] = true;
+    if (typeof config[key] !== "boolean") config[key] = true;
   }
 
+  return config;
+}
+
+/**
+ * Loads the state from the database (or, with `{ fromSnapshot: true }`, from
+ * its local snapshot). Must finish before anything reads it.
+ */
+async function load(options) {
+  ({ data: cachedConfig } = await store.load(
+    CONFIG_NAME,
+    CONFIG_PATH,
+    normalise,
+    options,
+  ));
+}
+
+function loadConfig() {
   return cachedConfig;
 }
 
-function saveConfig(config) {
-  cachedConfig = config;
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
+/**
+ * Saves a change, then applies it — see `configStore.commit`.
+ *
+ * @template T
+ * @param {(draft: object) => T} edit
+ * @returns {Promise<T>}
+ */
+function change(edit) {
+  return store.commit(CONFIG_NAME, loadConfig, edit, (saved) => {
+    cachedConfig = saved;
+  });
 }
 
 /**
@@ -103,7 +130,13 @@ function isActive() {
   if (config.mode === "off" || !config.target) return false;
 
   if (config.expiresAt !== null && Date.now() >= config.expiresAt) {
-    stop();
+    // Reads as off from here on, whatever the save does. One stop at a time:
+    // this runs on every message, and each would otherwise queue its own.
+    ending ??= stop()
+      .catch(logSaveError)
+      .finally(() => {
+        ending = null;
+      });
     return false;
   }
 
@@ -194,21 +227,21 @@ async function appliesToGuildChat(mcName, channelId) {
  *   startedBy: string,
  *   mode: 'test'|'live',
  * }} options `durationMs: null` runs until somebody stops it.
- * @returns {object} The new state.
+ * @returns {Promise<object>} The new state. Rejects when it could not be
+ *   saved, and then nothing is running: a disguise the database does not know
+ *   about would outlive the audit trail and vanish on restart.
  */
-function start({ target, durationMs, startedBy, mode }) {
-  const config = loadConfig();
-
-  config.mode = mode;
-  config.target = target;
-  config.startedBy = startedBy;
-  config.startedAt = Date.now();
-  config.expiresAt =
-    durationMs === null || durationMs === undefined
-      ? null
-      : Date.now() + durationMs;
-
-  saveConfig(config);
+async function start({ target, durationMs, startedBy, mode }) {
+  await change((config) => {
+    config.mode = mode;
+    config.target = target;
+    config.startedBy = startedBy;
+    config.startedAt = Date.now();
+    config.expiresAt =
+      durationMs === null || durationMs === undefined
+        ? null
+        : Date.now() + durationMs;
+  });
   return getState();
 }
 
@@ -216,29 +249,30 @@ function start({ target, durationMs, startedBy, mode }) {
  * Ends the effect, leaving the tester and channel lists intact so the next run
  * does not have to be set up from scratch.
  *
- * @returns {{mode: string, target: object|null, expiresAt: number|null, startedBy: string|null, startedAt: number|null}}
- *   What was running, for the benefit of whoever announces the end.
+ * @returns {Promise<{mode: string, target: object|null, expiresAt: number|null, startedBy: string|null, startedAt: number|null}>}
+ *   What was running, for the benefit of whoever announces the end. Rejects
+ *   when the end could not be saved, and then it is still running.
  */
-function stop() {
-  const config = loadConfig();
+async function stop() {
+  const previous = await change((config) => {
+    const was = {
+      mode: config.mode,
+      target: config.target ? { ...config.target } : null,
+      expiresAt: config.expiresAt,
+      startedBy: config.startedBy,
+      startedAt: config.startedAt,
+    };
 
-  const previous = {
-    mode: config.mode,
-    target: config.target ? { ...config.target } : null,
-    expiresAt: config.expiresAt,
-    startedBy: config.startedBy,
-    startedAt: config.startedAt,
-  };
+    config.mode = "off";
+    config.target = null;
+    config.expiresAt = null;
+    config.startedBy = null;
+    config.startedAt = null;
 
-  config.mode = "off";
-  config.target = null;
-  config.expiresAt = null;
-  config.startedBy = null;
-  config.startedAt = null;
+    return was;
+  });
 
-  saveConfig(config);
   clearExpiry();
-
   return previous;
 }
 
@@ -265,7 +299,9 @@ function armExpiry(onEnd) {
 
   const remaining = config.expiresAt - Date.now();
   if (remaining <= 0) {
-    onEnd(stop());
+    // A failed save is announced on the next start instead, by
+    // 004restoreGlobalProfile, which will find the lapsed effect still stored.
+    stop().then(onEnd, logSaveError);
     return;
   }
 
@@ -277,7 +313,7 @@ function armExpiry(onEnd) {
       if (state.mode === "off") return;
 
       if (state.expiresAt !== null && Date.now() >= state.expiresAt) {
-        onEnd(stop());
+        stop().then(onEnd, logSaveError);
         return;
       }
 
@@ -296,12 +332,14 @@ function armExpiry(onEnd) {
  *
  * @param {'testerIds'|'testChannelIds'|'excludedChannelIds'} key
  * @param {string[]} ids
+ * @returns {Promise<string[]>} The stored list.
  */
-function setList(key, ids) {
-  const config = loadConfig();
-  config[key] = [...new Set(ids.map(String))];
-  saveConfig(config);
-  return config[key];
+async function setList(key, ids) {
+  const list = [...new Set(ids.map(String))];
+  await change((config) => {
+    config[key] = list;
+  });
+  return list;
 }
 
 const setTesters = (ids) => setList("testerIds", ids);
@@ -317,16 +355,23 @@ const setExcludedChannels = (ids) => setList("excludedChannelIds", ids);
  *
  * @param {'disguiseToMinecraft'|'disguiseToDiscord'} key
  * @param {boolean} enabled
- * @returns {boolean} The stored value.
+ * @returns {Promise<boolean>} The stored value.
  */
-function setDirection(key, enabled) {
-  const config = loadConfig();
-  config[key] = Boolean(enabled);
-  saveConfig(config);
-  return config[key];
+async function setDirection(key, enabled) {
+  const value = Boolean(enabled);
+  await change((config) => {
+    config[key] = value;
+  });
+  return value;
+}
+
+function logSaveError(error) {
+  console.error("Failed to save the global profile change:", error);
 }
 
 module.exports = {
+  load,
+  normalise,
   getState,
   getTarget,
   isActive,

@@ -112,9 +112,11 @@ async function handleClear(interaction, guildKey) {
       );
     }
 
-    guilds.update(guildKey, { auditChannelId: null });
+    // Acknowledged before the save, which can outlast Discord's three seconds.
+    await interaction.deferReply();
+    await guilds.update(guildKey, { auditChannelId: null });
     const global = getAuditChannelId();
-    return interaction.reply(
+    return interaction.editReply(
       `✅ Cleared the audit channel for **${guild.name}**.\n` +
         (global
           ? `> Its entries now go to the default channel, <#${global}>.`
@@ -127,8 +129,9 @@ async function handleClear(interaction, guildKey) {
     return interaction.reply("⚠️ No default audit channel is configured.");
   }
 
-  setAuditChannelId(null);
-  return interaction.reply(
+  await interaction.deferReply();
+  await setAuditChannelId(null);
+  return interaction.editReply(
     "✅ Cleared the default audit channel.\n" +
       "> Admin actions are no longer recorded, except for guilds with a channel of their own. " +
       "A global profile change will still run, but nothing will show who really sent each " +
@@ -146,17 +149,23 @@ async function handleSet(interaction, guildKey) {
     );
   }
 
-  if (guildKey) {
-    const result = guilds.update(guildKey, { auditChannelId: channel.id });
-    if (!result.ok) return interaction.reply("❌ Could not update that guild.");
+  // Acknowledged before the save, which can outlast Discord's three seconds.
+  await interaction.deferReply();
 
-    return interaction.reply(
+  if (guildKey) {
+    const result = await guilds.update(guildKey, {
+      auditChannelId: channel.id,
+    });
+    if (!result.ok)
+      return interaction.editReply("❌ Could not update that guild.");
+
+    return interaction.editReply(
       `✅ Admin actions for **${result.guild.name}** will now be recorded in <#${channel.id}>.`,
     );
   }
 
-  setAuditChannelId(channel.id);
-  return interaction.reply(
+  await setAuditChannelId(channel.id);
+  return interaction.editReply(
     `✅ Admin actions will now be recorded in <#${channel.id}>.`,
   );
 }

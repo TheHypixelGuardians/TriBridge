@@ -14,8 +14,9 @@ step.
 | **npm**               | Included with Node.js                                                                                                                                |
 | **Discord bot**       | An application at the [Discord Developer Portal](https://discord.com/developers/applications) with the **Message Content** privileged intent enabled |
 | **Minecraft account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net`                                   |
+| **PostgreSQL**        | The database shared with the THG community bot. TriBridge stores its settings there and does not start without it                                  |
 
-Dependencies are `discord.js`, `mineflayer`, `prismarine-auth` and `dotenv`; `npm install` handles them.
+Dependencies are `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv` and `pg`; `npm install` handles them.
 `nodemon` is a development dependency used only by `npm run dev`, so a server that just runs the bot can
 install with `npm install --omit=dev`.
 
@@ -51,6 +52,7 @@ install with `npm install --omit=dev`.
    DISCORD_CHANNEL_ID=your_bridge_channel_id
    LOG_CHANNEL=your_log_channel_id
    MINECRAFT_USERNAME=you@example.com
+   DATABASE_URL=your_postgres_connection_string
    ```
 
 4. **Invite the bot to your Discord server** with the permissions listed in [Permissions](/tribridge/permissions).
@@ -100,10 +102,11 @@ Everything after the first guild is done from Discord, not from the `.env`:
 The device code arrives in your own private reply — no console access needed. See
 [Hypixel guilds](/tribridge/hypixel-guilds).
 
-## Where TriBridge keeps its files
+## Where TriBridge keeps its settings
 
-Everything is written next to the repository, in the project root, and every one of those files is gitignored.
-See [Config files](/tribridge/config-files) for what each holds. They survive a `git pull`, which is what makes
+The settings you change from Discord are stored in the database; the `.env` and the cached Microsoft tokens are
+in the project root, gitignored. See [Config files](/tribridge/config-files) for what each holds. None of it is
+touched by a `git pull`, which is what makes
 [updating](/tribridge/updating) a two-command job.
 
 ## Running it as a service

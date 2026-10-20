@@ -1,32 +1,37 @@
-const fs = require("fs");
 const path = require("path");
 const bridge = require("../bridge");
+const store = require("./configStore");
 
+const CONFIG_NAME = "auditChannel";
+
+// The import source and the local snapshot of the database row — see
+// configStore.js.
 const CONFIG_PATH = path.join(__dirname, "..", "..", "auditChannelConfig.json");
 
-let cachedConfig = null;
+let cachedConfig = { channelId: null };
 
-function loadConfig() {
-  if (cachedConfig) return cachedConfig;
-  try {
-    const data = fs.readFileSync(CONFIG_PATH, "utf-8");
-    cachedConfig = JSON.parse(data);
-  } catch {
-    cachedConfig = { channelId: null };
-  }
-  return cachedConfig;
+function normalise(raw) {
+  return raw ?? { channelId: null };
 }
 
-function saveConfig(config) {
-  cachedConfig = config;
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
+/**
+ * Loads the setting from the database (or, with `{ fromSnapshot: true }`,
+ * from its local snapshot). Must finish before anything reads it.
+ */
+async function load(options) {
+  ({ data: cachedConfig } = await store.load(
+    CONFIG_NAME,
+    CONFIG_PATH,
+    normalise,
+    options,
+  ));
 }
 
 /**
  * The channel admin actions are recorded in.
  *
  * A Hypixel guild may override the destination for its own entries. Those
- * overrides live in `guildsConfig.json` rather than here, so removing a guild
+ * overrides live in the guild registry rather than here, so removing a guild
  * cannot leave an orphaned channel setting behind.
  *
  * @param {string} [guildKey] Scope the lookup to one Hypixel guild.
@@ -40,14 +45,24 @@ function getAuditChannelId(guildKey) {
     const scoped = guilds.get(guildKey)?.auditChannelId;
     if (scoped) return scoped;
   }
-  return loadConfig().channelId ?? null;
+  return cachedConfig.channelId ?? null;
 }
 
 /**
  * @param {string|null} channelId Pass null to stop recording.
+ * @returns {Promise<void>} Rejects when the setting could not be saved.
  */
-function setAuditChannelId(channelId) {
-  saveConfig({ channelId: channelId ?? null });
+async function setAuditChannelId(channelId) {
+  await store.commit(
+    CONFIG_NAME,
+    () => cachedConfig,
+    (draft) => {
+      draft.channelId = channelId ?? null;
+    },
+    (saved) => {
+      cachedConfig = saved;
+    },
+  );
 }
 
 /**
@@ -79,4 +94,10 @@ async function logAudit(payload, { guildKey } = {}) {
   }
 }
 
-module.exports = { getAuditChannelId, setAuditChannelId, logAudit };
+module.exports = {
+  load,
+  normalise,
+  getAuditChannelId,
+  setAuditChannelId,
+  logAudit,
+};

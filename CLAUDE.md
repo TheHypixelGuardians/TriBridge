@@ -96,13 +96,13 @@ The bridge, the admin panel and the global profile change stay here, because all
 the Minecraft side. The two bots share one database for the two things both must agree
 about — who is linked, and who is staff — and that contract is written down in
 [docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md). Read it before touching `utils/db.js`,
-`utils/linkedAccounts.js` or `utils/adminRoles.js`.
+`utils/configStore.js`, `utils/linkedAccounts.js` or `utils/adminRoles.js`.
 
 - CommonJS (`"type": "commonjs"`) — use `require`/`module.exports`, not ESM.
 - No build step and no linter. Unit tests live in `test/` and run with `npm test` (Node's built-in
   `node:test`, no dependencies); `npm run format:check` runs Prettier. CI runs both, plus a syntax check, on
   every pull request. Add a test with any change to a parser, the sanitiser or routing.
-- Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`. `nodemon` is the only
+- Node v22+. Dependencies: `discord.js`, `mineflayer`, `prismarine-auth`, `dotenv`, `pg`. `nodemon` is the only
   dev dependency, used by `npm run dev` and needed by nothing that runs the bot.
 - Documentation lives in [docs/](docs/) (canonical in-repo reference in [FEATURES.md](docs/FEATURES.md) and
   maintainer workflow docs) and [site/](site/) (the org-wide Mintlify site at
@@ -123,14 +123,16 @@ npm run dev               # nodemon, restarts on any source or .env change
 ```
 
 Requires a `.env` (gitignored) with `DISCORD_TOKEN`, `DISCORD_CHANNEL_ID`, `LOG_CHANNEL`,
-`MINECRAFT_USERNAME`. `MINECRAFT_USERNAME` only seeds the first Hypixel guild on a fresh
-install; once `guildsConfig.json` exists the registry is authoritative and the env var is
-ignored. A first sign-in for an account opens a Microsoft device-code flow — surfaced in
-Discord by `/guilds add|auth`, and always echoed to the console; tokens are cached per
-account in `.minecraft-auth/` (gitignored).
+`MINECRAFT_USERNAME` and `DATABASE_URL`. Its settings live in the database; if that is unreachable
+at startup it runs from the local snapshot files (see the shared database section). `MINECRAFT_USERNAME` only seeds the first Hypixel guild on a
+fresh install; once a registry exists it is authoritative and the env var is ignored. A first
+sign-in for an account opens a Microsoft device-code flow — surfaced in Discord by
+`/guilds add|auth`, and always echoed to the console; tokens are cached per account in
+`.minecraft-auth/` (gitignored).
 
 Running the bot connects to live Discord and Hypixel — don't start it to "verify" a change
-unless the user asks. Test offline against fakes instead — `test/` has examples, and a good deal
+unless the user asks. Test offline against fakes instead — `test/` has examples (the settings store
+tests mock `db.query` with `mock.method` from `node:test`, so they need no database), and a good deal
 more is testable the same way: `utils/chatRouting.js`, `utils/guilds.js`,
 `utils/queryGuild.js` (drive it with a bare
 `EventEmitter` whose `chat()` emits stub messages), `retireBot`, `utils/chatQueue.js` and
@@ -138,8 +140,9 @@ more is testable the same way: `utils/chatRouting.js`, `utils/guilds.js`,
 
 ## Architecture
 
-`src/index.js` seeds the guild registry, boots the Discord client, populates the shared
-`bridge` object, wires the Discord event handler and logs in. It deliberately does **not**
+`src/index.js` loads the three settings modules from the database, seeds the guild registry,
+boots the Discord client, populates the shared `bridge` object, wires the Discord event handler
+and logs in. It deliberately does **not**
 create any Minecraft bot: `002autoReconnect.js` owns every connect, so there is one code
 path for it, and Discord comes up even when no guild can connect (`/guilds` is the only way
 to repair a broken registry).
@@ -149,7 +152,7 @@ other: `discordClient`, `discordChannelId`, `logChannelId`, `discordServerId`, a
 — a `Map` of `guildKey → BotRecord`, one per Hypixel guild. There is no DI, and deliberately
 no "current bot" scalar; new cross-client state belongs here.
 
-**`src/utils/guilds.js`** is the Hypixel guild registry over `guildsConfig.json`, and
+**`src/utils/guilds.js`** is the Hypixel guild registry, and
 **`src/utils/mcBots.js`** holds the accessors for `bridge.mcBots`. Between them they answer
 every "which guild?" question. Resolve a user-supplied guild with `guilds.resolveKey()` —
 autocomplete values are attacker-controlled, so never index `bridge.mcBots` with a raw
@@ -203,7 +206,7 @@ Global command propagation can take up to an hour on Discord's side. The diff co
 
 - **"Guild" means two things — keep them apart.** A *Hypixel guild* is one of the (plural)
   Minecraft guilds the bot bridges; it is identified by a `guildKey` and lives in
-  `guildsConfig.json`. A *Discord server* is the single Discord community the bot serves; its id
+  the guild registry. A *Discord server* is the single Discord community the bot serves; its id
   is `bridge.discordServerId`. discord.js confusingly calls a server a "guild", so
   `interaction.guildId` is a Discord server id — that is the library's word, not ours. Never
   introduce a bare `guildId` in new code.
@@ -261,7 +264,7 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   `events/minecraft/message/relayToGuilds.js`.
 - **Guild→guild bridging:** `utils/crossBridge.js` decides the targets (`crossBridgeTargets()`,
   registry-driven and testable offline) and does the fan-out. Opt-in per guild via the
-  `crossBridge` flag in `guildsConfig.json`, set with `/guilds edit`. The flag is deliberately
+  `crossBridge` flag in the guild registry, set with `/guilds edit`. The flag is deliberately
   symmetric — a guild that doesn't send doesn't receive — and the source must have it on too,
   otherwise switching it off wouldn't stop that guild's chat being pushed everywhere. The
   `[TAG]` goes in the *name* position (`/gc [SB] Notch: hi`), unlike the Discord relay where
@@ -327,7 +330,9 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   argument through `sanitizeForChat()` first — same newline-injection hazard as above. `/send`
   is the deliberate exception: sending an arbitrary command is the whole point of it, which is
   why it is admin-gated.
-- **Replies:** `deferReply()` first for anything touching a Minecraft bot, then `editReply()`.
+- **Replies:** `deferReply()` (`deferUpdate()` for panel components) first for anything touching a
+  Minecraft bot or saving a setting, then `editReply()` — a database write can outlast Discord's
+  three-second window.
   Guard with `resolveTarget(interaction)`. User-facing strings use ✅ / ⚠️ / ❌ prefixes and
   `>` blockquotes — match the existing tone.
 - **Discord embed limits:** description 4096 chars, message content 2000. Existing code
@@ -373,19 +378,43 @@ to "database down" are deliberately different:
 | `utils/linkedAccounts.js` | `MinecraftLink` + `User` | Not linked — relay under the Discord name |
 | `utils/adminRoles.js`     | `AdminRole`              | **Fails closed** — refuses                |
 
+A third, `utils/blacklist.js`, reads **and writes** the community bot's `Blacklist` table —
+the one table in that schema this bot writes, because `/blacklist` lives here. It **fails open**
+(an unreadable database blacklists nobody), unlike `isAdmin`: failing closed would stop every
+command and the whole bridge during an outage. `refuseIfBlacklisted()` runs after the server
+guard in every interaction handler, and both Discord→Minecraft relays check `isBlacklisted()` —
+each handler file runs independently, so a new handler needs its own check. The table needs
+the community bot's migration (DB-side defaults for `id` and `updatedAt`); a plain `INSERT`
+here fails without them.
+
 Both cache for 15 seconds. They cannot invalidate on write — the writer is another process —
 so the TTL *is* the worst-case lag between an admin doing something on the community bot and
 this side honouring it. Don't raise it without reading
 [docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md): 15s is what keeps a member's very first
 message after `/link` attributed correctly.
 
-Everything else stays in this repository's own config files, including the global profile
-change and the audit channel.
+TriBridge's own settings — the guild registry, the global profile change and the audit channel —
+live in the same database, in its own `tribridge` schema, through `utils/configStore.js`. They are
+loaded once at startup (`load()`, awaited in `index.js`) and read synchronously from memory after
+that, so they add no query to the message path. Writes are `async` and go through `configStore.commit()`:
+the change is made to a copy, saved, and only then applied to the cache, one change per setting at
+a time; a failed save rejects and leaves memory untouched. Never mutate a cached document
+directly — memory would then hold a setting the database does not. `await` writes, except
+in an event handler, where a rejection is unhandled and ends the process; there, `.catch()` and
+log. On a first start with no row for a setting, `configStore` imports the matching
+`*Config.json` once. From then on that file is a **snapshot**: `configStore` rewrites it (temp file +
+rename) after every successful save and on every load from the database, and reads it only when the
+database is unreachable through every startup retry (`{ fromSnapshot: true }`, `isDegraded()`). Only a
+`DatabaseUnavailableError` may trigger that fallback; a corrupt legacy file with no row must still stop
+startup. Never write a snapshot before the database save succeeds: the snapshot is only safe to start
+from because it never holds anything the database did not accept. Schema in
+`public` is the community bot's, and its `prisma db push` would drop a table it does not define —
+keep TriBridge tables in `tribridge`.
 
 ## The global profile change
 
-`/adminpanel` starts and stops it, `utils/globalProfile.js` holds the state in
-`globalProfileConfig.json`, and `utils/disguise.js` applies it to three legs: the Discord
+`/adminpanel` starts and stops it, `utils/globalProfile.js` holds the state (stored in the
+database), and `utils/disguise.js` applies it to three legs: the Discord
 repost, the name guild chat is told (`disguiseToMinecraft`), and the name on incoming guild
 chat (`disguiseToDiscord`). `resolveIdentity()` is **async** — a global profile change
 outranks an account link, which outranks the plain Discord author, and the link is a database
@@ -400,9 +429,8 @@ Never `resolveIdentity()` in the officer leg — see the officer-chat convention
 
 ## Hypixel guilds and reconnection
 
-`guildsConfig.json` holds the registered guilds; `utils/guilds.js` reads and writes it with
-the same lazy-cache-and-`writeFileSync` shape as the other config modules, and `/guilds`
-is the only supported way to change it. `key` and `account` are immutable — `account` is the
+`utils/guilds.js` holds the registered guilds, with the same load-once, write-through shape as
+the other settings modules, and `/guilds` is the only supported way to change it. `key` and `account` are immutable — `account` is the
 key prismarine-auth hashes for its token cache, so normalising or editing it later silently
 starts a fresh device-code flow against a different cache file.
 
@@ -430,7 +458,9 @@ whoever holds the code can complete the sign-in with *their own* Microsoft accou
 ## Files to leave alone
 
 `.env`, `.minecraft-auth/`, `guildsConfig.json`, `globalProfileConfig.json`,
-`auditChannelConfig.json`, `.idea/` — local/secret state. Never print or commit token,
+`auditChannelConfig.json`, `.idea/` — local/secret state. The three `*Config.json` files are
+the import source and the database snapshots. Only `configStore.js` writes them; nothing else may
+delete or rewrite them. Never print or commit token,
 auth-cache, database-URL or account-address contents.
 
 The config files the migrated features used — `adminRolesConfig.json`,
