@@ -5,8 +5,10 @@ serving one Discord server. The community bot owns the community half — member
 bot-admin roles, feature requests — and TriBridge owns the bridge. Two of the things the community bot owns
 are *needed* by the bridge, so the two share one PostgreSQL database rather than each keeping its own copy.
 
-**The community bot owns the `public` schema.** It runs the migrations, and both tables below are defined in its
-`prisma/schema.prisma`. TriBridge reads them with plain SQL through `src/utils/db.js` and **never writes them**.
+**The community bot owns the `public` schema.** It runs the migrations, and every table below is defined in its
+`prisma/schema.prisma`. TriBridge reads them with plain SQL through `src/utils/db.js` and **never writes them** —
+with the one exception of `Blacklist`, because `/blacklist` lives here. See
+[What TriBridge writes](#what-tribridge-writes).
 TriBridge's own settings live in a separate `tribridge` schema — see [What TriBridge stores](#what-tribridge-stores).
 
 Set `DATABASE_URL` here to the same connection string the community bot uses.
@@ -20,6 +22,22 @@ Set `DATABASE_URL` here to the same connection string the community bot uses.
 
 `MinecraftLink` relates to `User.id` rather than to the Discord id — the community bot's schema convention —
 so both link lookups join through `"User"`.
+
+## What TriBridge writes
+
+| Table       | Used for                                                                              | Module               |
+|-------------|---------------------------------------------------------------------------------------|----------------------|
+| `Blacklist` | `/blacklist`, and the check every command, button and Discord→Minecraft relay makes   | `utils/blacklist.js` |
+
+`/blacklist` is a TriBridge command, so the writes are here and the community bot only reads. One writer per
+table is the rule both bots keep; two writing one table is how they would start to disagree.
+
+The table is still the community bot's: its migration creates it, with database-side defaults for `id` and
+`updatedAt`. Those defaults are what lets a plain `INSERT` from here work at all — Prisma fills both in
+application code, and this side has no Prisma. Rows are keyed per Discord server (`guildId`) and member
+(`discordId`), unique together, which `INSERT … ON CONFLICT DO NOTHING` relies on. **Deploy the community bot's
+migration before this side's `/blacklist`**, or every add reports a database error and every check lets
+everyone through.
 
 ## What TriBridge stores
 
@@ -60,6 +78,7 @@ message path, where an exception would take the relay down with it.
 |--------------|-----------------------------------------------------------------------------------------------------|
 | Account link | Behaves as **not linked** — the message relays under the Discord name rather than not relaying       |
 | Admin roles  | **Fails closed.** `isAdmin` refuses. `/send` runs arbitrary commands as the Minecraft account and `/adminpanel` can impersonate everybody in the server, so handing either out during an outage is worse than the outage |
+| Blacklist    | **Fails open** — nobody counts as blacklisted. Failing closed would refuse every command and stop the whole bridge during an outage; the admin check still fails closed |
 
 Without `DATABASE_URL` the pool is never created and one line is logged. TriBridge's own settings cannot be loaded
 then, so **the bot does not start**: it retries for about 40 seconds and exits with a non-zero code. The same
@@ -75,6 +94,7 @@ being invalidated:
 |---------------|-----|------------------------------------------------------------------------------------|
 | Account links | 15s | A member who has just run `/link` expects their next message attributed correctly   |
 | Admin roles   | 15s | A revoked admin role should stop working in seconds, not at the next restart        |
+| Blacklist     | 15s | Cleared on every write here, so it only lags on the community bot's side            |
 
 Those numbers are the deliberate trade for not querying Postgres once per relayed message. Shortening them
 costs a query per message on a busy bridge; lengthening them makes `/link` look broken.

@@ -39,6 +39,8 @@ module.exports = (existingCommand, localCommand) => {
         // option would never propagate to the registered command.
         (localOption.autocomplete || false) !==
           (existingOption.autocomplete || false) ||
+        (localOption.maxLength ?? null) !==
+          (existingOption.maxLength ?? null) ||
         (localOption.choices?.length || 0) !==
           (existingOption.choices?.length || 0) ||
         areChoicesDifferent(
@@ -60,6 +62,18 @@ module.exports = (existingCommand, localCommand) => {
     }
     return false;
   };
+
+  // Discord reports no default permissions as null; a local command leaves
+  // the field out. Compared as bitfields, so a command that gains or loses
+  // `defaultMemberPermissions` is re-registered rather than keeping the old
+  // visibility until it is deleted by hand.
+  const localPermissions =
+    localCommand.defaultMemberPermissions != null
+      ? BigInt(localCommand.defaultMemberPermissions)
+      : null;
+  const existingPermissions =
+    existingCommand.defaultMemberPermissions?.bitfield ?? null;
+  if (localPermissions !== existingPermissions) return true;
 
   const localType = localCommand.type || 1;
   const existingType = existingCommand.type || 1;

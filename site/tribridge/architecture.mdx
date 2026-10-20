@@ -116,6 +116,7 @@ module.exports = {
     options: [...],                 // discord.js ApplicationCommandOption objects
     permissionsRequired: [...],     // optional, PermissionFlagsBits
     botPermissions: [...],          // optional
+    defaultMemberPermissions: ...,  // optional bigint; hides the command from members without it
     deleted: false,                 // optional; true unregisters the command
     callback: async (client, interaction) => { ...
     },
@@ -128,7 +129,11 @@ module.exports = {
 `utils/areCommandsDifferent.js` and creates, edits or deletes them **globally** on startup. Global propagation
 can take up to an hour on Discord's side.
 
-The diff compares `autocomplete` and recurses into subcommand options, so nested changes do propagate — but
+`defaultMemberPermissions` only hides a command — a server administrator can override it in Discord's
+integration settings — so pair it with `permissionsRequired`, which is what enforces it. It is sent as `null`
+when absent, so removing it from a command clears it on Discord's side too.
+
+The diff compares `autocomplete`, `maxLength` and `defaultMemberPermissions` and recurses into subcommand options, so nested changes do propagate — but
 `choices` and `autocomplete` are mutually exclusive in the Discord API. Never set both.
 
 ## Two permission systems
@@ -143,6 +148,13 @@ And the guard that is neither: `handleCommands.js` refuses any interaction whose
 that check an administrator of any *other* server the bot is in could `/adminrole add` a role they control and
 inherit bot-admin — `isAdmin` matches role ids and has no server dimension. It fails closed. **Do not add a
 command dispatch path that skips it.**
+
+Right after it, every interaction handler calls `refuseIfBlacklisted()` from `utils/blacklist.js`, and both
+Discord→Minecraft relays check `isBlacklisted()`. The event handler runs each file in an event folder on its
+own, so no handler can stop the others — a new handler needs its own check. The blacklist **fails open**, the
+opposite of `isAdmin`: it reads the community bot's `Blacklist` table, and failing closed would stop every
+command and the whole bridge during a database outage. It is also the one table in the community bot's schema
+this bot writes, so writes clear its 15-second cache.
 
 ## Talking to Hypixel
 

@@ -44,7 +44,7 @@ See [Account linking](/tribridge/account-linking) and [Link role](/tribridge/lin
 
 ## Management
 
-Every command in this section is 🔒 bot-admin only. The six that act on a Hypixel guild take an optional
+Every command in this section is 🔒 bot-admin only, except `/pingdiamond`. The eight that act on a Hypixel guild take an optional
 `guild` with autocomplete; leave it out and the [default guild](/tribridge/hypixel-guilds) is used.
 
 | Command                               | Does                                                                   |
@@ -53,6 +53,12 @@ Every command in this section is 🔒 bot-admin only. The six that act on a Hypi
 | `/kick <username> [reason] [guild]`   | Kick a member from a Hypixel guild                                     |
 | `/promote <username> [guild]`         | Promote a member                                                       |
 | `/demote <username> [guild]`          | Demote a member                                                        |
+| `/mute <username> <duration> [guild]` | Mute a member in guild chat. Duration like `30m`, `12h`, `7d`, at most `30d` |
+| `/unmute <username> [guild]`          | Unmute a member                                                        |
+| `/blacklist add <user> [reason]`      | Bar a member from both bots — see [Blacklist](/tribridge/blacklist)    |
+| `/blacklist remove <user>`            | Take a member off the blacklist                                        |
+| `/blacklist list`                     | Everyone on the blacklist, who added them and when                     |
+| `/pingdiamond`                        | Ping the configured member and delete the ping. Needs **Manage Roles**, not bot-admin |
 | `/send <message> [guild]`             | Run any command or message as that guild's account, and show the reply |
 | `/login [guild]`                      | Connect the bot. With no guild, every *disconnected* guild             |
 | `/adminpanel`                         | Open the [admin panel](/tribridge/admin-panel)                                    |

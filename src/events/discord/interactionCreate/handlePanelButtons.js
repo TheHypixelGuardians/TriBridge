@@ -28,6 +28,7 @@ const {
   setExcludedChannels,
 } = require("../../../utils/globalProfile");
 const { isAllowedServer } = require("../../../utils/serverGuard");
+const { refuseIfBlacklisted } = require("../../../utils/blacklist");
 const { getLink } = require("../../../utils/linkedAccounts");
 const { resolveMember } = require("../../../utils/serverMember");
 
@@ -224,6 +225,8 @@ module.exports = async (client, interaction) => {
       ephemeral: true,
     });
   }
+
+  if (await refuseIfBlacklisted(interaction)) return;
 
   // Re-checked on every click, not just when the panel was opened — an admin
   // role can be taken away while the panel sits there.

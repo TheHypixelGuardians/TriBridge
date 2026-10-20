@@ -266,7 +266,7 @@ account. The check fails closed: if the server cannot be resolved, every command
 
 ## Management commands
 
-Six commands act on a Hypixel guild through its Minecraft account. Each takes an optional `guild` with
+Eight commands act on a Hypixel guild through its Minecraft account. Each takes an optional `guild` with
 autocomplete; leave it out and the default guild is used.
 
 | Command                             | Does                                                                     |
@@ -275,6 +275,8 @@ autocomplete; leave it out and the default guild is used.
 | `/kick <username> [reason] [guild]` | `/g kick` in that guild                                                  |
 | `/promote <username> [guild]`       | `/g promote` in that guild                                               |
 | `/demote <username> [guild]`        | `/g demote` in that guild                                                |
+| `/mute <username> <duration> [guild]` | `/g mute` in that guild                                                |
+| `/unmute <username> [guild]`        | `/g unmute` in that guild                                                |
 | `/send <message> [guild]`           | Runs any command or message as that account and shows the server's reply |
 | `/login [guild]`                    | Connects the bot; with no guild, every *disconnected* guild              |
 
@@ -282,9 +284,48 @@ autocomplete; leave it out and the default guild is used.
 Minecraft account. `/login` with no guild reconnects everything, since after an outage that is almost always
 what was meant.
 
+`/mute` takes its duration as one number and one unit — `30m`, `12h`, `7d` — between one minute and Hypixel's
+limit of 30 days; anything else is refused before it reaches Hypixel. `/mute` and `/unmute` reply privately, and
+every one that succeeds is recorded in that guild's [audit channel](#auditing). The wording Hypixel answers a
+guild mute with was written from memory rather than checked against the server, so a reply the bot does not
+recognise is shown as Hypixel's own output instead of being guessed at.
+
 Hypixel gives no way to correlate a reply with the command that caused it, so the bot listens for a while and
 stops when the output goes quiet. Every query for an account is serialised with a settle window afterwards,
 which is the only thing stopping two concurrent commands from eating each other's output.
+
+## Blacklist
+
+`/blacklist add <user> [reason]`, `/blacklist remove <user>` and `/blacklist list` bar a member from **both
+bots**. They are bot-admin only and reply privately.
+
+A blacklisted member:
+
+- has every command, button, menu and autocomplete refused, on TriBridge and on the THG community bot alike;
+- no longer reaches Minecraft from the bridge or officer channels. Their message stays in Discord with a ⛔
+  reaction, so they can see it did not go through, rather than it vanishing.
+
+What they type **in-game** is not affected — the blacklist is about Discord accounts. Use `/mute` for guild
+chat.
+
+- **Stored in the shared database**, in the `Blacklist` table, per Discord server. TriBridge writes it and the
+  community bot reads it — see [The shared database](SHARED_DATABASE.md). A change applies here at once and on
+  the community bot within about 15 seconds.
+- **Bots, yourself and other bot admins cannot be blacklisted.** Take the admin role away first. Otherwise one
+  admin could lock another out of both bots, admin panel included.
+- **It fails open.** If the database cannot be read, nobody counts as blacklisted. Failing closed would refuse
+  every command and stop the whole bridge for everyone during an outage, to keep out a handful of members. The
+  admin check still fails closed, so nothing privileged opens up.
+- Every add and remove is recorded in the [audit channel](#auditing).
+
+## `/pingdiamond`
+
+Pings one fixed member and deletes the ping straight away, so they get the notification with nothing left in
+the channel. It needs the Discord **Manage Roles** permission, and is hidden from members without it.
+
+The member is set with `PINGDIAMOND_USER_ID` in `.env`; without it the command says it is not set up. The
+message is sent with mentions locked to that one id, so it can never ping anyone else. Each use is recorded in
+the [audit channel](#auditing).
 
 ## Information commands
 

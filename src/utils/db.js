@@ -5,8 +5,10 @@ const { Pool } = require("pg");
  *
  * The community bot owns account links and the bot-admin role list; this bot
  * reads both so the two agree about who is who and who is staff, and never
- * writes either. TriBridge's own settings live in the same database, in its own
- * `tribridge` schema — see `configStore.js`.
+ * writes either. The one table in that schema it does write is `Blacklist`,
+ * because `/blacklist` lives here — see `blacklist.js`. TriBridge's own
+ * settings live in the same database, in its own `tribridge` schema — see
+ * `configStore.js`.
  *
  * `DATABASE_URL` is the same connection string the community bot uses. Without
  * it every query here fails, and each caller decides what that means: link

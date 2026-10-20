@@ -10,6 +10,7 @@ const { buildGuildChatCommand } = require("../../../utils/sanitizeForChat");
 const { routeMessage } = require("../../../utils/chatRouting");
 const mcBots = require("../../../utils/mcBots");
 const { sendChat } = require("../../../utils/chatQueue");
+const { isBlacklisted } = require("../../../utils/blacklist");
 
 /**
  * Relays a message to every Hypixel guild it is addressed to.
@@ -77,6 +78,15 @@ module.exports = async (client, message) => {
   // bot, so this guard is also what stops the repost loop.
   if (message.author.bot || message.channel.id !== bridge.discordChannelId)
     return;
+
+  // Before routing, the repost and the disguise: a blacklisted member's
+  // message reaches no guild and is never reposted under another name. It
+  // stays in Discord, marked, because a silent drop looks like a broken
+  // bridge to the sender and to everyone else watching.
+  if (await isBlacklisted(message.guildId, message.author.id)) {
+    await markUp(message, ["⛔"]);
+    return;
+  }
 
   const { targets, body, unknownTag, targeted } = routeMessage(message.content);
 

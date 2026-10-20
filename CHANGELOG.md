@@ -32,6 +32,11 @@
       database cannot make Discord time the click or command out. A deferred command that then fails now says
       so, instead of being left on "thinking…".
 + Added `pg` and its dependencies to `package-lock.json`, which listed `pg` in `package.json` only.
++ Added `utils/blacklist.js`, which reads and writes the community bot's `Blacklist` table — the one table in
+  its schema TriBridge writes. Every interaction handler and both Discord→Minecraft relays check it after the
+  server guard. The table and its migration live in the community bot's repository.
++ Commands can set `defaultMemberPermissions`. It is sent on create and edit, and `areCommandsDifferent` now
+  compares it and each option's `maxLength`, so a change to either is re-registered.
 + Added `npm test`, a `node:test` suite in `test/` with no new dependency. It covers the one-time import (empty
   database and a JSON file present imports it; a stored setting ignores the file), corrupt files, save ordering
   and the modules' normalisation, with `db.query` mocked so no database is needed.
@@ -129,6 +134,21 @@
     + Naming a channel another guild already uses is allowed and says so, since sharing one officer channel
       between guilds is usually what is wanted.
     + `/guilds list` shows each guild's officer channel and marks the ones sharing officer chat with 🛡️.
++ Added `/blacklist add|remove|list` to bar a member from **both bots**, admin-only and private.
+    + A blacklisted member's commands, buttons and menus are refused on TriBridge and on the THG community bot.
+    + Their messages in the bridge and officer channels are no longer relayed into Minecraft. The message stays
+      in Discord with a ⛔ reaction, so they can see it did not go through.
+    + Bots, yourself and other bot admins cannot be blacklisted — take the admin role away first.
+    + Applies here at once and on the community bot within 15 seconds. If the database is unreachable, nobody
+      counts as blacklisted, so an outage cannot lock the whole server out.
+    + Every add and remove is recorded in the audit channel.
++ Added `/mute <username> <duration> [guild]` and `/unmute <username> [guild]` to mute guild members in-game,
+  admin-only.
+    + The duration is a number and one unit — `30m`, `12h`, `7d` — up to Hypixel's 30 days.
+    + Replies are private, and every successful mute or unmute is recorded in that guild's audit channel.
++ Added `/pingdiamond`, which pings one configured member and deletes the ping straight away.
+    + Needs **Manage Roles**, and is hidden from members without it.
+    + The member is set with `PINGDIAMOND_USER_ID` in `.env`. Only that member can ever be pinged by it.
 
 #### Information
 

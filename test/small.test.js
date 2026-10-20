@@ -47,3 +47,27 @@ test("command diff ignores Discord's omitted defaults but sees real changes", ()
     true,
   );
 });
+
+test("command diff sees default member permissions come and go", () => {
+  const local = { name: "pingdiamond", description: "Ping" };
+  // discord.js always gives a registered command an options array.
+  const registered = { ...local, options: [], defaultMemberPermissions: null };
+  assert.equal(areCommandsDifferent(registered, local), false);
+
+  const gated = { ...local, defaultMemberPermissions: 1n << 28n };
+  assert.equal(areCommandsDifferent(registered, gated), true);
+  assert.equal(
+    areCommandsDifferent(
+      { ...registered, defaultMemberPermissions: { bitfield: 1n << 28n } },
+      gated,
+    ),
+    false,
+  );
+  assert.equal(
+    areCommandsDifferent(
+      { ...registered, defaultMemberPermissions: { bitfield: 1n << 28n } },
+      local,
+    ),
+    true,
+  );
+});

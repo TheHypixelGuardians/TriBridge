@@ -378,6 +378,15 @@ to "database down" are deliberately different:
 | `utils/linkedAccounts.js` | `MinecraftLink` + `User` | Not linked — relay under the Discord name |
 | `utils/adminRoles.js`     | `AdminRole`              | **Fails closed** — refuses                |
 
+A third, `utils/blacklist.js`, reads **and writes** the community bot's `Blacklist` table —
+the one table in that schema this bot writes, because `/blacklist` lives here. It **fails open**
+(an unreadable database blacklists nobody), unlike `isAdmin`: failing closed would stop every
+command and the whole bridge during an outage. `refuseIfBlacklisted()` runs after the server
+guard in every interaction handler, and both Discord→Minecraft relays check `isBlacklisted()` —
+each handler file runs independently, so a new handler needs its own check. The table needs
+the community bot's migration (DB-side defaults for `id` and `updatedAt`); a plain `INSERT`
+here fails without them.
+
 Both cache for 15 seconds. They cannot invalidate on write — the writer is another process —
 so the TTL *is* the worst-case lag between an admin doing something on the community bot and
 this side honouring it. Don't raise it without reading

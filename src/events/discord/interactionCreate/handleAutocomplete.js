@@ -1,5 +1,6 @@
 const getLocalCommands = require("../../../utils/getLocalCommands");
 const { isAllowedServer } = require("../../../utils/serverGuard");
+const { refuseIfBlacklisted } = require("../../../utils/blacklist");
 
 /**
  * Dispatches autocomplete interactions to a command's optional `autocomplete`
@@ -18,6 +19,8 @@ module.exports = async (client, interaction) => {
   if (!isAllowedServer(interaction)) {
     return interaction.respond([]).catch(() => {});
   }
+
+  if (await refuseIfBlacklisted(interaction)) return;
 
   const commandObject = getLocalCommands().find(
     (cmd) => cmd.name === interaction.commandName,
