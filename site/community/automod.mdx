@@ -1,0 +1,48 @@
+---
+title: "Automod"
+description: "Invite links blocked and timeouts for repeat offenders, on top of Discord's own AutoMod."
+---
+
+Discord's own AutoMod does the blocking. The bot builds on top of it: it adds a rule that blocks invite links,
+and it times out members whose messages AutoMod keeps blocking. Both are switched on in `/setup` > **AutoMod**.
+
+## What members notice
+
+- An invite link to another Discord server is blocked before anyone sees it, with a short note saying why.
+- If AutoMod blocks your messages several times in a short while (by default 3 times in 10 minutes), you get a
+  short timeout (by default 10 minutes) and a DM with the reason.
+
+## The server's own rules
+
+The AutoMod page lists every AutoMod rule in the server: what it matches, what it does and what is exempt.
+Keyword lists show only as counts.
+
+**The bot never changes these rules.** Staff edit them in **Server Settings > AutoMod**, so changes made by
+hand there are never overwritten.
+
+## Invite links
+
+**Block invite links** creates one extra AutoMod rule, *Block Invite Links (THG Community bot)*. It matches
+`discord.gg`, `discord.com/invite`, `discordapp.com/invite` and `dsc.gg` links.
+- Bot admins are exempt. Add more exempt roles or channels to the rule in Server Settings.
+- When a mod log is set, Discord posts an alert there for each blocked invite.
+- Because it is a native rule, it works even while the bot is offline.
+- **Stop blocking invites** deletes the rule.
+
+## Timeouts for repeat offenders
+
+The bot counts the messages AutoMod blocks for each member, from every rule. When a member reaches the limit
+within the time window, the bot times them out:
+
+| Setting | Choices | Default |
+|---------|---------|---------|
+| Blocked messages | 2, 3, 4, 5 | 3 |
+| Within | 5, 10, 30 or 60 minutes | 10 minutes |
+| Timeout length | 5 min, 10 min, 1 hour, 6 hours, 1 day | 10 minutes |
+
+Each timeout is a normal [moderation](/community/moderation) case, with the bot as moderator, a DM to the
+member and a line in the mod log. Bot admins, server administrators and anyone above the bot's role are
+never timed out.
+
+The bot needs **Manage Server** and **Moderate Members**. The AutoMod intent it uses is not privileged, so
+nothing has to be switched on in the Developer Portal.

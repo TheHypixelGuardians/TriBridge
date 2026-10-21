@@ -18,7 +18,8 @@ Early alpha (`0.0.1-alpha.1`). The items below are what ships today.
 | **Bot-admin roles** | `/adminrole` — the staff roles, shared with TriBridge |
 | **Tickets** | Panel buttons open a private channel with staff, with a short form, claim, close with transcript and reopen — see [Tickets](/community/tickets) |
 | **Moderation** | Warn, timeout, kick, ban, purge, with numbered cases, DMs and a mod log — see [Moderation](/community/moderation) |
-| **Server setup** | `/setup` — log channel, request channel, admin roles, tickets and the mod log, stored in the `Setup` table |
+| **Automod** | On top of Discord's AutoMod: a rule blocking invite links and timeouts for repeat offenders — see [Automod](/community/automod) |
+| **Server setup** | `/setup` — log channel, request channel, admin roles, tickets, the mod log and automod, stored in the `Setup` table |
 | **Error reporting** | Unhandled errors can post to a Discord channel when `ERROR_LOG_CHANNEL_ID` is set |
 | **Hot reload** | `yarn dev` reloads commands and events without a full process restart |
 
@@ -36,10 +37,6 @@ Early alpha (`0.0.1-alpha.1`). The items below are what ships today.
 | `ModCase` | One row per moderation action: case number, type, member, moderator, reason, duration |
 
 See [Shared database](/community/shared-database) before changing `Blacklist`, the one table TriBridge writes.
-
-## Planned
-
-Automod is next. The `Setup` table already has the automod columns.
 
 ## Not in this bot
 

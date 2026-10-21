@@ -123,7 +123,7 @@
       },
       {
         "product": "THG Community",
-        "description": "Discord community bot — profiles, linking, requests, tickets, moderation",
+        "description": "Discord community bot — profiles, linking, requests, tickets, moderation, automod",
         "icon": "users",
         "groups": [
           {
@@ -137,6 +137,7 @@
               "community/account-linking",
               "community/tickets",
               "community/moderation",
+              "community/automod",
               "community/user-management",
               "community/features"
             ]
