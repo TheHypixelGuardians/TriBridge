@@ -62,6 +62,12 @@
   `wiki/` with both kept in sync until cutover.
 + Restructured the Mintlify site as an org-wide hub at `thehypixelguardians.mintlify.site` with **Products** for
   TriBridge (`site/tribridge/`) and THG Community (`site/community/`).
++ The THG Community pages no longer describe a link role, `/linkrole` or a `[Knight]` nickname: the community
+  bot dropped all three, since roles for linking are handled by another bot. They also note that its
+  verification server accepts Minecraft releases newer than its protocol data.
++ The THG Community pages document `/setrank` and the rank stored on a link, the username fetched by Discord id,
+  and the dropped `language` column. The user management page no longer describes prefix commands and a
+  `common.ts` that are long gone.
 
 ### New Features
 

@@ -3,8 +3,9 @@ title: "Account linking"
 description: "Bind a Discord user to a Minecraft account on the community bot."
 ---
 
-Binds a Discord user to a Minecraft account on the community bot. Linking also sets the member's nickname to
-`[Knight] <Minecraft name>` and gives the link role.
+Binds a Discord user to a Minecraft account on the community bot. It only records the link: the community bot
+gives no role and changes no nickname, because roles are handled by another bot and two bots managing the same
+members would undo each other.
 
 These are this bot's own links. [TriBridge](/tribridge) keeps a separate list with its own `/link`, so linking
 here does not change how the bridge shows a member — see [TriBridge account linking](/tribridge/account-linking).
@@ -17,12 +18,15 @@ here does not change how the bridge shows a member — see [TriBridge account li
 | `/unlink [user]` | anyone / bot-admin for `user:` | Remove your link, or somebody else's |
 | `/whois <user\|username>` | bot-admin | Look one up in either direction |
 | `/links` | bot-admin | List every link |
-| `/linkrole set\|show\|clear` | bot-admin | The role handed to linked members |
+| `/setrank <user> [rank]` | bot-admin | Set the guild rank stored on a link; leave `rank` out to clear it |
 
 ## What is stored
 
 `MinecraftLink`, one row per member, related to `User.id` rather than to the Discord id. It holds the
 canonical name Mojang returned and the account's UUID.
+
+It also holds a **rank**, set by hand with `/setrank` and shown by `/whois` and `/links`. It is free text, up
+to 32 characters, and only a record: nothing fills it in from Hypixel, and nothing turns it into a role.
 
 **The UUID is why a link survives a rename**: avatar URLs are built from it, so a member who changes their
 Minecraft name keeps their head and only the stored name goes stale.
@@ -47,12 +51,16 @@ With verification on, `/link` proves the member owns the account:
 A code works once, expires after five minutes, and only redeems for the account named in step 1. Five wrong
 codes per ten minutes, then a wait: the code is the only thing between a member and somebody else's account.
 
-A verified link **takes the account over** from anybody who claimed it before, and that member loses the link
-role and the `[Knight]` nickname. Refusing would let one unverified claim lock the real owner out for good.
+A verified link **takes the account over** from anybody who claimed it before, and that member's link is gone.
+Refusing would let one unverified claim lock the real owner out for good.
 
 The server runs inside the bot. Hosts switch it on with `VERIFY_SERVER_PORT` (the port it listens on) and
 `VERIFY_SERVER_ADDRESS` (what members are told to join); point an A record and a `_minecraft._tcp` SRV record
 at it so members can join without typing a port.
+
+It accepts every Java Edition release from 1.7 up, including ones newer than the bot has protocol data for,
+and the server list always shows it as compatible. Showing one fixed version would tell anybody on a newer
+release "Outdated server" and stop them from trying.
 
 With verification off, the name from the form is linked straight away after a Mojang check that the account
 exists, and nothing more. Anyone can then link any real Minecraft name; an admin undoes a wrong one with
@@ -62,33 +70,6 @@ exists, and nothing more. Anyone can then link any real Minecraft name; an admin
 A Mojang lookup distinguishes three outcomes, and the reply differs for each: no such account, Mojang
 unreachable, and success. Collapsing the middle case into the first would tell a member they typed their own
 name wrong when the truth was an outage.
-
-## The link role
-
-`/linkrole set <role>` names a role every linked member should have. `/link` grants it, `/unlink` takes it
-back, setting the role backfills it onto everybody already linked, and `clientReady` re-syncs from the stored
-links at every startup.
-
-Two rules hold it together:
-
-- **The role never gates the link.** `applyLinkRole` returns a result instead of throwing; every caller
-  reports the failure and carries on. A missing role or a lost **Manage Roles** is a configuration problem,
-  not a reason to refuse someone's `/link`.
-- **The sync only ever adds.** The role may be handed out for unrelated reasons, so it is never stripped from
-  someone merely because they have no link. Changing or clearing the configured role likewise leaves the old
-  one on whoever has it.
-
-Members are fetched **one id at a time**, not with a bulk roster fetch.
-
-The bot needs **Manage Roles**, and its own highest role must rank above the link role. `/linkrole set`
-refuses up front when either is untrue.
-
-## The nickname
-
-`/link` sets the member's nickname to `[Knight] <Minecraft name>`, and a relink replaces it. `/unlink` clears
-it, but only while it is still exactly the one `/link` set: a nickname chosen since is the member's own. Like
-the role, the nickname never gates the link. It needs **Manage Nicknames** and a bot role ranked above the
-member's; a failure goes to the log channel. Discord never lets a bot rename the server owner.
 
 ## TriBridge
 
