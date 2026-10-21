@@ -1,0 +1,107 @@
+---
+title: "Privacy Policy"
+description: "What the THG bots store, why, how long it is kept and how to have it removed."
+---
+This policy covers both bots in the THG Discord server: **TriBridge** (the bridge between the Discord server and
+the Hypixel guild chats) and the **THG Community bot**. They are run by The Hypixel Guardians, maintained by
+zVapor. Both serve the THG server only.
+
+The bots are not Discord products. Discord's own handling of your account and messages is covered by the
+[Discord Privacy Policy](https://discord.com/privacy).
+
+## What is stored
+
+Both bots share one database. Everything in it refers to people by their Discord user ID.
+
+**Account links.** Each bot keeps its own list: your Discord ID, your Minecraft username and your Minecraft
+UUID, and on the Community bot a rank set by staff. Linking is optional; you start it with `/link`.
+
+**Tickets** (Community bot). The ticket number and type, who opened, claimed and closed it, the answers you gave
+in the ticket form, the close reason and the times. When a ticket closes, the bot posts a text transcript of
+the ticket channel, message text included, to a staff-only log channel. The transcript is a Discord message in
+that channel; the database keeps no copy.
+
+**Moderation cases** (Community bot). The action (warn, timeout, kick, ban, unban, purge), the member, the
+moderator, the reason, the duration and whether the member was told by DM.
+
+**Feature requests** (Community bot). The title and description you submit, your Discord ID, its status and
+who handled it.
+
+**Blacklist.** Members barred from both bots: their Discord ID, the reason and who added them.
+
+**Server settings.** Channels, roles, admin roles and the bridge's configuration (guilds, audit channel, global
+profile settings).
+
+**Your Discord username** is stored next to your ID once you use a Community bot command, and refreshed from
+Discord.
+
+## Message content
+
+**TriBridge reads messages in the bridge and officer channels only**, to relay them. What you post there is
+sent to the matching Hypixel guild chat, under your Minecraft name if you are linked and your Discord name if
+you are not, where every guild member in-game can read it. Guild chat is relayed back the same way. Posting in
+a bridge channel is how you ask for that, and the channel is limited to linked members. TriBridge does not
+store relayed messages.
+
+**Linked messages are reposted.** A linked member's message is reposted with their Minecraft head and name and
+the original deleted. While staff run a [global profile change](/tribridge/global-profile-change), messages
+are reposted under another linked member's name and head; the real author is recorded in a staff-only audit
+channel. Linking is how you agree to both, and `/link` says so when you link.
+
+**The Community bot reads message text only to write ticket transcripts.** It does not read or keep messages
+anywhere else.
+
+Neither bot uses message content for AI or machine learning, analytics or advertising.
+
+## Why it is stored
+
+- To run linking, the bridge, tickets, moderation and feature requests.
+- To let staff review cases and tickets and act consistently.
+- To keep the bots secure and stop misuse (the blacklist, admin roles).
+
+## Who can see it
+
+- **Members** see what the bots post in public channels, and their own tickets.
+- **THG staff** see tickets, cases, requests, links and the audit channel, through Discord channel permissions
+  and the bots' admin roles.
+- **The maintainer** (zVapor) can access the database to run, debug and secure the bots.
+
+We do not sell data and do not share it with advertisers.
+
+## Services that process data
+
+| Service | What for | Where |
+| --- | --- | --- |
+| Discord | Delivers the bots' messages | United States, under Discord's own policies |
+| Neon | Hosts the database | European Union (Frankfurt) |
+| The bots' host | Runs both bots | European Union (Finland) |
+| Hypixel and Mojang | Look up guild rosters, SkyBlock profiles and Minecraft names and UUIDs. Only Minecraft names and UUIDs are sent, never Discord data | Their own servers |
+| Mintlify | Hosts this documentation site | United States |
+
+## How long it is kept
+
+- **Account links** until you `/unlink`, or staff unlink you.
+- **Tickets, cases, requests and the blacklist** for as long as the THG server uses the bots, unless staff
+  delete them sooner.
+- **Ticket transcripts** are Discord messages in the log channel and stay until staff delete them.
+- **When the bots stop being used**, their database is deleted.
+
+## Deleting your data and reporting problems
+
+Open a **Support** ticket in the THG Discord server to:
+
+- ask for a copy of the data held about you, or to correct or delete it;
+- report a problem with either bot or someone misusing it.
+
+We answer within one month. A moderation record against you may be kept while it is needed to moderate the
+server; we will tell you what was kept and why. If you are in the EU or UK you can also complain to your data
+protection authority.
+
+## Children
+
+Discord requires its users to be at least 13 (older in some countries). The bots are not aimed at children and
+we do not knowingly keep data about anyone below Discord's minimum age.
+
+## Changes
+
+When this policy changes, this page is updated. The bots' changelogs say when it happened.
