@@ -254,8 +254,8 @@ TriBridge has two separate permission systems.
 **Bot-admin** is a flat list of Discord role ids, checked inside each admin command. Everything under
 Management is gated this way, including `/adminpanel` and `/auditchannel`, plus `/links`, `/whois` and
 `/unlink user:`. The list is **shared with the THG community bot**: it is set there with
-**`/adminrole add|remove <role>`** (shown with `/adminrole show`, all Administrator-only), and TriBridge reads
-it from the shared database. A role that is staff on one bot is staff on both. TriBridge caches the list for 15
+**`/adminrole add|remove <role>`** or the `/setup` panel (open to bot admins and Discord administrators), and
+TriBridge reads it from the shared database. A bot admin can therefore make others admins, on both bots. A role that is staff on one bot is staff on both. TriBridge caches the list for 15
 seconds, so a change on the community bot takes effect here within that.
 
 **The check fails closed.** A member with no matching role is not an admin, with no roles set nobody is, and

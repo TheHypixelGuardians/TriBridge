@@ -48,7 +48,8 @@ Set `DISCORD_GUILD_ID` in the `.env` to the server's id and restart. See [Admin 
 ## Admin commands are refused for one person
 
 They hold no [bot-admin role](/tribridge/admin-roles). Add one with the community bot's `/adminrole add role:@Staff`,
-run by someone with the Discord **Administrator** permission. The change reaches the bridge within 15 seconds.
+run by another bot admin or someone with the Discord **Administrator** permission. The change reaches the bridge
+within 15 seconds.
 
 If nobody's admin commands work, the list may be empty, or the bridge cannot read the database: the check fails
 closed, so an outage makes nobody an admin.

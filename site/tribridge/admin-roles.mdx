@@ -18,7 +18,8 @@ TriBridge reads it from the shared database. One list decides who is staff on bo
 
 ## Setting it up
 
-On the community bot, someone with the Discord **Administrator** permission runs:
+On the community bot, a bot admin, or someone with the Discord **Administrator** permission, runs these (or
+uses the admin-roles picker in `/setup`):
 
 ```
 /adminrole add role:@Staff
@@ -26,8 +27,12 @@ On the community bot, someone with the Discord **Administrator** permission runs
 /adminrole show
 ```
 
-Until at least one role is added, nothing admin-gated works on either bot. That is the intended starting state,
-not a bug — do this during [installation](/tribridge/installation).
+Until at least one role is added, nothing admin-gated works on either bot, so the first role is set by a Discord
+administrator. That is the intended starting state, not a bug — do this during
+[installation](/tribridge/installation).
+
+Any bot admin can add or remove admin roles after that, which means any bot admin can make someone else an
+admin on both bots, `/send` included. Give admin roles only to people you would trust with that.
 
 TriBridge caches the list for 15 seconds, so a change made on the community bot takes effect here within that.
 If the database cannot be read, **nobody is an admin**: failing open would hand `/send` to anybody during an

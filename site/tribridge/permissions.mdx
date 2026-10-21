@@ -70,8 +70,8 @@ console and swallowed. A log line always describes something that has already ha
 
 Two separate systems, deliberately.
 
-- **Discord permissions**, checked generically before a command runs. No TriBridge command uses one today;
-  `/adminrole`, which needs **Administrator**, is on the community bot.
+- **Discord permissions**, checked generically before a command runs. No TriBridge command uses one today.
+  The admin role list is set with the community bot's `/adminrole`.
 - **[Bot-admin roles](/tribridge/admin-roles)**, checked inside the command. Everything admin-gated uses this.
 
 And two guards that are neither: **every command is refused unless it came from the one Discord server the bot
