@@ -14,7 +14,8 @@ all.
 
 ## Features
 
-- **The bridge** — one Discord channel and Hypixel guild chat, relayed both ways, joins and leaves included.
+- **The bridge** — one Discord channel and Hypixel guild chat, relayed both ways, joins and leaves included;
+  `@name` in guild chat pings that member in Discord.
 - **Multiple Hypixel guilds** — one Minecraft account each, all through the same channel, colour-coded and
   tagged on the way back.
 - **Guild tags** — `!sb hey` reaches one guild; anything else reaches all of them. An unrecognised tag is

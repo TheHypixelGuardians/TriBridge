@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### New Features
+
+#### Bridge
+
++ `@name` in guild chat now pings that person in Discord, in the bridge channel and in officer channels.
+    + The name can be a linked Minecraft name, a Discord username, or a display name or server nickname that
+      only one member has. Anything that doesn't match stays as plain text.
+    + Only the people the bot resolved are pinged: `@everyone`, `@here`, roles and raw `<@id>` text typed
+      in-game ping nobody, and one line pings at most five people.
+
 ### Removed Features
 
 #### Information
@@ -18,6 +28,10 @@
 
 #### Core
 
++ Added `utils/mentions.js`, used by both Minecraft→Discord relays. A mention inside an embed renders but never
+  notifies, so the resolved ids also go in the message content, with `allowedMentions` limited to exactly those
+  users. Discord names are found with the REST member search, which needs no GuildMembers intent; lookups are
+  cached for five minutes (one minute for a miss), and a failed lookup drops the ping, never the message.
 + Added optional `HYPIXEL_API_KEY` and `utils/hypixel.js` for Hypixel API v2 reads.
 + On Minecraft spawn, `002probeHypixelGuildId.js` learns each guild's Hypixel `_id` when a key is set and
   persists it as `hypixelGuildId` on the registry entry (skipped when already known, or when the key / UUID

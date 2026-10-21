@@ -55,3 +55,29 @@ test("the bot's own officer lines are not echoed back", async () => {
   await relayOfficerToDiscord(bot, line("Officer > BridgeBot: from discord"));
   assert.equal(posted.length, 0);
 });
+
+test("an @mention in officer chat pings only the resolved user", async () => {
+  const linkedAccounts = require("../src/utils/linkedAccounts");
+  require("../src/utils/mentions").clearCache();
+  mock.method(linkedAccounts, "getLinkByName", async (name) =>
+    name === "Alice" ? { discordId: "42", name: "Alice" } : null,
+  );
+  bridge.discordServerId = "SERVER";
+  bridge.discordClient.guilds = {
+    fetch: async () => ({ members: { search: async () => new Map() } }),
+  };
+
+  await relayOfficerToDiscord(
+    bot,
+    line("Officer > [MVP++] Boss: @Alice @everyone check this"),
+  );
+
+  assert.equal(posted.length, 1);
+  const { payload } = posted[0];
+  assert.equal(payload.content, "<@42>");
+  assert.deepEqual(payload.allowedMentions, { parse: [], users: ["42"] });
+  assert.equal(
+    payload.embeds[0].data.description,
+    "<@42> @everyone check this",
+  );
+});

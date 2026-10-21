@@ -26,6 +26,18 @@ speaker's Minecraft head as the author icon. Member joins and leaves are relayed
 registered, the guild's tag is appended to the author name — `Notch [SB]` — so it is obvious which guild said
 what; with a single guild there is nothing to disambiguate, so the tag is omitted entirely.
 
+**Pinging from Minecraft.** `@name` in guild chat becomes a real Discord ping. The name is matched, in order,
+against the Minecraft names of [linked accounts](#account-linking), then Discord usernames, then display names
+and server nicknames — a display name or nickname only counts when exactly one member has it, so a shared
+nickname never pings the wrong person. The embed shows the mention, and the message carries it as well,
+because Discord never notifies anyone for a mention inside an embed. Names that match nobody stay as typed.
+The same applies in [officer channels](#officer-chat).
+
+Only names the bot resolved itself can notify anyone. `@everyone`, `@here`, role mentions and raw `<@id>` text
+typed in-game ping nobody: guild chat is open to every guild member, Discord permissions included or not, so
+letting it parse mentions would hand all of them `@everyone`. For the same reason one line pings at most five
+people.
+
 Minecraft 1.8 caps a chat packet at 100 characters, so a long Discord message is truncated on the way in. The
 command is built **once** for a message and reused for every guild it reaches, so a broadcast is cut at
 exactly the same point everywhere rather than differently per guild.

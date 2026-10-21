@@ -12,6 +12,7 @@ const {
   parseGuildPresence,
 } = require("../../../utils/guildChat");
 const { createRelayDedupe } = require("../../../utils/relayDedupe");
+const { resolveMentions, mentionPayload } = require("../../../utils/mentions");
 
 // Two accounts sitting in the same Hypixel guild — a misconfiguration — would
 // each relay the other's chat, doubling every line. This module is
@@ -81,16 +82,20 @@ module.exports = async (client, jsonMsg) => {
     const { author, disguised } = await resolveAuthor(username, guild);
 
     try {
+      // `@name` becomes a real ping: the mention in the embed for show, the
+      // same ids in the content because embeds never notify anyone.
+      const { text, userIds } = await resolveMentions(content);
+
       const channel = await bridge.discordClient.channels.fetch(
         bridge.discordChannelId,
       );
       const embed = new EmbedBuilder()
         .setAuthor(author)
-        .setDescription(content)
+        .setDescription(text)
         .setColor(guilds.colorOf(guild))
         .setTimestamp();
 
-      await channel.send({ embeds: [embed] });
+      await channel.send({ embeds: [embed], ...mentionPayload(userIds) });
 
       // The embed is the only copy of this message in Discord, so a
       // relabelled one needs the same audit trail as a Discord repost.
