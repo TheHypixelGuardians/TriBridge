@@ -6,8 +6,8 @@ Every command TriBridge answers to. Slash commands are registered **globally** b
 Discord server the bot serves — see [Admin roles](/tribridge/admin-roles) for why. `/help` browses the same list in
 Discord, one page per category.
 
-⛔ marks a command that needs the Discord **Administrator** permission. 🔒 marks one gated on a
-[bot-admin role](/tribridge/admin-roles).
+🔒 marks a command gated on a [bot-admin role](/tribridge/admin-roles). The role list itself is set with the
+THG Community bot's `/adminrole`.
 
 ## Guild tags
 
@@ -42,21 +42,20 @@ These are the bridge's own links, separate from the THG Community bot's `/link`.
 
 ## Management
 
-Every command in this section is 🔒 bot-admin only, except `/pingdiamond`. The eight that act on a Hypixel guild take an optional
+Every command in this section is 🔒 bot-admin only. The eight that act on a Hypixel guild take an optional
 `guild` with autocomplete; leave it out and the [default guild](/tribridge/hypixel-guilds) is used.
 
 | Command                               | Does                                                                   |
 |---------------------------------------|------------------------------------------------------------------------|
 | `/invite <username> [guild]`          | Invite a player to a Hypixel guild                                     |
 | `/kick <username> [reason] [guild]`   | Kick a member from a Hypixel guild                                     |
-| `/promote <username> [guild]`         | Promote a member                                                       |
+| `/promote <user> <rank> [guild]`      | Give a member a rank in-game and on Discord — see [Ranks](/tribridge/ranks) |
 | `/demote <username> [guild]`          | Demote a member                                                        |
 | `/mute <username> <duration> [guild]` | Mute a member in guild chat. Duration like `30m`, `12h`, `7d`, at most `30d` |
 | `/unmute <username> [guild]`          | Unmute a member                                                        |
 | `/blacklist add <user> [reason]`      | Bar a member from both bots — see [Blacklist](/tribridge/blacklist)    |
 | `/blacklist remove <user>`            | Take a member off the blacklist                                        |
 | `/blacklist list`                     | Everyone on the blacklist, who added them and when                     |
-| `/pingdiamond`                        | Ping the configured member and delete the ping. Needs **Manage Roles**, not bot-admin |
 | `/send <message> [guild]`             | Run any command or message as that guild's account, and show the reply |
 | `/login [guild]`                      | Connect the bot. With no guild, every *disconnected* guild             |
 | `/adminpanel`                         | Open the [admin panel](/tribridge/admin-panel)                                    |

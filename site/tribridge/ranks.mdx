@@ -1,0 +1,48 @@
+---
+title: "Ranks"
+description: "Give a member a guild rank, its Discord role and a [Rank] nickname with one /promote."
+---
+`/promote` with a `user` and a `rank` gives a Discord member a rank in-game and on Discord in one go. It is
+bot-admin only.
+
+```
+/promote user:@Someone rank:Veteran
+/promote user:@Someone rank:Trial Officer guild:sb
+```
+
+## The ranks
+
+Highest first:
+
+| Rank               | In-game rank | Discord role set by        |
+|--------------------|--------------|----------------------------|
+| **Senior Officer** | Officer      | `RANK_ROLE_SENIOR_OFFICER` |
+| **Officer**        | Officer      | `RANK_ROLE_OFFICER`        |
+| **Trial Officer**  | Officer      | `RANK_ROLE_TRIAL_OFFICER`  |
+| **Veteran**        | Veteran      | `RANK_ROLE_VETERAN`        |
+| **Elite**          | Elite        | `RANK_ROLE_ELITE`          |
+| **Titan**          | Titan        | `RANK_ROLE_TITAN`          |
+
+The three officer tiers share Hypixel's one **Officer** rank; the tier exists only on Discord.
+
+## What it does
+
+- **In-game:** `/g setrank <name> <rank>` in the `guild` you name, or else in whichever bridged guild the
+  member is in, found by reading the rosters. This needs a [bridge link](/tribridge/account-linking): a member
+  who has not linked is ranked on Discord only. The bot never guesses a Minecraft name from a nickname,
+  because a wrong guess would change somebody else's rank.
+- **On Discord:** the rank's role, the other five rank roles removed, and the nickname
+  `[Rank] <Minecraft name>` (their own name when unlinked), cut to Discord's 32 characters. The community
+  bot's Knight role stays.
+
+Each step reports separately in the reply, one failing does not stop the others, and the whole change is
+recorded in the [audit channel](/tribridge/auditing).
+
+## Setting it up
+
+1. Put each rank's role id in `.env` (see [Configuration](/tribridge/configuration)) and restart the bot. A
+   rank with no id set uses the server role with the rank's name. An id that matches no role is reported
+   rather than replaced by a same-named role, so a deleted role is noticed.
+2. Give the bot **Manage Roles** and **Manage Nicknames**, with its own role above every rank role and above
+   the members it ranks. Discord never lets a bot rename the server owner.
+3. The guild's Minecraft account must be allowed to change ranks in-game.

@@ -42,7 +42,6 @@ permission does not spam the channel. The bridge falls back to ordinary relaying
 | [Request channel](/tribridge/feature-requests)                                       | View Channel, Send Messages, Embed Links                |
 | [Officer channel](/tribridge/officer-chat)                                           | View Channel, Send Messages, Embed Links, Add Reactions |
 | Every channel a [global profile change](/tribridge/global-profile-change) applies to | View Channel, Manage Webhooks, Manage Messages          |
-| Any channel `/pingdiamond` is run in                                       | View Channel, Send Messages                             |
 
 An officer channel needs **Add Reactions** only for the routing markers — 📡 when a reply reached no guild,
 ❓ on an unrecognised [guild tag](/tribridge/guild-tags); without it the reply is still attempted. It deliberately needs
@@ -55,6 +54,15 @@ A channel where the bot is missing **Manage Webhooks** or **Manage Messages** is
 profile change and left completely alone, with one warning to the log channel. It is not partially disguised.
 Officer channels are skipped by it whatever the permissions are — see [Officer chat](/tribridge/officer-chat).
 
+## Server-wide permissions
+
+| Permission           | Needed for                                                                                       |
+|----------------------|--------------------------------------------------------------------------------------------------|
+| **Manage Roles**     | The rank roles [`/promote`](/tribridge/ranks) gives. The bot's role must rank above them |
+| **Manage Nicknames** | The `[Rank] name` nickname `/promote` sets. The bot's role must rank above the member's          |
+
+Without them the in-game half of a promotion still happens, and the reply says which Discord step failed.
+
 A missing or broken log channel never takes down the work it was reporting on — the failure is printed to the
 console and swallowed. A log line always describes something that has already happened.
 
@@ -62,9 +70,9 @@ console and swallowed. A log line always describes something that has already ha
 
 Two separate systems, deliberately.
 
-- **Discord permissions**, checked generically before a command runs. `/pingdiamond` needs **Manage Roles**,
-  and is hidden from members without it.
-- **[Bot-admin roles](/tribridge/admin-roles)**, checked inside the command. Everything else admin-gated uses this.
+- **Discord permissions**, checked generically before a command runs. No TriBridge command uses one today;
+  `/adminrole`, which needs **Administrator**, is on the community bot.
+- **[Bot-admin roles](/tribridge/admin-roles)**, checked inside the command. Everything admin-gated uses this.
 
 And two guards that are neither: **every command is refused unless it came from the one Discord server the bot
 serves**, and every command, button and menu is refused for a [blacklisted](/tribridge/blacklist) member. See [Admin roles](/tribridge/admin-roles) for why that is not optional.

@@ -1,24 +1,38 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const { isAdmin } = require("../../utils/adminRoles");
-const { isValidMinecraftName } = require("../../utils/minecraftName");
-const queryGuild = require("../../utils/queryGuild");
+const { logAudit } = require("../../utils/auditChannel");
+const { resolveMember } = require("../../utils/serverMember");
+const {
+  PROMOTION_RANKS,
+  getRank,
+  promoteMember,
+  describeStep,
+} = require("../../utils/guildPromotion");
 const {
   GUILD_OPTION,
   guildOptionAutocomplete,
   resolveTarget,
-  guildPhrase,
-  describeQueryFailure,
 } = require("../../utils/commandGuild");
 
 module.exports = {
   name: "promote",
-  description: "Promote a member in a Hypixel guild.",
+  description: "Give a member a rank, in-game and on Discord.",
   options: [
     {
-      name: "username",
-      description: "The Minecraft username to promote.",
+      name: "user",
+      description: "The member to give the rank.",
+      type: ApplicationCommandOptionType.User,
+      required: true,
+    },
+    {
+      name: "rank",
+      description: "The rank to give.",
       type: ApplicationCommandOptionType.String,
       required: true,
+      choices: PROMOTION_RANKS.map((rank) => ({
+        name: rank.name,
+        value: rank.value,
+      })),
     },
     GUILD_OPTION,
   ],
@@ -33,90 +47,67 @@ module.exports = {
       });
     }
 
-    await interaction.deferReply();
-
-    const target = resolveTarget(interaction);
-    if (!target.ok) return interaction.editReply(target.message);
-
-    const username = interaction.options.getString("username");
-
-    // Validated because it goes straight into bot.chat() below without
-    // passing through buildGuildChatCommand.
-    if (!isValidMinecraftName(username)) {
-      return interaction.editReply(
-        "❌ That is not a valid Minecraft username.\n" +
-          "> Names are at most 16 letters, digits or underscores.",
-      );
-    }
-
-    const query = await queryGuild(target.record, `/guild promote ${username}`);
-    if (!query.ok) return interaction.editReply(describeQueryFailure(query));
-
-    const result = parsePromoteResponse(
-      query.lines.join("\n"),
-      username,
-      target.guild,
+    return giveRank(
+      interaction,
+      interaction.options.getUser("user"),
+      interaction.options.getString("rank"),
     );
-    await interaction.editReply(result);
   },
 };
 
 /**
- * Parses the collected Hypixel chat messages after a /guild promote command
- * to determine the outcome and return a user-friendly message.
+ * Sets one of {@link PROMOTION_RANKS} in-game (when the
+ * member has a bridge link) and on Discord.
  *
- * @param {string} combined - All collected messages joined by newlines
- * @param {string} username - The Minecraft username that was promoted
- * @param {object} guild - The Hypixel guild registry record
- * @returns {string} A Discord-friendly result message
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction
+ * @param {import('discord.js').User} user
+ * @param {string} rankValue
  */
-function parsePromoteResponse(combined, username, guild) {
-  const lower = combined.toLowerCase();
-  const where = guildPhrase(guild);
-
-  // Successful promotion
-  if (lower.includes("was promoted")) {
-    return `✅ **${username}** has been promoted!`;
+async function giveRank(interaction, user, rankValue) {
+  // Choices are a hint: Discord accepts any string here from a crafted
+  // request, so the rank is always looked up, never used as given.
+  const rank = getRank(rankValue);
+  if (!rank) {
+    return interaction.reply({
+      content: "❌ That is not one of the ranks.",
+      ephemeral: true,
+    });
   }
 
-  // Already at highest rank
-  if (
-    lower.includes("already the highest rank") ||
-    lower.includes("is already the highest")
-  ) {
-    return `⚠️ **${username}** is already at the highest guild rank.`;
+  // The roster reads and the rank change are Hypixel round trips, far past
+  // Discord's three seconds.
+  await interaction.deferReply();
+
+  const member = await resolveMember(user.id);
+  if (!member) {
+    return interaction.editReply("❌ That user is not in this server.");
   }
 
-  // Player not in guild
-  if (
-    lower.includes("is not in your guild") ||
-    lower.includes("not a member of your guild")
-  ) {
-    return `❌ **${username}** is not a member of ${where}.`;
+  // With `guild` given, only that guild is promoted in; without it, every
+  // connected guild's roster is searched for the member.
+  let record = null;
+  if (interaction.options.getString("guild")) {
+    const target = resolveTarget(interaction);
+    if (!target.ok) return interaction.editReply(target.message);
+    record = target.record;
   }
 
-  // Player not found
-  if (
-    lower.includes("can't find a player by the name") ||
-    lower.includes("player not found")
-  ) {
-    return `❌ Could not find a player named **${username}**.`;
-  }
+  const result = await promoteMember(member, rank, { record });
+  const where = result.guildName ? ` (${result.guildName})` : "";
+  const steps = [
+    describeStep(`In-game${where}`, result.minecraft),
+    describeStep("Role", result.role),
+    describeStep("Nickname", result.nickname),
+  ].join("\n");
 
-  // No permission
-  if (
-    lower.includes("you don't have permission") ||
-    lower.includes("you do not have permission") ||
-    lower.includes("you must be")
-  ) {
-    return `❌ The bot does not have permission to promote players in ${where}.`;
-  }
+  await interaction.editReply({
+    content: `<@${member.id}> → **${rank.name}**\n${steps}`,
+    allowedMentions: { parse: [] },
+  });
 
-  // Fallback
-  const trimmed = combined.trim();
-  if (trimmed) {
-    return `⚠️ Promote command sent for **${username}**. Server response:\n> ${trimmed.split("\n").join("\n> ")}`;
-  }
-
-  return `⚠️ Promote command sent for **${username}**, but no response was received from the server.`;
+  await logAudit(
+    `⬆️ <@${interaction.user.id}> gave <@${member.id}>` +
+      (result.mcName ? ` (**${result.mcName}**)` : "") +
+      ` the rank **${rank.name}**.\n${steps}`,
+  );
 }

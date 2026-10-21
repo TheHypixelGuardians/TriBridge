@@ -98,7 +98,8 @@
               "tribridge/admin-panel",
               "tribridge/global-profile-change",
               "tribridge/auditing",
-              "tribridge/blacklist"
+              "tribridge/blacklist",
+              "tribridge/ranks"
             ]
           },
           {

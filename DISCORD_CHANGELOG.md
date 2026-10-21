@@ -15,6 +15,7 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 ### Moderation
 
 - Admins can now mute and unmute guild members from Discord with `/mute` and `/unmute`.
+- Staff can give you a rank with `/promote`: your guild rank, Discord role and `[Rank]` nickname change together.
 - Admins can blacklist a member from both bots. A blacklisted member's commands are refused, and their messages here get a ⛔ and no longer reach guild chat.
 
 ### Fixes
