@@ -90,13 +90,14 @@ TriBridge is a Node.js bot that bridges a Discord channel and a Hypixel guild ch
 messages both ways; slash commands let Discord admins run guild management commands
 in-game.
 
-Member profiles, account linking, bot-admin roles, feature requests and tickets belong to the
-sibling **THG community bot** (`../thg-community`), a TypeScript/discordx bot on PostgreSQL.
-The bridge, the admin panel and the global profile change stay here, because all three need
-the Minecraft side. The two bots share one database for the two things both must agree
-about — who is linked, and who is staff — and that contract is written down in
-[docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md). Read it before touching `utils/db.js`,
-`utils/configStore.js`, `utils/linkedAccounts.js` or `utils/adminRoles.js`.
+The sibling **THG community bot** (`../thg-community`) is a TypeScript/discordx bot on
+PostgreSQL with member profiles, feature requests, tickets and its own account linking and
+admin roles. **The two bots' features are separate** (the owner's rule): they share the
+database and the blacklist, and nothing else. This bot has its own `/link` and its own
+`/adminrole`; never point either back at the community bot's tables. That contract is
+written down in [docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md). Read it before touching
+`utils/db.js`, `utils/configStore.js`, `utils/blacklist.js` or the one-time link copy in
+`utils/linkedAccounts.js`.
 
 - CommonJS (`"type": "commonjs"`) — use `require`/`module.exports`, not ESM.
 - No build step and no linter. Unit tests live in `test/` and run with `npm test` (Node's built-in
@@ -221,10 +222,9 @@ Global command propagation can take up to an hour on Discord's side. The diff co
 - **Permissions:** two separate systems. `permissionsRequired` is enforced generically by
   `handleCommands.js` (used for real Discord permissions like `Administrator`). Bot-admin
   gating is done *inside* the callback with `await isAdmin(interaction.member)` from
-  `utils/adminRoles.js`, which reads role IDs from the community bot's `AdminRole` table
-  (cached for 15s; there is no `/adminrole` here any more). **It is `async` and it fails
-  closed** — an unreachable database is not an admin, because `/send` runs arbitrary commands
-  as a Minecraft account. Follow the existing pattern for the command type you're adding, and
+  `utils/adminRoles.js`, which reads the bridge's own role list (set with `/adminrole`,
+  stored in `tribridge.config`) from memory. **It is `async` and it fails closed** — no roles
+  set means nobody is an admin, because `/send` runs arbitrary commands as a Minecraft account. Follow the existing pattern for the command type you're adding, and
   don't drop the `await`: a bare promise is truthy, so `if (!isAdmin(...))` would let
   *everybody* through.
 - **Querying Hypixel:** use `queryGuild(record, chatCommand, opts)` from `utils/queryGuild.js`.
@@ -345,11 +345,17 @@ Global command propagation can take up to an hour on Discord's side. The diff co
 
 ## Account linking and the shared database
 
-`/link` and the rest of account linking live on the **THG community bot** now. This bot reads
-the result: `utils/linkedAccounts.js` exposes `getLink(discordId)` and `getLinkByName(name)`,
-both **async**, both reading `MinecraftLink` joined through `User` in the community bot's
-PostgreSQL database. There is deliberately no write path — two bots writing one link table is
-how they would start disagreeing about who is who.
+`/link`, `/unlink`, `/links` and `/whois` live here, and the links are the bridge's own:
+`utils/linkedAccounts.js` stores them in `tribridge.config` (`linkedAccounts`) through
+`configStore`, like the other settings, and serves `getLink(discordId)` and
+`getLinkByName(name)` from memory. Both stay **async** so callers keep their `await`. The
+community bot has a separate `/link` and link list; the two are independent on purpose. The
+only read of the community's `MinecraftLink` is a one-time copy on the first start with no
+stored list and no `linkedAccountsConfig.json`, saved even when empty so it never repeats.
+There is no link role here — that and the `[Knight]` nickname are the community bot's.
+
+`/link` checks guild membership against the live roster of every connected guild and fails
+open on an inconclusive answer, but not on a clean roster without the name.
 
 Links are **not** scoped to a Hypixel guild: one link per Discord user, whatever guild they
 are in.
@@ -369,16 +375,7 @@ The repost path needs **Manage Webhooks** and **Manage Messages**. Neither is en
 `messageCreate`), so failure is handled at runtime: fall back to the old relay behaviour and
 report once to the log channel, latched so it doesn't spam.
 
-Two modules read the shared database, both on message paths, so both are **async and never
-throw** — `utils/db.js` returns `null` for a failed query rather than rejecting. Their answers
-to "database down" are deliberately different:
-
-| Module                    | Reads                    | Behaviour when the read fails             |
-|---------------------------|--------------------------|-------------------------------------------|
-| `utils/linkedAccounts.js` | `MinecraftLink` + `User` | Not linked — relay under the Discord name |
-| `utils/adminRoles.js`     | `AdminRole`              | **Fails closed** — refuses                |
-
-A third, `utils/blacklist.js`, reads **and writes** the community bot's `Blacklist` table —
+`utils/blacklist.js` reads **and writes** the community bot's `Blacklist` table —
 the one table in that schema this bot writes, because `/blacklist` lives here. It **fails open**
 (an unreadable database blacklists nobody), unlike `isAdmin`: failing closed would stop every
 command and the whole bridge during an outage. `refuseIfBlacklisted()` runs after the server
@@ -387,13 +384,11 @@ each handler file runs independently, so a new handler needs its own check. The 
 the community bot's migration (DB-side defaults for `id` and `updatedAt`); a plain `INSERT`
 here fails without them.
 
-Both cache for 15 seconds. They cannot invalidate on write — the writer is another process —
-so the TTL *is* the worst-case lag between an admin doing something on the community bot and
-this side honouring it. Don't raise it without reading
-[docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md): 15s is what keeps a member's very first
-message after `/link` attributed correctly.
+It caches for 15 seconds and clears on its own writes, so it only lags behind the community
+bot's side.
 
-TriBridge's own settings — the guild registry, the global profile change and the audit channel —
+TriBridge's own settings — the guild registry, the global profile change, the audit channel, the
+admin roles and the account links —
 live in the same database, in its own `tribridge` schema, through `utils/configStore.js`. They are
 loaded once at startup (`load()`, awaited in `index.js`) and read synchronously from memory after
 that, so they add no query to the message path. Writes are `async` and go through `configStore.commit()`:
@@ -417,8 +412,8 @@ keep TriBridge tables in `tribridge`.
 database), and `utils/disguise.js` applies it to three legs: the Discord
 repost, the name guild chat is told (`disguiseToMinecraft`), and the name on incoming guild
 chat (`disguiseToDiscord`). `resolveIdentity()` is **async** — a global profile change
-outranks an account link, which outranks the plain Discord author, and the link is a database
-read now.
+outranks an account link, which outranks the plain Discord author, and the link lookup is async
+(a memory read today, kept async so a future database read cannot drop an `await`).
 
 `appliesToGuildChat()` is async for the same reason: test mode matches an incoming Minecraft
 name back to an account link, because guild chat carries no Discord author to check. A tester
@@ -458,15 +453,14 @@ whoever holds the code can complete the sign-in with *their own* Microsoft accou
 ## Files to leave alone
 
 `.env`, `.minecraft-auth/`, `guildsConfig.json`, `globalProfileConfig.json`,
-`auditChannelConfig.json`, `.idea/` — local/secret state. The three `*Config.json` files are
+`auditChannelConfig.json`, `adminRolesConfig.json`, `linkedAccountsConfig.json`, `.idea/` —
+local/secret state. The five `*Config.json` files are
 the import source and the database snapshots. Only `configStore.js` writes them; nothing else may
 delete or rewrite them. Never print or commit token,
 auth-cache, database-URL or account-address contents.
 
-The config files the migrated features used — `adminRolesConfig.json`,
-`linkedAccountsConfig.json`, `linkRoleConfig.json`, `featureRequestsConfig.json` — are gone.
-Their data lives in the community bot's database; an install upgrading past this needs it
-moved by hand, and the old files can then be deleted.
+`linkRoleConfig.json` and `featureRequestsConfig.json` are from features that moved to the
+community bot; nothing reads them, and they can be deleted.
 
 `src/events/minecraft/message/test.js` is a no-op debug scratch file with commented-out
 logging; it is intentionally inert.

@@ -1,27 +1,21 @@
 # The shared database
 
 TriBridge and the [THG community bot](https://github.com/TheHypixelGuardians/thg-community) are two processes
-serving one Discord server. The community bot owns the community half — member profiles, account links,
-bot-admin roles, feature requests — and TriBridge owns the bridge. Two of the things the community bot owns
-are *needed* by the bridge, so the two share one PostgreSQL database rather than each keeping its own copy.
+serving one Discord server, and their features are **separate**. Each bot has its own account links and its own
+bot-admin roles; linking or being staff on one does not carry over to the other. They share exactly two things:
+**the PostgreSQL database**, and **the blacklist** in it.
 
-**The community bot owns the `public` schema.** It runs the migrations, and every table below is defined in its
-`prisma/schema.prisma`. TriBridge reads them with plain SQL through `src/utils/db.js` and **never writes them** —
-with the one exception of `Blacklist`, because `/blacklist` lives here. See
-[What TriBridge writes](#what-tribridge-writes).
-TriBridge's own settings live in a separate `tribridge` schema — see [What TriBridge stores](#what-tribridge-stores).
+**The community bot owns the `public` schema.** It runs the migrations, and `Blacklist` is defined in its
+`prisma/schema.prisma`. TriBridge touches that schema through `src/utils/db.js` with plain SQL for the blacklist
+only (see [What TriBridge writes](#what-tribridge-writes)), plus one read of the community links on its very
+first start (see [The one-time link copy](#the-one-time-link-copy)). Everything else TriBridge keeps lives in its
+own `tribridge` schema — see [What TriBridge stores](#what-tribridge-stores).
 
 Set `DATABASE_URL` here to the same connection string the community bot uses.
 
-## What TriBridge reads
-
-| Table                   | Used for                                                                                          | Module                    |
-|-------------------------|---------------------------------------------------------------------------------------------------|---------------------------|
-| `MinecraftLink`, `User` | Attributing guild chat to a member's Minecraft name, and the webhook repost's head                 | `utils/linkedAccounts.js` |
-| `AdminRole`             | `isAdmin()` — the gate on `/send`, `/guilds`, `/invite`, `/kick`, `/promote`, `/demote`, `/login`, `/adminpanel` and `/auditchannel` | `utils/adminRoles.js`     |
-
-`MinecraftLink` relates to `User.id` rather than to the Discord id — the community bot's schema convention —
-so both link lookups join through `"User"`.
+Linking and admin roles used to be shared: the community bot owned both and TriBridge read them. That made a
+feature on one bot depend on the other's tables and its 15-second cache. They were split back on 2026-10-21, so
+the two bots now only meet at the blacklist.
 
 ## What TriBridge writes
 
@@ -45,11 +39,13 @@ TriBridge owns one table, `tribridge.config`, which `src/utils/configStore.js` c
 finds it missing (checked with `to_regclass`, then `CREATE SCHEMA`/`CREATE TABLE IF NOT EXISTS`). It holds one JSONB document per setting, all managed from Discord by this
 bot's own commands:
 
-| `name`          | Holds                          | Module                   | Imported once from          |
-|-----------------|--------------------------------|--------------------------|-----------------------------|
-| `guilds`        | The Hypixel guild registry     | `utils/guilds.js`        | `guildsConfig.json`         |
-| `globalProfile` | The global profile change      | `utils/globalProfile.js` | `globalProfileConfig.json`  |
-| `auditChannel`  | The default audit channel      | `utils/auditChannel.js`  | `auditChannelConfig.json`   |
+| `name`           | Holds                          | Module                    | Imported once from           |
+|------------------|--------------------------------|---------------------------|------------------------------|
+| `guilds`         | The Hypixel guild registry     | `utils/guilds.js`         | `guildsConfig.json`          |
+| `globalProfile`  | The global profile change      | `utils/globalProfile.js`  | `globalProfileConfig.json`   |
+| `auditChannel`   | The default audit channel      | `utils/auditChannel.js`   | `auditChannelConfig.json`    |
+| `adminRoles`     | The bridge's bot-admin roles   | `utils/adminRoles.js`     | `adminRolesConfig.json`      |
+| `linkedAccounts` | The bridge's account links     | `utils/linkedAccounts.js` | `linkedAccountsConfig.json`  |
 
 The table is in its own schema rather than `public` on purpose: the community bot runs `prisma db push`, which
 treats any `public` table its schema does not define as one to drop. The database role needs the `CREATE`
@@ -69,40 +65,41 @@ snapshots instead and warns in the log channel. Every write still goes to the da
 settings changes fail cleanly and nothing exists only in memory or only on disk. `npm run config:import` imports
 files by hand (see [config files](https://thehypixelguardians.mintlify.site/tribridge/config-files)).
 
+## The one-time link copy
+
+The first start with no `linkedAccounts` row and no `linkedAccountsConfig.json` to import copies the community
+bot's links (`MinecraftLink` joined through `User`) into the bridge's own list, so nobody has to link again on the
+day the bridge got its own list back. The copy is saved even when it is empty, so it never runs twice; from then
+on the two lists are independent and the community tables can change without affecting the bridge. If the
+community tables cannot be read at that moment, the bridge starts with no links and tries the copy again on its
+next start.
+
 ## Failure behaviour
 
-Both reads have a defined answer for "the database is unreachable", and neither throws — they run on the
-message path, where an exception would take the relay down with it.
+TriBridge's links and admin roles are read from memory, so the database being down after startup changes
+nothing for them. The blacklist is the one read on the message path:
 
 | Read         | On failure                                                                                          |
 |--------------|-----------------------------------------------------------------------------------------------------|
-| Account link | Behaves as **not linked** — the message relays under the Discord name rather than not relaying       |
-| Admin roles  | **Fails closed.** `isAdmin` refuses. `/send` runs arbitrary commands as the Minecraft account and `/adminpanel` can impersonate everybody in the server, so handing either out during an outage is worse than the outage |
 | Blacklist    | **Fails open** — nobody counts as blacklisted. Failing closed would refuse every command and stop the whole bridge during an outage; the admin check still fails closed |
 
+`isAdmin` still **fails closed** in its own way: no admin roles set means nobody is an admin. `/send` runs
+arbitrary commands as the Minecraft account and `/adminpanel` can impersonate everybody in the server, so an
+empty list must never mean "everyone".
+
 Without `DATABASE_URL` the pool is never created and one line is logged. TriBridge's own settings cannot be loaded
-then, so **the bot does not start**: it retries for about 40 seconds and exits with a non-zero code. The same
-goes for a database that cannot be reached at startup: running on
-empty settings instead would let the next admin action save over the real ones.
+then, so **the bot does not start**: it retries for about 40 seconds and exits with a non-zero code. A database
+that cannot be reached at startup, through every retry, makes the bot start from its local snapshots instead.
 
 ## Staleness
 
-TriBridge is a reader and cannot see the community bot's writes, so each cache expires on a timer rather than
-being invalidated:
-
-| Cache         | TTL | Why that number                                                                   |
-|---------------|-----|------------------------------------------------------------------------------------|
-| Account links | 15s | A member who has just run `/link` expects their next message attributed correctly   |
-| Admin roles   | 15s | A revoked admin role should stop working in seconds, not at the next restart        |
-| Blacklist     | 15s | Cleared on every write here, so it only lags on the community bot's side            |
-
-Those numbers are the deliberate trade for not querying Postgres once per relayed message. Shortening them
-costs a query per message on a busy bridge; lengthening them makes `/link` look broken.
+The blacklist is the only thing either bot reads that the other writes. Its cache is 15 seconds, cleared on
+every write here, so it only lags on the community bot's side. Links and admin roles have no such lag: each bot
+writes its own, and the bridge applies a change the moment it is saved.
 
 ## The global profile change and the account link
 
 The disguise itself is entirely local, but its **test mode** reads a link: guild chat carries no Discord
-author, so a tester is recognised by matching the Minecraft name back to a link. A tester who has not run
-`/link` on the community bot will not see their guild chat rewritten, and if the database is unreachable no
-tester will. That is the safe direction — without the rule, testing would silently relabel guild members who
-never agreed to take part.
+author, so a tester is recognised by matching the Minecraft name back to a link. That is the bridge's own link
+now: a tester who has not run the bridge's `/link` will not see their guild chat rewritten. That is the safe
+direction — without the rule, testing would silently relabel guild members who never agreed to take part.

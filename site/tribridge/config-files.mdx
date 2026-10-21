@@ -25,14 +25,20 @@ community bot's tables.
 | `guilds`          | The Hypixel guild registry                       | [`/guilds`](/tribridge/hypixel-guilds)            |
 | `globalProfile`   | The running global profile change, and its scope | [`/adminpanel`](/tribridge/global-profile-change) |
 | `auditChannel`    | The default audit channel                        | [`/auditchannel`](/tribridge/auditing)            |
+| `adminRoles`      | The bridge's bot-admin roles                     | [`/adminrole`](/tribridge/admin-roles)            |
+| `linkedAccounts`  | The bridge's Minecraft account links             | [`/link`](/tribridge/account-linking)             |
 
-Account links and bot-admin roles are not TriBridge's — they belong to the community bot and are only read from
-the same database.
+These are the bridge's own links and admin roles, separate from the THG Community bot's. The one table the two
+bots share is the [blacklist](/tribridge/blacklist).
+
+The first time the bot starts without a `linkedAccounts` setting (and without a `linkedAccountsConfig.json` to
+import), it copies the community bot's links once, so nobody has to link again. That copy is saved even when it
+is empty, so it never runs twice; from then on the two lists are independent.
 
 ## Upgrading from the JSON files
 
-Older versions kept those three settings in `guildsConfig.json`, `globalProfileConfig.json` and
-`auditChannelConfig.json` in the project root. On the first start after upgrading, each setting that is not in
+Older versions kept these settings in `guildsConfig.json`, `globalProfileConfig.json`,
+`auditChannelConfig.json`, `adminRolesConfig.json` and `linkedAccountsConfig.json` in the project root. On the first start after upgrading, each setting that is not in
 the database yet is imported from its file, and the console says which. After that the database is
 authoritative, and nothing needs doing by hand. Restarting again does not import twice.
 
@@ -58,8 +64,8 @@ instead would strand the file: the first change saved from Discord would create 
 and the file would never be imported after that. Once the database has the setting, the file is ignored
 whatever is in it.
 
-`adminRolesConfig.json`, `linkedAccountsConfig.json`, `linkRoleConfig.json` and `featureRequestsConfig.json` are
-from features that moved to the community bot. Nothing reads them.
+`linkRoleConfig.json` and `featureRequestsConfig.json` are from features that moved to the community bot.
+Nothing reads them.
 
 ## Things worth knowing
 

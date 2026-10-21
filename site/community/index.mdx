@@ -10,8 +10,8 @@ tickets, and SkyBlock lookups.
 It is **not** a Minecraft bridge. There is no in-game account and no guild-chat relay — that is
 [TriBridge](/tribridge). SkyBlock features here talk to HTTP APIs only.
 
-The two bots serve one Discord server and **share one PostgreSQL database**, so they agree about who is
-linked and who is staff. This bot owns the schema; TriBridge reads it. See
+The two bots serve one Discord server and share one **PostgreSQL database** and the **blacklist**. Everything
+else is separate: each has its own account links and its own staff roles. See
 [Shared database](/community/shared-database).
 
 <Note>
@@ -38,7 +38,7 @@ See [Features](/community/features) for the full list. Highlights:
   guild-chat attribution.
 - **Feature requests** — `/request` opens a form; admins move submissions through a status with
   `/requeststatus`.
-- **Bot-admin roles** — `/adminrole` names staff roles shared with TriBridge.
+- **Bot-admin roles** — `/adminrole` names this bot's staff roles (TriBridge keeps its own).
 - **Localization** — Dutch (`nl`, default), English, and Spanish via `t()`.
 
 ## Documentation map

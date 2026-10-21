@@ -193,7 +193,7 @@ function disguisesToMinecraft() {
  * @param {string} mcName The Minecraft name that spoke in guild chat.
  * @param {string} channelId The bridge channel the message is headed for.
  * @returns {Promise<boolean>} Async only because the link lookup it needs in
- *   test mode reads the community bot's database.
+ *   test mode is.
  */
 async function appliesToGuildChat(mcName, channelId) {
   if (!isActive()) return false;

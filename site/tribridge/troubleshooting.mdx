@@ -63,16 +63,6 @@ The bot is missing **Manage Webhooks** or **Manage Messages** in the bridge chan
 relaying and reports once to the log channel — latched, so you get one warning, not one per message. Grant
 both and it resumes on the next message.
 
-## The link role is not being handed out
-
-Two usual causes, both about role hierarchy:
-
-- the bot lacks **Manage Roles**, or
-- the link role sits **at or above** the bot's own highest role. Discord refuses that regardless of
-  permissions.
-
-Move the bot's role above it and restart — the startup sync backfills everyone. See [Link role](/tribridge/link-role).
-
 ## A global profile change is not applying in some channels
 
 Those channels are missing **Manage Webhooks** or **Manage Messages**, or you excluded them in the scope view.

@@ -6,6 +6,8 @@ const bridge = require("./bridge");
 const guilds = require("./utils/guilds");
 const globalProfile = require("./utils/globalProfile");
 const auditChannel = require("./utils/auditChannel");
+const adminRoles = require("./utils/adminRoles");
+const linkedAccounts = require("./utils/linkedAccounts");
 const configStore = require("./utils/configStore");
 const db = require("./utils/db");
 
@@ -100,6 +102,8 @@ async function loadSettings() {
       await guilds.load();
       await globalProfile.load();
       await auditChannel.load();
+      await adminRoles.load();
+      await linkedAccounts.load();
       return;
     } catch (error) {
       if (attempt === LOAD_ATTEMPTS) {
@@ -123,6 +127,8 @@ async function loadSnapshots() {
   await guilds.load(options);
   await globalProfile.load(options);
   await auditChannel.load(options);
+  await adminRoles.load(options);
+  await linkedAccounts.load(options);
   console.error(
     "The database is unreachable, so the bot started from its local settings " +
       "snapshots. The bridge runs normally; settings changes will fail until " +

@@ -141,7 +141,9 @@ The diff compares `autocomplete`, `maxLength` and `defaultMemberPermissions` and
 - **`permissionsRequired`** is enforced generically by `handleCommands.js` — real Discord permissions like
   `Administrator`.
 - **Bot-admin** is checked *inside* the callback with `isAdmin(interaction.member)` from
-  `utils/adminRoles.js`, which reads role ids from `adminRolesConfig.json`.
+  `utils/adminRoles.js`, which reads the bridge's own role list from memory (the `adminRoles` setting in
+  `tribridge.config`, loaded at startup). It is async and fails closed — no roles set means no admins — and
+  callers must keep the `await`: a bare promise is truthy.
 
 And the guard that is neither: `handleCommands.js` refuses any interaction whose `guildId` is not
 `bridge.discordServerId`. Commands are registered globally but the bot serves one Discord server, and without

@@ -32,15 +32,13 @@ responsible for. `/help`'s buttons stop working after five minutes — run it ag
 
 | Command                   | Does                                                           |
 |---------------------------|----------------------------------------------------------------|
-| `/link <username>`        | Bind your Minecraft account to your Discord account            |
+| `/link <username>`        | Link your Minecraft account for the bridge                     |
 | `/unlink [user]`          | Remove a link — your own, or 🔒 anyone's                       |
 | `/links`                  | 🔒 List every linked Minecraft account                         |
 | `/whois <user\|username>` | 🔒 Look up a link by Discord user or Minecraft username        |
-| `/linkrole set <role>`    | 🔒 Set the role given to users with a linked account           |
-| `/linkrole show`          | 🔒 Show the configured role                                    |
-| `/linkrole clear`         | 🔒 Stop giving out a role on link. Does not take it off anyone |
 
-See [Account linking](/tribridge/account-linking) and [Link role](/tribridge/link-role).
+These are the bridge's own links, separate from the THG Community bot's `/link`. See
+[Account linking](/tribridge/account-linking).
 
 ## Management
 
@@ -62,7 +60,7 @@ Every command in this section is 🔒 bot-admin only, except `/pingdiamond`. The
 | `/send <message> [guild]`             | Run any command or message as that guild's account, and show the reply |
 | `/login [guild]`                      | Connect the bot. With no guild, every *disconnected* guild             |
 | `/adminpanel`                         | Open the [admin panel](/tribridge/admin-panel)                                    |
-| `/adminrole add\|remove <role>`       | ⛔ Configure the bot-admin roles                                        |
+| `/adminrole add\|remove\|list`       | ⛔ Configure the bridge's bot-admin roles                               |
 | `/auditchannel set <channel> [guild]` | Set where [audit](/tribridge/auditing) entries go                                 |
 | `/auditchannel show`                  | Show the default audit channel and every per-guild override            |
 | `/auditchannel clear [guild]`         | Stop recording, or drop one guild's override                           |

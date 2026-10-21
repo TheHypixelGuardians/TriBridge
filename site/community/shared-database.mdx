@@ -3,53 +3,40 @@ title: "Shared database"
 description: "PostgreSQL contract between THG Community and TriBridge."
 ---
 
-This bot and [TriBridge](/tribridge) are two processes serving one Discord server. This bot owns the community
-half — profiles, account links, bot-admin roles, feature requests — and TriBridge owns the Discord ↔ Hypixel
-guild chat bridge, along with the admin panel and the global profile change.
+This bot and [TriBridge](/tribridge) are two processes serving one Discord server, and their features are
+**separate**. Each has its own account links and its own bot-admin roles: linking or being staff on one bot
+does not carry over to the other. They share two things only — **the PostgreSQL database** and **the
+blacklist**.
 
-Two tables are **needed** by the bridge, so both processes talk to one PostgreSQL database instead of keeping
-separate copies.
+**This bot owns the `public` schema.** `prisma/schema.prisma` defines every table there, and migrations create
+them. TriBridge keeps its own settings, links and admin roles in its own `tribridge` schema in the same
+database. This bot neither reads nor writes that schema.
 
-**This bot owns the schema.** `prisma/schema.prisma` defines every table, and `yarn prisma:push` creates them.
-TriBridge has no ORM; it reads with plain SQL through `src/utils/db.js`, using the same `DATABASE_URL`, and
-**never writes**.
+## The one shared table: `Blacklist`
 
-## What TriBridge reads
+| Table       | This bot                                                     | TriBridge                                                   |
+|-------------|--------------------------------------------------------------|-------------------------------------------------------------|
+| `Blacklist` | Reads it: a listed member's interactions are refused         | Writes it with `/blacklist`, and reads it for its own commands and the relay |
 
-| Table | What the bridge does with it |
-|-------|------------------------------|
-| `MinecraftLink`, `User` | Attributes guild chat to a member's Minecraft name and reposts them with their head |
-| `AdminRole` | Gates every admin command, including `/adminpanel` and `/auditchannel` |
+TriBridge writes with plain SQL, so the table's `id` and `updatedAt` defaults must stay **database-side**: a
+client-side Prisma default would make every bridge insert fail. Both sides cache the list for fifteen seconds
+and **fail open** — an unreadable database blacklists nobody, because failing closed would stop both bots during
+an outage.
 
-Three consequences for anyone changing those tables:
+## A one-time read of `MinecraftLink`
 
-- **Renaming a column breaks the bridge silently.** TriBridge selects by name in raw SQL; a failed query
-  returns `null`, which callers read as "no link" / "not an admin". A rename needs a matching change in
-  TriBridge's `utils/linkedAccounts.js` or `utils/adminRoles.js` in the same change.
-- **TriBridge caches both reads for about fifteen seconds** and cannot see this bot's writes, so a change
-  here takes up to that long to reach the bridge. That is why `/link` tells the member their *next* message
-  will be attributed.
-- **A `MinecraftLink` row powers TriBridge's global profile test mode.** Guild chat carries no Discord author,
-  so the bridge recognises a tester by matching the Minecraft name back to a link.
-
-## What TriBridge does not read
-
-The admin panel, global profile change, and audit channel are TriBridge's own settings, stored in its own
-`tribridge` schema in the same database. This bot neither reads nor writes them. Nothing in this bot starts, stops, or records a
-disguise.
+TriBridge reads `MinecraftLink` and `User` exactly once: on the first start of a bridge that has no link list of
+its own yet, to start that list from this bot's links so nobody has to link again. The copy is saved even when
+empty, so it never repeats. After that the two link lists are independent, and changing these tables no longer
+affects the bridge.
 
 ## Failure behaviour
 
-This bot treats a database failure as a real error — commands surface it through the error handler.
-TriBridge degrades on the message path instead: links read as *not linked*, and `isAdmin` **fails closed** when
-`DATABASE_URL` is unset on the bridge.
-
-## Caching here
-
-This process is the only writer, so caches invalidate on write — `setup.ts`, `adminRoles.ts`, and
-`linkedAccounts.ts` all work that way.
+This bot treats a database failure as a real error — commands surface it through the error handler. TriBridge
+loads its settings at startup and falls back to its local snapshots if the database is unreachable.
 
 ## Related
 
-- [Account linking](/community/account-linking) — what goes into `MinecraftLink`
-- [TriBridge account linking](/tribridge/account-linking) — how the bridge uses the same rows
+- [Account linking](/community/account-linking) — this bot's links
+- [TriBridge account linking](/tribridge/account-linking) — the bridge's own links
+- [TriBridge blacklist](/tribridge/blacklist)
