@@ -7,6 +7,10 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Bridge
+
+- Typing `@name` in guild chat now pings that person here. Use their Minecraft name if they're linked, or their Discord name.
+
 ### Linking
 
 - The bridge has its own `/link` again, separate from the community bot's. If you were linked, your link was copied over, so you don't need to do anything.

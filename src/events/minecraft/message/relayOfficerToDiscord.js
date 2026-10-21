@@ -4,6 +4,7 @@ const guilds = require("../../../utils/guilds");
 const mcBots = require("../../../utils/mcBots");
 const { parseOfficerChat } = require("../../../utils/guildChat");
 const { createRelayDedupe } = require("../../../utils/relayDedupe");
+const { resolveMentions, mentionPayload } = require("../../../utils/mentions");
 
 // Module-cached, so it is shared across every bot — see utils/relayDedupe.js.
 // Its own instance, separate from the two guild-chat relays: an officer line
@@ -41,6 +42,8 @@ module.exports = async (client, jsonMsg) => {
   // the main bridge; relabelling who said what inside a channel that exists to
   // record what officers said would defeat the point of having it.
   try {
+    const { text, userIds } = await resolveMentions(content);
+
     const channel = await bridge.discordClient.channels.fetch(
       guild.officerChannelId,
     );
@@ -50,7 +53,7 @@ module.exports = async (client, jsonMsg) => {
         name: `${username} [${guild.tag}]`,
         iconURL: `https://mc-heads.net/avatar/${encodeURIComponent(username)}`,
       })
-      .setDescription(content)
+      .setDescription(text)
       .setColor(guilds.colorOf(guild))
       // The tag is shown whatever `shouldShowTags()` says, unlike the bridge
       // channel. Officer chat can arrive here from another guild via the
@@ -58,7 +61,7 @@ module.exports = async (client, jsonMsg) => {
       .setFooter({ text: `🛡️ Officer chat · ${guild.name}` })
       .setTimestamp();
 
-    await channel.send({ embeds: [embed] });
+    await channel.send({ embeds: [embed], ...mentionPayload(userIds) });
   } catch (error) {
     console.error(error);
   }

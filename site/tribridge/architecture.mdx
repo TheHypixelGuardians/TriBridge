@@ -199,6 +199,17 @@ This is the part to understand before touching a relay.
 - **`utils/relayDedupe.js`** catches the same player saying the same thing in two guilds within two seconds.
   Each caller gets its own instance, so one relay consuming a line never hides it from another.
 
+## Mentions from Minecraft
+
+`utils/mentions.js` turns `@name` in a relayed line into a Discord ping, for both `relayToDiscord.js` and
+`relayOfficerToDiscord.js`. `resolveMentions()` tries the bridge's own account link for that Minecraft name,
+then the REST member search (no GuildMembers intent needed) for an exact username, or a display name or
+nickname only one member has. `mentionPayload()` puts the ids in the message content, because a mention in an
+embed never notifies, and sets `allowedMentions` to `{ parse: [], users: ids }`. That is the load-bearing part:
+guild chat is open to everyone in the guild, so parsing mentions from it would let any guild member ping
+`@everyone`. Lookups are cached, a line pings at most five people, and a failed lookup drops the ping, never the
+message.
+
 ## Routing Discord → Minecraft
 
 `routeMessage()` from `utils/chatRouting.js` decides which guilds a bridge message reaches: `!tag` for one,
