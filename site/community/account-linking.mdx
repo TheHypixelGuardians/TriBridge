@@ -13,7 +13,7 @@ here does not change how the bridge shows a member — see [TriBridge account li
 
 | Command | Who | Does |
 |---------|-----|------|
-| `/link <username>` | anyone | Bind your Minecraft account |
+| `/link` | anyone | Bind your Minecraft account: a form for the name, then a verification code |
 | `/unlink [user]` | anyone / bot-admin for `user:` | Remove your link, or somebody else's |
 | `/whois <user\|username>` | bot-admin | Look one up in either direction |
 | `/links` | bot-admin | List every link |
@@ -35,9 +35,29 @@ Links are deliberately **not** scoped to a Hypixel guild: one link per member, w
 
 ## Verification
 
-`/link` verifies with Mojang that the account exists, and nothing more. It does **not** check Hypixel guild
-membership — that check lives on TriBridge's `/link`, which needs a connected Minecraft bot. Anyone can
-therefore link any real Minecraft name here; an admin undoes a wrong one with `/unlink user:@them`.
+With verification on, `/link` proves the member owns the account:
+
+1. `/link` opens a form asking for the Minecraft username.
+2. The bot replies, only to them, with how to join the verification server and an **Enter code** button.
+3. They join the server in Minecraft (Java Edition). It is online-mode, so Mojang confirms the account is
+   theirs, and they are disconnected straight away with a six-digit code. Nobody loads into a world.
+4. **Enter code** opens a second form. A correct code links the account and the message turns into a
+   confirmation. A wrong code gets its own error, and the button keeps working.
+
+A code works once, expires after five minutes, and only redeems for the account named in step 1. Five wrong
+codes per ten minutes, then a wait: the code is the only thing between a member and somebody else's account.
+
+A verified link **takes the account over** from anybody who claimed it before, and that member loses the link
+role and the `[Knight]` nickname. Refusing would let one unverified claim lock the real owner out for good.
+
+The server runs inside the bot. Hosts switch it on with `VERIFY_SERVER_PORT` (the port it listens on) and
+`VERIFY_SERVER_ADDRESS` (what members are told to join); point an A record and a `_minecraft._tcp` SRV record
+at it so members can join without typing a port.
+
+With verification off, the name from the form is linked straight away after a Mojang check that the account
+exists, and nothing more. Anyone can then link any real Minecraft name; an admin undoes a wrong one with
+`/unlink user:@them`. Hypixel guild membership is not checked either way — that check lives on TriBridge's
+`/link`, which needs a connected Minecraft bot.
 
 A Mojang lookup distinguishes three outcomes, and the reply differs for each: no such account, Mojang
 unreachable, and success. Collapsing the middle case into the first would tell a member they typed their own
