@@ -43,7 +43,7 @@ See [Account linking](/community/account-linking) for verification rules.
 | Command | Description |
 |---------|-------------|
 | `/adminrole add\|remove\|show` | The Discord roles that count as bot-admin on both bots (bot admins and server admins) |
-| `/setup` | One panel, a page per area: log channel, request channel, admin roles, tickets (bot admins and server admins) |
+| `/setup` | One panel, a page per area: log channel, request channel, admin roles, tickets, moderation (bot admins and server admins) |
 
 The admin-role list is **shared with TriBridge** — one list decides who is staff on both bots. See
 [Shared database](/community/shared-database).
@@ -57,3 +57,19 @@ The admin-role list is **shared with TriBridge** — one list decides who is sta
 | `/ticket close [reason]` | Close the ticket: transcript to the log, DM to the member (the member who opened it, or staff) |
 
 Tickets are opened from the panel's buttons, not a command. See [Tickets](/community/tickets).
+
+## Moderation
+
+| Command | Description |
+|---------|-------------|
+| `/warn <user> <reason>` | Record a warning and DM it to the member (Moderate Members) |
+| `/timeout <user> <duration> [reason]` | Time a member out for up to 28 days (Moderate Members) |
+| `/untimeout <user> [reason]` | Take a timeout off early (Moderate Members) |
+| `/kick <user> [reason]` | Kick a member (Kick Members) |
+| `/ban <user> [reason] [delete_messages]` | Ban a member or a user id, optionally deleting recent messages (Ban Members) |
+| `/unban <user> [reason]` | Lift a ban (Ban Members) |
+| `/purge <count> [user]` | Delete up to 100 recent messages in the channel (Manage Messages) |
+| `/cases <user>` | A member's latest 25 cases (Moderate Members) |
+| `/case view\|reason\|delete <id>` | Show a case, change its reason, or delete it (delete: Administrator or bot admin) |
+
+Every action is a numbered case in the mod log. See [Moderation](/community/moderation).
