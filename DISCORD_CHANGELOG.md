@@ -7,6 +7,11 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+### Linking
+
+- The bridge has its own `/link` again, separate from the community bot's. If you were linked, your link was copied over, so you don't need to do anything.
+- Feature requests (`/request`) are on the community bot.
+
 ### Moderation
 
 - Admins can now mute and unmute guild members from Discord with `/mute` and `/unmute`.

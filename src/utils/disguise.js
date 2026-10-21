@@ -132,8 +132,6 @@ function canRepostIn(channel) {
 async function resolveIdentity(message) {
   if (appliesTo(message.author.id, message.channel.id)) {
     const target = getTarget();
-    // The link is the one input here that lives in the community bot's
-    // database; everything else is a cached local read.
     const link = await getLink(message.author.id);
 
     return {

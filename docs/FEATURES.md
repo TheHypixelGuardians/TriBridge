@@ -215,24 +215,30 @@ Note this is separate from sharing a Discord channel. Two guilds can share one o
 
 ## Account linking
 
-Members link a Minecraft account with **`/link` on the [THG community bot](https://github.com/TheHypixelGuardians/thg-community)**,
-which owns `/link`, `/unlink`, `/links`, `/whois` and the link role. TriBridge reads the link and nothing else
-— see [The shared database](SHARED_DATABASE.md).
+Members link a Minecraft account with **`/link <username>`**. The bridge keeps its **own** link list, separate
+from the THG community bot's `/link`: the two bots share the database and the blacklist and nothing else, so
+linking on one does not link you on the other. `/unlink` removes your own link (admins can pass `user:`), and
+the admin-only `/links` and `/whois <user|username>` look links up.
 
 Linked members get a visibly better bridge. Their Discord message is **reposted through a webhook** wearing
 their Minecraft head and name, the original is deleted, and the guild-chat copy is attributed to their
 Minecraft name rather than their Discord one — so a guild member reading either side sees the same person.
 Officer chat uses the link too, for the name it speaks under, and takes no repost.
 
-- **One link per Discord user, and one Discord user per Minecraft account.** Both directions are enforced by
-  the community bot.
+- **Membership is checked against the live roster** of every connected guild when you run `/link`, and being
+  in any one of them is enough. If no roster gives a clear answer (no account connected, a timeout, output that
+  did not look like a roster) the link goes through rather than refusing you over the bot's own outage; it is
+  refused only when a roster came back cleanly without your name.
+- **One link per Discord user, and one Discord user per Minecraft account**, matched on the UUID as well as
+  the name.
 - **Links are not scoped to a Hypixel guild.** One link, whatever guild you are in.
 - **The UUID is stored alongside the name**, and avatar URLs use it, so a link survives a Minecraft name
   change.
-- **An unreachable database reads as "not linked".** The message still relays, under the Discord name — a
-  degraded bridge beats a stopped one.
-- **A new link is honoured within about fifteen seconds.** This side caches lookups because they sit on the
-  message path, and cannot see the community bot's writes to invalidate them.
+- **A new link is honoured on the very next message.** Links are stored with the bot's other settings and read
+  from memory.
+- **The first start copies today's community links once**, so nobody had to link again when the bridge got its
+  own list back. After that the lists are independent. See [The shared database](SHARED_DATABASE.md).
+- There is no link role on the bridge; the link role and the `[Knight]` nickname belong to the community bot.
 
 The repost path needs **Manage Webhooks** and **Manage Messages** in the bridge channel. Without them the bot
 falls back to the ordinary relay and reports the problem once to the log channel — latched, so it does not
@@ -243,16 +249,18 @@ author's own permissions and an unrestricted one would let any linked user ping 
 
 TriBridge has two separate permission systems.
 
-**Discord permissions** are enforced generically before a command runs.
+**Discord permissions** are enforced generically before a command runs. No TriBridge command uses one today.
 
-**Bot-admin** is a flat list of Discord role ids, configured on the **THG community bot** with `/adminrole
-add|remove <role>` and read from the shared database, then checked inside each admin command. Everything under
-Management is gated this way, including `/adminpanel` and `/auditchannel`. One list serves both bots, so a
-role that counts as staff there counts as staff here.
+**Bot-admin** is a flat list of Discord role ids, checked inside each admin command. Everything under
+Management is gated this way, including `/adminpanel` and `/auditchannel`, plus `/links`, `/whois` and
+`/unlink user:`. The list is **shared with the THG community bot**: it is set there with
+**`/adminrole add|remove <role>`** (shown with `/adminrole show`, all Administrator-only), and TriBridge reads
+it from the shared database. A role that is staff on one bot is staff on both. TriBridge caches the list for 15
+seconds, so a change on the community bot takes effect here within that.
 
-**The check fails closed.** A member with no matching role, an unresolved Discord server or an unreachable
-database is not an admin. `/send` runs arbitrary commands as a Minecraft account, so handing it out during a
-database outage would be worse than the outage. Set `DATABASE_URL`, or nothing admin-gated works at all.
+**The check fails closed.** A member with no matching role is not an admin, with no roles set nobody is, and
+neither is anyone while the database cannot be read. `/send` runs arbitrary commands as a Minecraft account, so
+an empty or unreadable list must never mean "everyone". Set the roles during installation, on the community bot.
 
 ### One Discord server
 

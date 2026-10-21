@@ -58,15 +58,6 @@ Officer channels are skipped by it whatever the permissions are — see [Officer
 A missing or broken log channel never takes down the work it was reporting on — the failure is printed to the
 console and swallowed. A log line always describes something that has already happened.
 
-## Server-wide permissions
-
-| Permission       | Needed for                                                                             |
-|------------------|----------------------------------------------------------------------------------------|
-| **Manage Roles** | Granting the [link role](/tribridge/link-role). The bot's own highest role must rank **above** it |
-
-A link role that cannot be granted is reported and the link goes ahead anyway. The role never gates the link:
-a missing role is a configuration problem, not a reason to refuse someone's `/link`.
-
 ## Permissions the bot demands of people
 
 Two separate systems, deliberately.

@@ -10,13 +10,17 @@ Linking tells the bot which Minecraft account is yours. It takes one command:
 
 Use your own Minecraft username. You must be a member of one of the bridged Hypixel guilds.
 
+This is the **bridge's own link**, separate from the THG Community bot's `/link`. The two bots keep their own
+lists: linking on one does not link you on the other, and unlinking on one leaves the other alone. Discord
+shows which bot a `/link` belongs to in the command picker. If you had linked before the bridge got its own
+list again, your link was copied over once and you do not need to link again.
+
 ## What changes once you are linked
 
 - **Your messages in the bridge channel are reposted with your Minecraft head and name.** Your original is
   deleted and the repost takes its place, so the channel shows the same person the guild sees.
 - **Guild chat is told your Minecraft name**, not your Discord one. Somebody in-game replying to you can type
   your actual name.
-- **You may be given a role**, if the server has one configured — see [Link role](/tribridge/link-role).
 
 Your Minecraft **UUID** is stored alongside the name, and your head comes from the UUID, so the link survives
 a Minecraft name change.
@@ -39,8 +43,8 @@ when a roster came back cleanly and your name was not on it.
 /unlink
 ```
 
-Removes your own link, and takes back the link role if there is one. Admins can pass `user:` to unlink
-somebody else — for example when a member leaves the guild.
+Removes your own bridge link. Admins can pass `user:` to unlink somebody else — for example when a member
+leaves the guild.
 
 ## Looking links up
 
@@ -62,4 +66,4 @@ Both are admin-only:
 ## Next
 
 - [Using the bridge](/tribridge/using-the-bridge)
-- [Link role](/tribridge/link-role) — for whoever configures the role
+- [Admin roles](/tribridge/admin-roles) — who can use `/links`, `/whois` and `/unlink user:`

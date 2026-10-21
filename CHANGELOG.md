@@ -32,6 +32,14 @@
       database cannot make Discord time the click or command out. A deferred command that then fails now says
       so, instead of being left on "thinking…".
 + Added `pg` and its dependencies to `package-lock.json`, which listed `pg` in `package.json` only.
++ `utils/linkedAccounts.js` stores the bridge's own links in `tribridge.config` (`linkedAccounts`) through
+  `configStore`, read from memory. It no longer reads the community bot's `MinecraftLink` or `User` tables,
+  apart from a one-time copy on the first start with no stored list (saved even when empty, so it never
+  repeats).
+    + `getLink` and `getLinkByName` stay async, so no caller loses its `await`.
+    + `npm run config:import` also imports `linkedAccountsConfig.json`.
++ `utils/adminRoles.js` reads the community bot's `AdminRole` table for the bridge's Discord server, cached for
+  15 seconds. `isAdmin` stays async and fails closed: an unreadable database makes nobody an admin.
 + Added `utils/blacklist.js`, which reads and writes the community bot's `Blacklist` table — the one table in
   its schema TriBridge writes. Every interaction handler and both Discord→Minecraft relays check it after the
   server guard. The table and its migration live in the community bot's repository.
@@ -182,6 +190,11 @@
 
 #### Account Linking
 
++ Links are now stored in the database with the bot's other settings, so a new link is honoured on the very
+  next message.
+    + On the first start after upgrading, an existing `linkedAccountsConfig.json` is imported. With no link
+      file, the bridge copies the community bot's current links once, so nobody has to link again; after that
+      the two lists are independent.
 + `/link` now accepts a member of **any** bridged guild. It still refuses only when every roster was read
   successfully and the name was in none of them.
 
@@ -358,20 +371,17 @@
 
 #### Community
 
-+ Moved the features that need no Minecraft account to the sibling **THG community bot**. They are not gone —
-  they are run from the other bot, and the two share one database so they still agree about who is linked and
-  who is staff. The admin panel, the global profile change and auditing stay here, because all three reach
-  into guild chat.
-    + `/link`, `/unlink`, `/links`, `/whois` and `/linkrole` moved. Members link on the community bot; the
-      bridge reads the link and keeps reposting linked members with their Minecraft head and name exactly as
-      before.
-    + `/adminrole` moved. Both bots read the one list, so a role that counts as staff there counts as staff
-      here. **Set `DATABASE_URL` before upgrading**: without it the admin check fails closed and nothing
-      admin-gated works, `/adminpanel` included.
++ Moved feature requests and the link role to the sibling **THG community bot**. The two bots share the
+  database, the blacklist and the bot-admin roles, and nothing else.
     + `/request`, `/requestchannel` and `/requeststatus` moved outright; nothing about them touched the
       bridge.
-    + `/adminpanel`, the global profile change and `/auditchannel` **stay here**, unchanged. Test mode still
-      recognises a tester by their account link, which now means the link they made on the community bot.
+    + `/linkrole` moved: the link role (and the `[Knight]` nickname) are handed out by the community bot's
+      `/link`.
+    + `/link`, `/unlink`, `/links` and `/whois` **stay here**, with the bridge's own links. The community bot
+      has its own; linking on one bot does not carry over to the other.
+    + `/adminrole` moved: the bot-admin roles are shared, and set with the community bot's `/adminrole`. A
+      role that is staff on one bot is staff on both.
+    + `/adminpanel`, the global profile change and `/auditchannel` **stay here**, unchanged.
 
 ## Version 1.2.1
 

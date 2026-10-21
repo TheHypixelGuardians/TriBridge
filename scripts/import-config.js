@@ -24,6 +24,7 @@ const store = require("../src/utils/configStore");
 const guilds = require("../src/utils/guilds");
 const globalProfile = require("../src/utils/globalProfile");
 const auditChannel = require("../src/utils/auditChannel");
+const linkedAccounts = require("../src/utils/linkedAccounts");
 const db = require("../src/utils/db");
 
 const CONFIGS = [
@@ -37,6 +38,11 @@ const CONFIGS = [
     name: "auditChannel",
     file: "auditChannelConfig.json",
     normalise: auditChannel.normalise,
+  },
+  {
+    name: "linkedAccounts",
+    file: "linkedAccountsConfig.json",
+    normalise: linkedAccounts.normalise,
   },
 ];
 

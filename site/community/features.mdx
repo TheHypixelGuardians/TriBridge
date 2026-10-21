@@ -16,7 +16,7 @@ Early alpha (`0.0.1-alpha.1`). The items below reflect what ships today unless m
 | **Localization** | Dutch (`nl`, default), English, and Spanish via `t()` / `tWithUser()` |
 | **Account linking** | `/link`, `/unlink`, `/whois`, `/links`, `/linkrole` — shared with [TriBridge](/tribridge) via PostgreSQL |
 | **Feature requests** | `/request`, `/requestchannel`, `/requeststatus` |
-| **Bot-admin roles** | `/adminrole` — the same role list TriBridge uses for staff commands |
+| **Bot-admin roles** | `/adminrole` — the staff roles, shared with TriBridge |
 | **Per-server setup storage** | Ticket, automod, link-role, request-channel, and log-channel settings in the `Setup` table |
 | **Error reporting** | Unhandled errors can post to a Discord channel when `ERROR_LOG_CHANNEL_ID` is set |
 | **Hot reload** | `yarn dev` reloads commands and events without a full process restart |
@@ -27,11 +27,11 @@ Early alpha (`0.0.1-alpha.1`). The items below reflect what ships today unless m
 |-------|---------|
 | `User` | One row per Discord user; `language` defaults to `nl` |
 | `Setup` | Per-Discord-server configuration |
-| `MinecraftLink` | Minecraft name and UUID, related to `User.id` — **read by TriBridge** |
-| `AdminRole` | Discord roles that count as bot-admin — **shared with TriBridge** |
+| `MinecraftLink` | Minecraft name and UUID, related to `User.id` |
+| `AdminRole` | Discord roles that count as bot-admin on both bots |
 | `FeatureRequest` | `/request` submissions with a sequence `id` |
 
-See [Shared database](/community/shared-database) before renaming columns on `MinecraftLink` or `AdminRole`.
+See [Shared database](/community/shared-database) before changing `Blacklist`, the one table TriBridge writes.
 
 ## Scaffolded (not yet commands)
 

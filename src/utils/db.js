@@ -3,17 +3,17 @@ const { Pool } = require("pg");
 /**
  * Access to the Postgres database shared with the THG community bot.
  *
- * The community bot owns account links and the bot-admin role list; this bot
- * reads both so the two agree about who is who and who is staff, and never
- * writes either. The one table in that schema it does write is `Blacklist`,
- * because `/blacklist` lives here — see `blacklist.js`. TriBridge's own
- * settings live in the same database, in its own `tribridge` schema — see
- * `configStore.js`.
+ * The two bots share the database and the blacklist, and nothing else: each
+ * has its own account links and its own bot-admin roles. `Blacklist` is the
+ * one community table this bot touches, reading and writing it because
+ * `/blacklist` lives here — see `blacklist.js`. (The first start also reads the
+ * community links once, to start the bridge's own list from — see
+ * `linkedAccounts.js`.) TriBridge's own settings, its links and admin roles
+ * included, live in its own `tribridge` schema — see `configStore.js`.
  *
  * `DATABASE_URL` is the same connection string the community bot uses. Without
- * it every query here fails, and each caller decides what that means: link
- * lookups behave as "not linked", `isAdmin` refuses, and startup stops because
- * the bot's settings cannot be loaded.
+ * it startup stops, because the bot's settings cannot be loaded, and a failed
+ * blacklist read blacklists nobody.
  */
 
 let pool = null;

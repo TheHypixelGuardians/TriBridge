@@ -47,10 +47,11 @@ Set `DISCORD_GUILD_ID` in the `.env` to the server's id and restart. See [Admin 
 
 ## Admin commands are refused for one person
 
-They hold no [bot-admin role](/tribridge/admin-roles). `/adminrole add role:@Staff`, run by someone with the Discord
-**Administrator** permission.
+They hold no [bot-admin role](/tribridge/admin-roles). Add one with the community bot's `/adminrole add role:@Staff`,
+run by someone with the Discord **Administrator** permission. The change reaches the bridge within 15 seconds.
 
-Note `/adminrole` is the only command gated on a real Discord permission; everything else uses the role list.
+If nobody's admin commands work, the list may be empty, or the bridge cannot read the database: the check fails
+closed, so an outage makes nobody an admin.
 
 ## New or changed commands do not appear
 
@@ -62,16 +63,6 @@ again does not speed it up.
 The bot is missing **Manage Webhooks** or **Manage Messages** in the bridge channel. It falls back to ordinary
 relaying and reports once to the log channel — latched, so you get one warning, not one per message. Grant
 both and it resumes on the next message.
-
-## The link role is not being handed out
-
-Two usual causes, both about role hierarchy:
-
-- the bot lacks **Manage Roles**, or
-- the link role sits **at or above** the bot's own highest role. Discord refuses that regardless of
-  permissions.
-
-Move the bot's role above it and restart — the startup sync backfills everyone. See [Link role](/tribridge/link-role).
 
 ## A global profile change is not applying in some channels
 

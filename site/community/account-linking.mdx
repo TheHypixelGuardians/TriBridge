@@ -1,10 +1,13 @@
 ---
 title: "Account linking"
-description: "Bind a Discord user to a Minecraft account — shared with TriBridge for guild-chat attribution."
+description: "Bind a Discord user to a Minecraft account on the community bot."
 ---
 
-Binds a Discord user to a Minecraft account. The link is what lets the community bot and
-[TriBridge](/tribridge) show the same person on both sides of the guild-chat bridge.
+Binds a Discord user to a Minecraft account on the community bot. Linking also sets the member's nickname to
+`[Knight] <Minecraft name>` and gives the link role.
+
+These are this bot's own links. [TriBridge](/tribridge) keeps a separate list with its own `/link`, so linking
+here does not change how the bridge shows a member — see [TriBridge account linking](/tribridge/account-linking).
 
 ## Commands
 
@@ -60,13 +63,14 @@ Members are fetched **one id at a time**, not with a bulk roster fetch.
 The bot needs **Manage Roles**, and its own highest role must rank above the link role. `/linkrole set`
 refuses up front when either is untrue.
 
-## What TriBridge does with a link
+## The nickname
 
-TriBridge reads `MinecraftLink` and never writes it. A linked member's bridge-channel message is reposted
-through a webhook wearing their Minecraft head and name, the original deleted, and the guild-chat copy
-attributed to their Minecraft name.
+`/link` sets the member's nickname to `[Knight] <Minecraft name>`, and a relink replaces it. `/unlink` clears
+it, but only while it is still exactly the one `/link` set: a nickname chosen since is the member's own. Like
+the role, the nickname never gates the link. It needs **Manage Nicknames** and a bot role ranked above the
+member's; a failure goes to the log channel. Discord never lets a bot rename the server owner.
 
-The bridge caches link lookups for about fifteen seconds and cannot see this bot's writes, so `/link` says the
-member's *next* message will be attributed rather than promising an instant change.
+## TriBridge
 
-See [Shared database](/community/shared-database) for the full contract.
+TriBridge does not read these links. It started its own list from them once, the first time it ran with links
+of its own, and the two lists have been independent since. See [Shared database](/community/shared-database).
