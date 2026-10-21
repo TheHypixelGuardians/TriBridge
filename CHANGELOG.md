@@ -397,6 +397,8 @@
       has its own; linking on one bot does not carry over to the other.
     + `/adminrole` moved: the bot-admin roles are shared, and set with the community bot's `/adminrole`. A
       role that is staff on one bot is staff on both.
+        + The bridge's old `/adminrole` is unregistered from Discord on startup, so only the community bot's
+          shows up.
     + `/adminpanel`, the global profile change and `/auditchannel` **stay here**, unchanged.
 
 ## Version 1.2.1
