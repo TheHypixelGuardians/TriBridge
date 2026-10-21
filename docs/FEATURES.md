@@ -252,6 +252,10 @@ Officer chat uses the link too, for the name it speaks under, and takes no repos
   own list back. After that the lists are independent. See [The shared database](SHARED_DATABASE.md).
 - There is no link role on the bridge, and the community bot has none either: roles for linking are handled by
   another bot.
+- **Linking is the opt-in.** The `/link` reply tells the member that their bridge-channel messages are relayed
+  to guild chat and that a [global profile change](#global-profile-change) can show messages under their name
+  and head, or theirs under another linked member's. Keep that line: the bridge channel is locked to linked
+  members, so the link is the only point where a member agrees to both.
 
 The repost path needs **Manage Webhooks** and **Manage Messages** in the bridge channel. Without them the bot
 falls back to the ordinary relay and reports the problem once to the log channel — latched, so it does not
@@ -386,6 +390,9 @@ costs the admin one re-pick.
 
 Pick a member and a duration, and for that long everybody's messages are reposted wearing that member's name
 and avatar — in Discord, in the guild-chat copy, and on guild chat coming back the other way.
+Everyone it touches has agreed to it when they linked: the bridge channel is locked to linked members, and the
+`/link` reply says a global profile change can repost their messages under another name, or others' under
+theirs (see [Account linking](#account-linking)).
 
 - **Each bridge direction has its own switch.** *Discord → Minecraft* governs the name guild chat is told;
   *Minecraft → Discord* governs the name on incoming guild chat embeds. Switching the first off stops the

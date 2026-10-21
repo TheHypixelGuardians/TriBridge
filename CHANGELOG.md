@@ -12,6 +12,14 @@
     + Only the people the bot resolved are pinged: `@everyone`, `@here`, roles and raw `<@id>` text typed
       in-game ping nobody, and one line pings at most five people.
 
+### Improvements
+
+#### Account Linking
+
++ The `/link` reply now says what linking agrees to: bridge-channel messages are relayed to guild chat, and a
+  global profile change can show messages under the member's name and head, or theirs under another linked
+  member's.
+
 ### Removed Features
 
 #### Information

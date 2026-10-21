@@ -36,6 +36,15 @@ async function checkRosters(name) {
   return "inconclusive";
 }
 
+/**
+ * Appended to every reply that creates a link. Linking is how a member opts in
+ * to the relay and to the global profile change, so the reply says so.
+ */
+const CONSENT_NOTE =
+  "\n> By linking, you agree that your messages in the bridge channel are relayed to guild chat, " +
+  "and that a global profile change run by an admin can show messages under your name and head, " +
+  "or yours under another linked member's.";
+
 module.exports = {
   name: "link",
   description:
@@ -106,14 +115,16 @@ module.exports = {
         `⚠️ Linked you to **${profile.name}**, but guild membership could not be ` +
           "verified right now.\n" +
           "> An admin can undo this with `/unlink` if it was a mistake." +
-          relinked,
+          relinked +
+          CONSENT_NOTE,
       );
     }
 
     return interaction.editReply(
       `✅ Linked you to **${profile.name}**.\n` +
         "> Your messages in the bridge channel will now show your Minecraft head and name." +
-        relinked,
+        relinked +
+        CONSENT_NOTE,
     );
   },
 };
