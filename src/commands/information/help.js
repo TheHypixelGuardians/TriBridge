@@ -9,6 +9,9 @@ const {
 const path = require("path");
 const getAllFiles = require("../../utils/getAllFiles");
 
+/** The privacy policy for both THG bots, linked from every help page. */
+const PRIVACY_URL = "https://thehypixelguardians.mintlify.site/privacy";
+
 /**
  * Converts a camelCase folder name into a readable title.
  * e.g. "chatScore" → "Chat Score", "admin" → "Admin"
@@ -99,7 +102,11 @@ function buildEmbed(pages, pageIndex) {
     .setTitle(`📖 Help — ${page.category}`)
     .setDescription(description)
     .setColor("#BD93F9")
-    .setFooter({ text: `Category ${pageIndex + 1} of ${pages.length}` })
+    .setFooter({
+      text:
+        `Category ${pageIndex + 1} of ${pages.length}` +
+        " · Problems or data requests: open a Support ticket",
+    })
     .setTimestamp();
 }
 
@@ -119,6 +126,10 @@ function buildButtons(pageIndex, totalPages, userId) {
       .setLabel("Next ▶")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(pageIndex === totalPages - 1),
+    new ButtonBuilder()
+      .setLabel("Privacy policy")
+      .setStyle(ButtonStyle.Link)
+      .setURL(PRIVACY_URL),
   );
 }
 
@@ -163,4 +174,5 @@ module.exports = {
   buildHelpPages,
   buildEmbed,
   buildButtons,
+  PRIVACY_URL,
 };

@@ -375,7 +375,10 @@ chat.
   everything the bot is responsible for.
 - **`/help`** — every command, one page per category, with ◀ / ▶ buttons. The categories are the folder names
   under `src/commands/`, so adding a folder adds a page. Commands needing a Discord permission are marked ⛔.
-  The buttons stop working after five minutes.
+  The buttons stop working after five minutes. Every page links the
+  [privacy policy](https://thehypixelguardians.mintlify.site/privacy) and says that problems and data requests
+  go through a Support ticket: Discord requires an app to tell users where to report problems and ask for
+  their data to be deleted.
 
 ## Admin panel
 
