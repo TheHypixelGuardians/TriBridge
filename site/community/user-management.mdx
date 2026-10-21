@@ -3,16 +3,22 @@ title: "User management"
 description: "How the THG Community bot registers members in PostgreSQL on every command."
 ---
 
-The bot automatically ensures that everyone who runs a command has a row in the database. No separate
-sign-up step — registration happens transparently before the command handler runs.
+The bot makes sure everyone who uses it has a row in the database. Members never sign up: registration
+happens before their command runs.
 
 ## How it works
 
-1. **Event handler integration** — user management runs from the main event handlers in `src/events/common.ts`.
-2. **Automatic check** — every slash command (and prefix command) checks whether the caller exists in the
-   database.
-3. **Automatic creation** — if not, a new `User` row is created.
-4. **Username updates** — if the row exists but the Discord username changed, it is updated.
+1. A member runs a slash command, presses a button or submits a form.
+2. A member on the shared blacklist is refused first, so a refused interaction creates no row. Bots are
+   skipped too, or every bot that triggered an interaction would get a row.
+3. The member's Discord username is fetched by their Discord id. If they have no row yet, one is created with
+   that name. If the name changed since, the row is updated.
+4. The command runs and can rely on the row existing.
+
+Every startup also re-fetches the username of every stored member in the background and saves the ones that
+changed. That keeps names current for members who have not used the bot in a while. It also gives the real
+name to rows that only had the Discord id as a placeholder, such as rows from the one-time import of
+TriBridge's old files. A deleted Discord account keeps its last known name.
 
 ## Database model
 
@@ -21,66 +27,20 @@ model User {
   id        String   @id @default(uuid())
   discordId String   @unique
   username  String
-  language  String   @default("nl")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  // relations: MinecraftLink, FeatureRequest, …
+  // relations: MinecraftLink, FeatureRequest
 }
 ```
 
-The internal `User.id` UUID is what foreign keys use — not the Discord snowflake.
+Other tables relate to the internal `User.id`, not to the Discord id.
 
 ## Key functions
 
-### `ensureUserExists(discordId, username)`
-
-- Looks up by Discord id.
-- Creates a row when missing.
-- Updates `username` when it changed.
-- Returns the database user object.
-
-### `getUserByDiscordId(discordId)`
-
-Retrieves a user by Discord id without creating one.
-
-## Event integration
-
-Slash commands call `ensureUserExists` before dispatch:
-
-```typescript
-if (interaction.user) {
-  await ensureUserExists(interaction.user.id, interaction.user.username);
-}
-```
-
-Prefix commands do the same for `message.author`.
+- `ensureUserExists(discordId)` fetches the username, creates or updates the row and returns it.
+- `getUserByDiscordId(discordId)` returns the row without creating one.
 
 ## Error handling
 
-Database errors are logged. If user creation fails, the existing error handler surfaces it to the caller.
-Production (`main.ts`) closes the Prisma connection on SIGINT/SIGTERM; development (`dev.ts`) does not.
-
-## Using it in commands
-
-Any command can assume the caller has a `User` row after the event hook runs:
-
-```typescript
-const user = await ensureUserExists(
-  interaction.user.id,
-  interaction.user.username,
-);
-
-await prisma.featureRequest.create({
-  data: {
-    userId: user.id,
-    // …
-  },
-});
-```
-
-`/profile` uses the same helper instead of duplicating create/update logic.
-
-## Related
-
-- [Commands](/community/commands) — `/profile` views or refreshes the stored row
-- [Account linking](/community/account-linking) — links hang off `User.id`
+A database error is logged and passed on. The command does not run, and the member gets an error reply
+instead of a command that silently does nothing.
