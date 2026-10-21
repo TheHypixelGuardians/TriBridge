@@ -281,7 +281,7 @@ autocomplete; leave it out and the default guild is used.
 |-------------------------------------|--------------------------------------------------------------------------|
 | `/invite <username> [guild]`        | `/g invite` in that guild                                                |
 | `/kick <username> [reason] [guild]` | `/g kick` in that guild                                                  |
-| `/promote <username> [guild]`       | `/g promote` in that guild                                               |
+| `/promote <user> <rank> [guild]`    | `/g setrank` for a Discord member's linked account, plus role and nickname, see below |
 | `/demote <username> [guild]`        | `/g demote` in that guild                                                |
 | `/mute <username> <duration> [guild]` | `/g mute` in that guild                                                |
 | `/unmute <username> [guild]`        | `/g unmute` in that guild                                                |
@@ -297,6 +297,29 @@ limit of 30 days; anything else is refused before it reaches Hypixel. `/mute` an
 every one that succeeds is recorded in that guild's [audit channel](#auditing). The wording Hypixel answers a
 guild mute with was written from memory rather than checked against the server, so a reply the bot does not
 recognise is shown as Hypixel's own output instead of being guessed at.
+
+## Ranks with `/promote`
+
+`/promote user:<member> rank:<rank>` gives a Discord member one of six ranks, highest first: **Senior
+Officer**, **Officer**, **Trial Officer**, **Veteran**, **Elite** and **Titan**.
+
+- **In-game**, the bot runs `/g setrank <name> <rank>` in the `guild` you name, or else in the bridged guild
+  the member is in, found by reading every connected guild's roster. The three officer tiers all set the
+  in-game rank **Officer**: Hypixel has one officer rank, so the tier exists only on Discord. Only for a member
+  with a **bridge link**: without one there is no Minecraft name, and guessing one from a Discord nickname
+  could promote a stranger, so the in-game step is skipped.
+- **On Discord**, the member gets the rank's role, loses the other five rank roles, and their nickname becomes
+  `[Rank] <Minecraft name>` (their own name when unlinked), cut to Discord's 32 characters. The community
+  bot's Knight role is not touched.
+
+Each rank's role is set by id in `.env` — `RANK_ROLE_SENIOR_OFFICER`, `RANK_ROLE_OFFICER`,
+`RANK_ROLE_TRIAL_OFFICER`, `RANK_ROLE_VETERAN`, `RANK_ROLE_ELITE`, `RANK_ROLE_TITAN`. A rank with no id set is
+matched to the role with the rank's name. A set id that matches no role is reported, not replaced by a role
+of the same name, so a deleted role is noticed instead of silently swapped.
+
+Each step reports on its own and one failing does not stop the others; the result is the reply and goes to
+the audit channel. The bot needs **Manage Roles** and **Manage Nicknames** with its role above the rank roles
+and the member, and the guild's account must be allowed to change ranks in-game.
 
 Hypixel gives no way to correlate a reply with the command that caused it, so the bot listens for a while and
 stops when the output goes quiet. Every query for an account is serialised with a settle window afterwards,
@@ -325,15 +348,6 @@ chat.
   every command and stop the whole bridge for everyone during an outage, to keep out a handful of members. The
   admin check still fails closed, so nothing privileged opens up.
 - Every add and remove is recorded in the [audit channel](#auditing).
-
-## `/pingdiamond`
-
-Pings one fixed member and deletes the ping straight away, so they get the notification with nothing left in
-the channel. It needs the Discord **Manage Roles** permission, and is hidden from members without it.
-
-The member is set with `PINGDIAMOND_USER_ID` in `.env`; without it the command says it is not set up. The
-message is sent with mentions locked to that one id, so it can never ping anyone else. Each use is recorded in
-the [audit channel](#auditing).
 
 ## Information commands
 

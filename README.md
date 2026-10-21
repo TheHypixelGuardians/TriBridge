@@ -39,7 +39,6 @@ all.
 - **Guild management** — `/invite`, `/kick`, `/promote`, `/demote`, `/mute`, `/unmute`, `/send` and `/login`,
   each targeting one guild or the default.
 - **Blacklist** — `/blacklist` bars a member from both bots' commands and from relaying into guild chat.
-- **`/pingdiamond`** — ghost-pings one configured member, for holders of Manage Roles.
 - **Information** — `/online`, `/ping` and `/help`.
 
 *See [Features](docs/FEATURES.md) for what each one does in full, the
@@ -84,7 +83,12 @@ the [change log](CHANGELOG.md) for what's new in each release.*
    MINECRAFT_USERNAME=you@example.com
    DATABASE_URL=postgres://user:password@host:5432/thg
    HYPIXEL_API_KEY=
-   PINGDIAMOND_USER_ID=
+   RANK_ROLE_SENIOR_OFFICER=
+   RANK_ROLE_OFFICER=
+   RANK_ROLE_TRIAL_OFFICER=
+   RANK_ROLE_VETERAN=
+   RANK_ROLE_ELITE=
+   RANK_ROLE_TITAN=
    ```
 
    | Variable             | Description                                                                                          |
@@ -96,7 +100,7 @@ the [change log](CHANGELOG.md) for what's new in each release.*
    | `DATABASE_URL`       | The PostgreSQL database shared with the community bot. The guild registry, global profile change, audit channel and account links are stored in it, and the blacklist and admin roles are shared through it. **Required** |
    | `HYPIXEL_API_KEY`    | *Optional.* Hypixel API key used to learn each guild's Hypixel id on connect                         |
    | `DISCORD_GUILD_ID`   | *Optional.* The only Discord server the bot accepts commands from. Defaults to the bridge channel's server |
-   | `PINGDIAMOND_USER_ID` | *Optional.* The Discord user id `/pingdiamond` pings. The command is inert without it                |
+   | `RANK_ROLE_*`        | *Optional.* The Discord role id for each `/promote` rank (`SENIOR_OFFICER`, `OFFICER`, `TRIAL_OFFICER`, `VETERAN`, `ELITE`, `TITAN`). Unset, the role with the rank's name is used |
 
    > **TriBridge serves a single Discord server**, however many Hypixel guilds it bridges. Commands are
    > registered globally, so it refuses any command sent from another server — otherwise an administrator of
@@ -127,12 +131,11 @@ Full walkthrough: [Installation](https://thehypixelguardians.mintlify.site/tribr
 |---------------------------------------------|-------------|---------------------------------------------------------------------------|
 | `/invite <username> [guild]`                | Management  | Invite a player to a Hypixel guild (admin only)                           |
 | `/kick <username> [reason] [guild]`         | Management  | Kick a member from a Hypixel guild (admin only)                           |
-| `/promote <username> [guild]`               | Management  | Promote a member in a Hypixel guild (admin only)                          |
+| `/promote <user> <rank> [guild]`            | Management  | Give a member a rank in-game and on Discord (admin only)                  |
 | `/demote <username> [guild]`                | Management  | Demote a member in a Hypixel guild (admin only)                           |
 | `/mute <username> <duration> [guild]`       | Management  | Mute a member in a Hypixel guild's chat (admin only)                      |
 | `/unmute <username> [guild]`                | Management  | Unmute a member in a Hypixel guild's chat (admin only)                    |
 | `/blacklist add/remove/list`                | Management  | Bar a member from both bots and from the chat bridge (admin only)         |
-| `/pingdiamond`                              | Management  | Ghost-ping the configured member (Manage Roles)                           |
 | `/send <message> [guild]`                   | Management  | Run a command as the Minecraft account and show the reply (admin only)    |
 | `/login [guild]`                            | Management  | Connect the bots; all disconnected guilds by default (admin only)         |
 | `/guilds add/remove/list/edit/default/auth` | Management  | Manage the bridged Hypixel guilds and sign their accounts in (admin only) |

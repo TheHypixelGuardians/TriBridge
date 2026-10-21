@@ -23,7 +23,12 @@ LOG_CHANNEL=your_log_channel_id
 MINECRAFT_USERNAME=you@example.com
 DATABASE_URL=your_postgres_connection_string
 HYPIXEL_API_KEY=
-PINGDIAMOND_USER_ID=
+RANK_ROLE_SENIOR_OFFICER=
+RANK_ROLE_OFFICER=
+RANK_ROLE_TRIAL_OFFICER=
+RANK_ROLE_VETERAN=
+RANK_ROLE_ELITE=
+RANK_ROLE_TITAN=
 ```
 
 | Variable             | Required  | Description                                                                                            |
@@ -35,7 +40,7 @@ PINGDIAMOND_USER_ID=
 | `DATABASE_URL`       | Yes       | The PostgreSQL database shared with the community bot. Holds this bot's settings; the bot will not start without it |
 | `HYPIXEL_API_KEY`    | No        | Hypixel API key. When set, the bot learns each guild's Hypixel id on connect and stores `hypixelGuildId` |
 | `DISCORD_GUILD_ID`   | No        | The only Discord server the bot accepts commands from. Defaults to the server the bridge channel is in |
-| `PINGDIAMOND_USER_ID` | No       | The Discord user id `/pingdiamond` pings. Without it the command says it is not set up                 |
+| `RANK_ROLE_*`        | No        | The Discord role id for each [`/promote` rank](/tribridge/ranks): `SENIOR_OFFICER`, `OFFICER`, `TRIAL_OFFICER`, `VETERAN`, `ELITE`, `TITAN`. Unset, the role named after the rank is used |
 
 To get a channel id: enable **Developer Mode** in Discord's Advanced settings, then right-click the channel →
 **Copy Channel ID**.

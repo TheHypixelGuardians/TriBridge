@@ -4,52 +4,7 @@ const { setLink } = require("../../utils/linkedAccounts");
 const { logGlobal } = require("../../utils/guildLog");
 const mcBots = require("../../utils/mcBots");
 const queryGuild = require("../../utils/queryGuild");
-
-/**
- * Searches collected `/guild list` output for a member.
- *
- * Hypixel guild list format (with Minecraft color codes):
- * - Rank headers: "-- RankName --" (after stripping §x codes)
- * - Player entries within a rank are separated by ● dots
- * - Both online and offline members are listed, so colour is ignored here
- * - A "Total Members: N" summary line closes the roster
- *
- * @param {string[]} rawMessages Raw message strings with colour codes.
- * @param {string} targetName Canonical Minecraft name to look for.
- * @returns {'found'|'absent'|'inconclusive'} 'inconclusive' when the output
- *   never looked like a roster at all (bot lagging, command rejected, format
- *   changed) — the caller fails open on that, but not on 'absent'.
- */
-function findInRoster(rawMessages, targetName) {
-  const target = targetName.toLowerCase();
-  let sawRosterStructure = false;
-  let found = false;
-
-  for (const raw of rawMessages) {
-    const clean = raw.replace(/§./g, "");
-    const trimmed = clean.trim();
-
-    if (
-      /^--\s+(.+?)\s+--$/.test(trimmed) ||
-      /^(Total|Online|Offline) Members:/.test(trimmed)
-    ) {
-      sawRosterStructure = true;
-    }
-
-    for (const segment of clean.split(/●+/)) {
-      const cleanSegment = segment.trim();
-      if (!cleanSegment) continue;
-
-      const nameMatch = cleanSegment.match(/(\w{1,16})\s*$/);
-      if (nameMatch && nameMatch[1].toLowerCase() === target) {
-        found = true;
-      }
-    }
-  }
-
-  if (found) return "found";
-  return sawRosterStructure ? "absent" : "inconclusive";
-}
+const { findInRoster } = require("../../utils/guildPromotion");
 
 /**
  * Checks every connected guild's roster for a player.

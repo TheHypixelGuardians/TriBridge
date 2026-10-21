@@ -332,6 +332,12 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   argument through `sanitizeForChat()` first — same newline-injection hazard as above. `/send`
   is the deliberate exception: sending an arbitrary command is the whole point of it, which is
   why it is admin-gated.
+- **Promotions** (`utils/guildPromotion.js`, `/promote user rank`) go in-game only for a member
+  with a bridge link. Never derive a Minecraft name from a Discord nickname: a wrong guess runs
+  `/g setrank` on somebody else. The `/g setrank` command is built by hand, so the linked name
+  goes through `isValidMinecraftName()` and the rank always comes from `PROMOTION_RANKS` via
+  `getRank()`, never from the raw option value. The officer tiers share `gameRank: "Officer"`
+  and differ only in their Discord role.
 - **Replies:** `deferReply()` (`deferUpdate()` for panel components) first for anything touching a
   Minecraft bot or saving a setting, then `editReply()` — a database write can outlast Discord's
   three-second window.

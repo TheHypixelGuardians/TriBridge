@@ -10,6 +10,10 @@
     + Lookups now live on the **THG community bot** as `/networth`.
     + `nw` and `networth` are no longer reserved guild tags.
 
+#### Management
+
++ `/pingdiamond` moved to the **THG community bot**; TriBridge unregisters it on startup.
+
 ### Technical Details
 
 #### Core
@@ -154,9 +158,21 @@
   admin-only.
     + The duration is a number and one unit — `30m`, `12h`, `7d` — up to Hypixel's 30 days.
     + Replies are private, and every successful mute or unmute is recorded in that guild's audit channel.
-+ Added `/pingdiamond`, which pings one configured member and deletes the ping straight away.
-    + Needs **Manage Roles**, and is hidden from members without it.
-    + The member is set with `PINGDIAMOND_USER_ID` in `.env`. Only that member can ever be pinged by it.
++ `/promote` now gives a member a rank in-game and on Discord in one go: `/promote user:<member> rank:<rank>`.
+    + Six ranks: **Senior Officer**, **Officer**, **Trial Officer**, **Veteran**, **Elite** and **Titan**. The
+      three officer tiers all get the in-game rank **Officer** and differ only in their Discord role.
+    + In-game it runs `/g setrank` in whichever bridged guild the member is in, found from the rosters, or in
+      the `guild` you name. That needs a bridge link; a member who has not run `/link` is ranked on Discord
+      only, never by a guessed name.
+    + On Discord it gives the rank's role, takes the other five rank roles away, and sets the nickname to
+      `[Rank] <Minecraft name>`. The community bot's Knight role is left alone.
+    + The roles are set with `RANK_ROLE_SENIOR_OFFICER`, `RANK_ROLE_OFFICER`, `RANK_ROLE_TRIAL_OFFICER`,
+      `RANK_ROLE_VETERAN`, `RANK_ROLE_ELITE` and `RANK_ROLE_TITAN` in `.env`; a rank without one is matched to
+      the role with its name.
+    + Each step is reported in the reply and in the audit channel, and one failing does not stop the others.
+    + Needs **Manage Roles** and **Manage Nicknames**, a bot role above the rank roles and the member, and an
+      in-game account allowed to change ranks.
+    + This replaces `/promote <username>`, which promoted one step in-game by Minecraft name.
 
 #### Information
 
