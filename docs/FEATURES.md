@@ -238,7 +238,8 @@ Officer chat uses the link too, for the name it speaks under, and takes no repos
   from memory.
 - **The first start copies today's community links once**, so nobody had to link again when the bridge got its
   own list back. After that the lists are independent. See [The shared database](SHARED_DATABASE.md).
-- There is no link role on the bridge; the link role and the `[Knight]` nickname belong to the community bot.
+- There is no link role on the bridge, and the community bot has none either: roles for linking are handled by
+  another bot.
 
 The repost path needs **Manage Webhooks** and **Manage Messages** in the bridge channel. Without them the bot
 falls back to the ordinary relay and reports the problem once to the log channel — latched, so it does not
@@ -309,8 +310,8 @@ Officer**, **Officer**, **Trial Officer**, **Veteran**, **Elite** and **Titan**.
   with a **bridge link**: without one there is no Minecraft name, and guessing one from a Discord nickname
   could promote a stranger, so the in-game step is skipped.
 - **On Discord**, the member gets the rank's role, loses the other five rank roles, and their nickname becomes
-  `[Rank] <Minecraft name>` (their own name when unlinked), cut to Discord's 32 characters. The community
-  bot's Knight role is not touched.
+  `[Rank] <Minecraft name>` (their own name when unlinked), cut to Discord's 32 characters. The Knight
+  role is not touched.
 
 Each rank's role is set by id in `.env` — `RANK_ROLE_SENIOR_OFFICER`, `RANK_ROLE_OFFICER`,
 `RANK_ROLE_TRIAL_OFFICER`, `RANK_ROLE_VETERAN`, `RANK_ROLE_ELITE`, `RANK_ROLE_TITAN`. A rank with no id set is
