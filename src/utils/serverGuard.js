@@ -7,9 +7,10 @@ const bridge = require("../bridge");
  * admin role list. (Hypixel guilds are a separate, plural concept — see
  * utils/guilds.js — and must never be confused with this one.) Commands
  * register globally though, so without this check anyone who can add the bot to
- * a server they own holds `Administrator` there, can `/adminrole add` a role
- * they control, and thereby inherits bot-admin — including `/send`, which runs
- * arbitrary commands as a Minecraft account — over the real server.
+ * a server they own holds `Administrator` there, can set that server's admin
+ * roles with the community bot's `/adminrole`, and thereby inherits bot-admin —
+ * including `/send`, which runs arbitrary commands as a Minecraft account — over
+ * the bridge's accounts.
  *
  * Fails closed. An unresolved `bridge.discordServerId` refuses everything rather
  * than falling back to the old permissive behaviour, and DM interactions (where

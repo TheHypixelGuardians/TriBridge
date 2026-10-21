@@ -1,21 +1,30 @@
 # The shared database
 
 TriBridge and the [THG community bot](https://github.com/TheHypixelGuardians/thg-community) are two processes
-serving one Discord server, and their features are **separate**. Each bot has its own account links and its own
-bot-admin roles; linking or being staff on one does not carry over to the other. They share exactly two things:
-**the PostgreSQL database**, and **the blacklist** in it.
+serving one Discord server, and their features are **separate**. Each bot has its own account links; linking on
+one does not carry over to the other. They share exactly three things: **the PostgreSQL database**, **the
+blacklist** in it, and **the bot-admin roles**, which the community bot's `/adminrole` sets for both.
 
 **The community bot owns the `public` schema.** It runs the migrations, and `Blacklist` is defined in its
 `prisma/schema.prisma`. TriBridge touches that schema through `src/utils/db.js` with plain SQL for the blacklist
-only (see [What TriBridge writes](#what-tribridge-writes)), plus one read of the community links on its very
-first start (see [The one-time link copy](#the-one-time-link-copy)). Everything else TriBridge keeps lives in its
+(see [What TriBridge writes](#what-tribridge-writes)) and the admin roles (see
+[What TriBridge reads](#what-tribridge-reads)), plus one read of the community links on its very first start
+(see [The one-time link copy](#the-one-time-link-copy)). Everything else TriBridge keeps lives in its
 own `tribridge` schema — see [What TriBridge stores](#what-tribridge-stores).
 
 Set `DATABASE_URL` here to the same connection string the community bot uses.
 
-Linking and admin roles used to be shared: the community bot owned both and TriBridge read them. That made a
-feature on one bot depend on the other's tables and its 15-second cache. They were split back on 2026-10-21, so
-the two bots now only meet at the blacklist.
+Linking used to be shared too: the community bot owned it and TriBridge read it. That made a feature on one bot
+depend on the other's tables and its 15-second cache, so it was split back on 2026-10-21. Admin roles stayed
+shared on purpose, so one list decides who is staff on both bots.
+
+## What TriBridge reads
+
+| Table       | Used for                                                                                       | Module                |
+|-------------|------------------------------------------------------------------------------------------------|-----------------------|
+| `AdminRole` | `isAdmin()`, the gate on every bot-admin command here (`/send`, `/guilds`, `/adminpanel` and the rest) | `utils/adminRoles.js` |
+
+There is no write path for it here: `/adminrole` lives on the community bot.
 
 ## What TriBridge writes
 
@@ -44,7 +53,6 @@ bot's own commands:
 | `guilds`         | The Hypixel guild registry     | `utils/guilds.js`         | `guildsConfig.json`          |
 | `globalProfile`  | The global profile change      | `utils/globalProfile.js`  | `globalProfileConfig.json`   |
 | `auditChannel`   | The default audit channel      | `utils/auditChannel.js`   | `auditChannelConfig.json`    |
-| `adminRoles`     | The bridge's bot-admin roles   | `utils/adminRoles.js`     | `adminRolesConfig.json`      |
 | `linkedAccounts` | The bridge's account links     | `utils/linkedAccounts.js` | `linkedAccountsConfig.json`  |
 
 The table is in its own schema rather than `public` on purpose: the community bot runs `prisma db push`, which
@@ -76,16 +84,13 @@ next start.
 
 ## Failure behaviour
 
-TriBridge's links and admin roles are read from memory, so the database being down after startup changes
-nothing for them. The blacklist is the one read on the message path:
+TriBridge's links are read from memory, so the database being down after startup changes nothing for them. The
+two community tables it reads behave differently on purpose:
 
 | Read         | On failure                                                                                          |
 |--------------|-----------------------------------------------------------------------------------------------------|
+| Admin roles  | **Fails closed** — nobody is an admin. `/send` runs arbitrary commands as the Minecraft account and `/adminpanel` can impersonate everybody in the server, so an unreadable or empty list must never mean "everyone" |
 | Blacklist    | **Fails open** — nobody counts as blacklisted. Failing closed would refuse every command and stop the whole bridge during an outage; the admin check still fails closed |
-
-`isAdmin` still **fails closed** in its own way: no admin roles set means nobody is an admin. `/send` runs
-arbitrary commands as the Minecraft account and `/adminpanel` can impersonate everybody in the server, so an
-empty list must never mean "everyone".
 
 Without `DATABASE_URL` the pool is never created and one line is logged. TriBridge's own settings cannot be loaded
 then, so **the bot does not start**: it retries for about 40 seconds and exits with a non-zero code. A database
@@ -93,9 +98,10 @@ that cannot be reached at startup, through every retry, makes the bot start from
 
 ## Staleness
 
-The blacklist is the only thing either bot reads that the other writes. Its cache is 15 seconds, cleared on
-every write here, so it only lags on the community bot's side. Links and admin roles have no such lag: each bot
-writes its own, and the bridge applies a change the moment it is saved.
+Two things are read here that the other bot writes. The admin roles are cached for 15 seconds, so a role added or
+removed with the community bot's `/adminrole` takes effect here within that. The blacklist's cache is also 15
+seconds, cleared on every write here, so it only lags on the community bot's side. Links have no such lag: each
+bot writes its own.
 
 ## The global profile change and the account link
 

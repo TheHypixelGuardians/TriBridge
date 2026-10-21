@@ -149,28 +149,26 @@ test("removeLink returns the removed link, and null when there was none", async 
   assert.deepEqual(database.rows.linkedAccounts.links, {});
 });
 
-function member(roleIds) {
+function member(roleIds, serverId = "1") {
   return {
+    guild: { id: serverId },
     roles: { cache: { some: (fn) => roleIds.some((id) => fn({ id })) } },
   };
 }
 
-test("isAdmin fails closed with no roles set, and reads the bridge's own list", async () => {
-  const database = fakeDatabase();
-  mock.method(db, "query", database.query);
-  await adminRoles.load();
+test("isAdmin reads the community bot's shared AdminRole list and fails closed", async () => {
+  let rows = [{ roleId: "10" }];
+  mock.method(db, "query", async (text) => {
+    assert.match(text, /"AdminRole"/);
+    return rows;
+  });
 
-  assert.equal(await adminRoles.isAdmin(member(["10"])), false);
-  assert.equal(await adminRoles.isAdmin(null), false);
-
-  assert.equal(await adminRoles.addRole("10"), true);
-  assert.equal(await adminRoles.addRole("10"), false);
   assert.equal(await adminRoles.isAdmin(member(["10"])), true);
   assert.equal(await adminRoles.isAdmin(member(["11"])), false);
-  assert.deepEqual(database.rows.adminRoles, { roleIds: ["10"] });
+  assert.equal(await adminRoles.isAdmin(null), false);
 
-  assert.equal(await adminRoles.removeRole("10"), true);
-  assert.equal(await adminRoles.isAdmin(member(["10"])), false);
-  // The community bot's AdminRole table is never consulted.
-  assert.equal(database.reads('"AdminRole"').length, 0);
+  // A database that cannot be read is nobody's admin rights, even with a
+  // matching role: /send runs arbitrary commands as the Minecraft account.
+  rows = null;
+  assert.equal(await adminRoles.isAdmin(member(["10"], "2")), false);
 });

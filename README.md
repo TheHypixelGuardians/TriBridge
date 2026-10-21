@@ -30,8 +30,8 @@ all.
   Microsoft device code arrives in a private reply, never the console.
 - **Auto-reconnect** — dropped accounts come back on their own, one guild per ten-second tick so a Hypixel
   restart can't throttle them all at once.
-- **Admin roles** — a flat list of Discord roles that hold bot-admin on the bridge, set with `/adminrole`.
-  The community bot keeps its own list.
+- **Admin roles** — a flat list of Discord roles that hold bot-admin, shared with the community bot and set
+  with its `/adminrole`.
 - **Admin panel** — `/adminpanel`, a button per admin function, with the running state on the embed.
 - **Global profile change** — everybody's messages reposted wearing one member's name and face, for a set
   duration, with a switch per bridge direction and a test mode.
@@ -54,7 +54,7 @@ the [change log](CHANGELOG.md) for what's new in each release.*
 | **npm**               | Included with Node.js                                                                                                                                |
 | **Discord bot**       | An application at the [Discord Developer Portal](https://discord.com/developers/applications) with the **Message Content** privileged intent enabled |
 | **Minecraft account** | One Microsoft account **per Hypixel guild**, each owning Minecraft: Java Edition and able to join `mc.hypixel.net`                                   |
-| **PostgreSQL**        | The database shared with the [THG community bot](https://github.com/TheHypixelGuardians/thg-community). This bot keeps its settings, links and admin roles there in its own schema, and shares the blacklist. **Required** — the bot does not start without it |
+| **PostgreSQL**        | The database shared with the [THG community bot](https://github.com/TheHypixelGuardians/thg-community). This bot keeps its settings and links there in its own schema, and shares the blacklist and admin roles. **Required** — the bot does not start without it |
 
 ## Installation
 
@@ -93,14 +93,14 @@ the [change log](CHANGELOG.md) for what's new in each release.*
    | `DISCORD_CHANNEL_ID` | The bridge channel — the one channel wired to guild chat                                             |
    | `LOG_CHANNEL`        | Where connection notices and warnings go. A Hypixel guild can override it with its own channel        |
    | `MINECRAFT_USERNAME` | Microsoft account email for the first Hypixel guild. **Ignored once a guild registry exists**          |
-   | `DATABASE_URL`       | The PostgreSQL database shared with the community bot. The guild registry, global profile change, audit channel, account links and admin roles are stored in it, and the blacklist is shared through it. **Required** |
+   | `DATABASE_URL`       | The PostgreSQL database shared with the community bot. The guild registry, global profile change, audit channel and account links are stored in it, and the blacklist and admin roles are shared through it. **Required** |
    | `HYPIXEL_API_KEY`    | *Optional.* Hypixel API key used to learn each guild's Hypixel id on connect                         |
    | `DISCORD_GUILD_ID`   | *Optional.* The only Discord server the bot accepts commands from. Defaults to the bridge channel's server |
    | `PINGDIAMOND_USER_ID` | *Optional.* The Discord user id `/pingdiamond` pings. The command is inert without it                |
 
    > **TriBridge serves a single Discord server**, however many Hypixel guilds it bridges. Commands are
    > registered globally, so it refuses any command sent from another server — otherwise an administrator of
-   > any other server the bot was added to could add themselves to the bot's admin roles.
+   > any other server the bot was added to could give themselves bot-admin over your Minecraft accounts.
 
 4. **Invite the bot** with the permissions listed
    in [Permissions](https://thehypixelguardians.mintlify.site/tribridge/permissions).
@@ -115,8 +115,9 @@ the [change log](CHANGELOG.md) for what's new in each release.*
    Microsoft device-code flow opens in the console. Tokens are cached in `.minecraft-auth/`, one entry per
    account.
 
-6. **Set the admin roles** — `/adminrole add role:@Staff`, run by someone with the Discord **Administrator**
-   permission. Until the list has an entry, nothing admin-gated works. The community bot keeps its own list.
+6. **Set the admin roles** — on the community bot, `/adminrole add role:@Staff`, run by someone with the
+   Discord **Administrator** permission. The list is shared, and until it has an entry nothing admin-gated
+   works on either bot.
 
 Full walkthrough: [Installation](https://thehypixelguardians.mintlify.site/tribridge/installation).
 
@@ -137,7 +138,6 @@ Full walkthrough: [Installation](https://thehypixelguardians.mintlify.site/tribr
 | `/guilds add/remove/list/edit/default/auth` | Management  | Manage the bridged Hypixel guilds and sign their accounts in (admin only) |
 | `/adminpanel`                               | Management  | Open the admin panel (admin only)                                         |
 | `/auditchannel set/show/clear [guild]`      | Management  | Choose where admin panel actions are recorded (admin only)                |
-| `/adminrole add/remove/list`                | Management  | Choose which roles are bridge bot admins (Administrator)                  |
 | `/link <username>`                          | Linking     | Link your Minecraft account for the bridge                                |
 | `/unlink [user]`                            | Linking     | Remove your link, or anyone's (admin only)                                |
 | `/links`                                    | Linking     | List every bridge link (admin only)                                       |
@@ -165,8 +165,8 @@ Everything past the first Hypixel guild is configured from Discord rather than f
 /guilds edit guild:sb crossbridge:True
 ```
 
-Bot-admin roles are set with `/adminrole`, and members link with `/link`. Both are the bridge's own, separate
-from the community bot's.
+Bot-admin roles are shared with the community bot and set with its `/adminrole`. Members link with `/link`,
+which is the bridge's own, separate from the community bot's.
 
 Config files are written next to the repository and are all gitignored, so they survive a `git pull` — see
 [Config files](https://thehypixelguardians.mintlify.site/tribridge/config-files).

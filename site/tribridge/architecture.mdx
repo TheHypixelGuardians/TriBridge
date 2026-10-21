@@ -141,14 +141,15 @@ The diff compares `autocomplete`, `maxLength` and `defaultMemberPermissions` and
 - **`permissionsRequired`** is enforced generically by `handleCommands.js` — real Discord permissions like
   `Administrator`.
 - **Bot-admin** is checked *inside* the callback with `isAdmin(interaction.member)` from
-  `utils/adminRoles.js`, which reads the bridge's own role list from memory (the `adminRoles` setting in
-  `tribridge.config`, loaded at startup). It is async and fails closed — no roles set means no admins — and
+  `utils/adminRoles.js`, which reads the community bot's `AdminRole` table for the bridge's Discord server,
+  cached for 15 seconds. The list is shared and set with the community bot's `/adminrole`; TriBridge has no
+  write path. It is async and fails closed — no roles set, or an unreadable database, means no admins — and
   callers must keep the `await`: a bare promise is truthy.
 
 And the guard that is neither: `handleCommands.js` refuses any interaction whose `guildId` is not
 `bridge.discordServerId`. Commands are registered globally but the bot serves one Discord server, and without
-that check an administrator of any *other* server the bot is in could `/adminrole add` a role they control and
-inherit bot-admin — `isAdmin` matches role ids and has no server dimension. It fails closed. **Do not add a
+that check an administrator of any *other* server the bot is in could set admin roles for that server on the
+community bot and inherit bot-admin over the bridge's Minecraft accounts. It fails closed. **Do not add a
 command dispatch path that skips it.**
 
 Right after it, every interaction handler calls `refuseIfBlacklisted()` from `utils/blacklist.js`, and both

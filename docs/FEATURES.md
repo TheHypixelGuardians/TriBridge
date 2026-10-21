@@ -249,18 +249,18 @@ author's own permissions and an unrestricted one would let any linked user ping 
 
 TriBridge has two separate permission systems.
 
-**Discord permissions** are enforced generically before a command runs. `/adminrole` needs **Administrator**,
-because it is the command that decides who else is an admin.
+**Discord permissions** are enforced generically before a command runs. No TriBridge command uses one today.
 
-**Bot-admin** is a flat list of Discord role ids, set with **`/adminrole add|remove <role>`** (and shown with
-`/adminrole list`), then checked inside each admin command. Everything under Management is gated this way,
-including `/adminpanel` and `/auditchannel`, plus `/links`, `/whois` and `/unlink user:`. The list is the
-bridge's own; the community bot keeps a separate one, so staff on one bot are not automatically staff on the
-other.
+**Bot-admin** is a flat list of Discord role ids, checked inside each admin command. Everything under
+Management is gated this way, including `/adminpanel` and `/auditchannel`, plus `/links`, `/whois` and
+`/unlink user:`. The list is **shared with the THG community bot**: it is set there with
+**`/adminrole add|remove <role>`** (shown with `/adminrole show`, all Administrator-only), and TriBridge reads
+it from the shared database. A role that is staff on one bot is staff on both. TriBridge caches the list for 15
+seconds, so a change on the community bot takes effect here within that.
 
-**The check fails closed.** A member with no matching role is not an admin, and with no roles set nobody is.
-`/send` runs arbitrary commands as a Minecraft account, so an empty list must never mean "everyone". Set the
-roles during installation, as someone with Administrator.
+**The check fails closed.** A member with no matching role is not an admin, with no roles set nobody is, and
+neither is anyone while the database cannot be read. `/send` runs arbitrary commands as a Minecraft account, so
+an empty or unreadable list must never mean "everyone". Set the roles during installation, on the community bot.
 
 ### One Discord server
 

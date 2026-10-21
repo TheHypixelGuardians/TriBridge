@@ -32,12 +32,14 @@
       database cannot make Discord time the click or command out. A deferred command that then fails now says
       so, instead of being left on "thinking…".
 + Added `pg` and its dependencies to `package-lock.json`, which listed `pg` in `package.json` only.
-+ `utils/linkedAccounts.js` and `utils/adminRoles.js` store the bridge's own links and admin roles in
-  `tribridge.config` (`linkedAccounts`, `adminRoles`) through `configStore`, read from memory. They no longer
-  read the community bot's `MinecraftLink`, `User` or `AdminRole` tables, apart from a one-time copy of the
-  links on the first start with no stored list (saved even when empty, so it never repeats).
-    + `getLink`, `getLinkByName` and `isAdmin` stay async, so no caller loses its `await`.
-    + `npm run config:import` also imports `adminRolesConfig.json` and `linkedAccountsConfig.json`.
++ `utils/linkedAccounts.js` stores the bridge's own links in `tribridge.config` (`linkedAccounts`) through
+  `configStore`, read from memory. It no longer reads the community bot's `MinecraftLink` or `User` tables,
+  apart from a one-time copy on the first start with no stored list (saved even when empty, so it never
+  repeats).
+    + `getLink` and `getLinkByName` stay async, so no caller loses its `await`.
+    + `npm run config:import` also imports `linkedAccountsConfig.json`.
++ `utils/adminRoles.js` reads the community bot's `AdminRole` table for the bridge's Discord server, cached for
+  15 seconds. `isAdmin` stays async and fails closed: an unreadable database makes nobody an admin.
 + Added `utils/blacklist.js`, which reads and writes the community bot's `Blacklist` table — the one table in
   its schema TriBridge writes. Every interaction handler and both Discord→Minecraft relays check it after the
   server guard. The table and its migration live in the community bot's repository.
@@ -188,12 +190,11 @@
 
 #### Account Linking
 
-+ Links and admin roles are now stored in the database with the bot's other settings, so a new link is honoured
-  on the very next message.
-    + On the first start after upgrading, an existing `linkedAccountsConfig.json` or `adminRolesConfig.json` is
-      imported. With no link file, the bridge copies the community bot's current links once, so nobody has to
-      link again; after that the two lists are independent.
-    + `/adminrole list` shows the configured admin roles.
++ Links are now stored in the database with the bot's other settings, so a new link is honoured on the very
+  next message.
+    + On the first start after upgrading, an existing `linkedAccountsConfig.json` is imported. With no link
+      file, the bridge copies the community bot's current links once, so nobody has to link again; after that
+      the two lists are independent.
 + `/link` now accepts a member of **any** bridged guild. It still refuses only when every roster was read
   successfully and the name was in none of them.
 
@@ -371,14 +372,15 @@
 #### Community
 
 + Moved feature requests and the link role to the sibling **THG community bot**. The two bots share the
-  database and the blacklist, and nothing else.
+  database, the blacklist and the bot-admin roles, and nothing else.
     + `/request`, `/requestchannel` and `/requeststatus` moved outright; nothing about them touched the
       bridge.
     + `/linkrole` moved: the link role (and the `[Knight]` nickname) are handed out by the community bot's
       `/link`.
-    + `/link`, `/unlink`, `/links`, `/whois` and `/adminrole` **stay here**, with the bridge's own links and
-      admin roles. The community bot has its own of each; linking or being staff on one bot does not carry
-      over to the other.
+    + `/link`, `/unlink`, `/links` and `/whois` **stay here**, with the bridge's own links. The community bot
+      has its own; linking on one bot does not carry over to the other.
+    + `/adminrole` moved: the bot-admin roles are shared, and set with the community bot's `/adminrole`. A
+      role that is staff on one bot is staff on both.
     + `/adminpanel`, the global profile change and `/auditchannel` **stay here**, unchanged.
 
 ## Version 1.2.1

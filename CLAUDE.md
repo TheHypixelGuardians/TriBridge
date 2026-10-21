@@ -91,13 +91,14 @@ messages both ways; slash commands let Discord admins run guild management comma
 in-game.
 
 The sibling **THG community bot** (`../thg-community`) is a TypeScript/discordx bot on
-PostgreSQL with member profiles, feature requests, tickets and its own account linking and
-admin roles. **The two bots' features are separate** (the owner's rule): they share the
-database and the blacklist, and nothing else. This bot has its own `/link` and its own
-`/adminrole`; never point either back at the community bot's tables. That contract is
+PostgreSQL with member profiles, feature requests, tickets, its own account linking and the
+`/adminrole` command. **The two bots' features are separate** (the owner's rule): they share the
+database, the blacklist and the bot-admin role list, and nothing else. This bot has its own
+`/link`; never point it back at the community bot's links. It has **no** `/adminrole`: the
+community bot's `AdminRole` table is the one list both bots read. That contract is
 written down in [docs/SHARED_DATABASE.md](docs/SHARED_DATABASE.md). Read it before touching
-`utils/db.js`, `utils/configStore.js`, `utils/blacklist.js` or the one-time link copy in
-`utils/linkedAccounts.js`.
+`utils/db.js`, `utils/configStore.js`, `utils/blacklist.js`, `utils/adminRoles.js` or the
+one-time link copy in `utils/linkedAccounts.js`.
 
 - CommonJS (`"type": "commonjs"`) — use `require`/`module.exports`, not ESM.
 - No build step and no linter. Unit tests live in `test/` and run with `npm test` (Node's built-in
@@ -222,9 +223,10 @@ Global command propagation can take up to an hour on Discord's side. The diff co
 - **Permissions:** two separate systems. `permissionsRequired` is enforced generically by
   `handleCommands.js` (used for real Discord permissions like `Administrator`). Bot-admin
   gating is done *inside* the callback with `await isAdmin(interaction.member)` from
-  `utils/adminRoles.js`, which reads the bridge's own role list (set with `/adminrole`,
-  stored in `tribridge.config`) from memory. **It is `async` and it fails closed** — no roles
-  set means nobody is an admin, because `/send` runs arbitrary commands as a Minecraft account. Follow the existing pattern for the command type you're adding, and
+  `utils/adminRoles.js`, which reads the community bot's `AdminRole` table (set with that bot's
+  `/adminrole`) for the bridge's Discord server, cached for 15 seconds. **It is `async` and it
+  fails closed** — no roles set, or a database it cannot read, means nobody is an admin, because
+  `/send` runs arbitrary commands as a Minecraft account. Follow the existing pattern for the command type you're adding, and
   don't drop the `await`: a bare promise is truthy, so `if (!isAdmin(...))` would let
   *everybody* through.
 - **Querying Hypixel:** use `queryGuild(record, chatCommand, opts)` from `utils/queryGuild.js`.
@@ -387,8 +389,8 @@ here fails without them.
 It caches for 15 seconds and clears on its own writes, so it only lags behind the community
 bot's side.
 
-TriBridge's own settings — the guild registry, the global profile change, the audit channel, the
-admin roles and the account links —
+TriBridge's own settings — the guild registry, the global profile change, the audit channel and
+the account links —
 live in the same database, in its own `tribridge` schema, through `utils/configStore.js`. They are
 loaded once at startup (`load()`, awaited in `index.js`) and read synchronously from memory after
 that, so they add no query to the message path. Writes are `async` and go through `configStore.commit()`:
@@ -453,8 +455,8 @@ whoever holds the code can complete the sign-in with *their own* Microsoft accou
 ## Files to leave alone
 
 `.env`, `.minecraft-auth/`, `guildsConfig.json`, `globalProfileConfig.json`,
-`auditChannelConfig.json`, `adminRolesConfig.json`, `linkedAccountsConfig.json`, `.idea/` —
-local/secret state. The five `*Config.json` files are
+`auditChannelConfig.json`, `linkedAccountsConfig.json`, `.idea/` —
+local/secret state. The four `*Config.json` files are
 the import source and the database snapshots. Only `configStore.js` writes them; nothing else may
 delete or rewrite them. Never print or commit token,
 auth-cache, database-URL or account-address contents.

@@ -6,33 +6,32 @@ TriBridge has **two** permission systems, and they are separate on purpose.
 
 | System                 | Checked                 | Used by                                        |
 |------------------------|-------------------------|------------------------------------------------|
-| **Discord permission** | Before the command runs | `/adminrole` only — it needs **Administrator** |
-| **Bot-admin role**     | Inside the command      | Everything else that is admin-gated            |
+| **Discord permission** | Before the command runs | Nothing on TriBridge today                     |
+| **Bot-admin role**     | Inside the command      | Everything that is admin-gated                 |
 
 Bot-admin is a **flat list of Discord role ids**. Anyone holding any of those roles is an admin as far as the
 bot is concerned.
 
-The list is the **bridge's own**. The THG Community bot keeps a separate admin role list with its own
-`/adminrole`, so being staff on one bot does not make anyone staff on the other. The two bots share the
-database and the [blacklist](/tribridge/blacklist), and nothing else.
+The list is **shared with the THG Community bot**: it is set there, with the community bot's `/adminrole`, and
+TriBridge reads it from the shared database. One list decides who is staff on both bots. TriBridge has no
+`/adminrole` of its own.
 
 ## Setting it up
+
+On the community bot, someone with the Discord **Administrator** permission runs:
 
 ```
 /adminrole add role:@Staff
 /adminrole remove role:@Staff
-/adminrole list
+/adminrole show
 ```
 
-`/adminrole` itself requires the Discord **Administrator** permission, because it is the command that decides
-who else is an admin. Everything else defers to the list.
+Until at least one role is added, nothing admin-gated works on either bot. That is the intended starting state,
+not a bug — do this during [installation](/tribridge/installation).
 
-Until at least one role is added, nothing admin-gated works for anyone except a Discord administrator running
-`/adminrole`. That is the intended starting state, not a bug — do this during
-[installation](/tribridge/installation).
-
-The list is stored in the database, with `adminRolesConfig.json` as its local snapshot. See
-[Config files](/tribridge/config-files).
+TriBridge caches the list for 15 seconds, so a change made on the community bot takes effect here within that.
+If the database cannot be read, **nobody is an admin**: failing open would hand `/send` to anybody during an
+outage.
 
 ## What bot-admin unlocks
 
@@ -53,9 +52,9 @@ This is the single most important guard in the bot. Without it:
 
 1. Anyone can add the bot to a server they own — a bot in a public server can be invited elsewhere.
 2. They hold **Administrator** there, because it is their server.
-3. So they can run `/adminrole add` on a role they control.
-4. The admin list has no server dimension — it is role ids and nothing else.
-5. They now hold bot-admin over **your** server, including `/send`.
+3. Admin roles are looked up for the server a command comes from, and the owner of that server can set them
+   with the community bot's `/adminrole` if it is there too.
+4. They now hold bot-admin over the bridge's Minecraft accounts, including `/send`.
 
 The server is resolved at startup from the bridge channel, or named explicitly with `DISCORD_GUILD_ID`. It
 **fails closed**: if it cannot be resolved, every command is refused rather than falling back to permissive

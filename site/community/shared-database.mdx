@@ -4,15 +4,16 @@ description: "PostgreSQL contract between THG Community and TriBridge."
 ---
 
 This bot and [TriBridge](/tribridge) are two processes serving one Discord server, and their features are
-**separate**. Each has its own account links and its own bot-admin roles: linking or being staff on one bot
-does not carry over to the other. They share two things only — **the PostgreSQL database** and **the
-blacklist**.
+**separate**. Each has its own account links: linking on one bot does not carry over to the other. They share
+three things only — **the PostgreSQL database**, **the blacklist** and **the bot-admin roles**.
 
 **This bot owns the `public` schema.** `prisma/schema.prisma` defines every table there, and migrations create
-them. TriBridge keeps its own settings, links and admin roles in its own `tribridge` schema in the same
-database. This bot neither reads nor writes that schema.
+them. TriBridge keeps its own settings and links in its own `tribridge` schema in the same database. This bot
+neither reads nor writes that schema.
 
-## The one shared table: `Blacklist`
+## Shared tables
+
+### `Blacklist`
 
 | Table       | This bot                                                     | TriBridge                                                   |
 |-------------|--------------------------------------------------------------|-------------------------------------------------------------|
@@ -22,6 +23,16 @@ TriBridge writes with plain SQL, so the table's `id` and `updatedAt` defaults mu
 client-side Prisma default would make every bridge insert fail. Both sides cache the list for fifteen seconds
 and **fail open** — an unreadable database blacklists nobody, because failing closed would stop both bots during
 an outage.
+
+### `AdminRole`
+
+| Table       | This bot                                       | TriBridge                                               |
+|-------------|------------------------------------------------|---------------------------------------------------------|
+| `AdminRole` | Writes it with `/adminrole`, and reads it      | Reads it for its own admin commands; never writes it    |
+
+One list decides who is staff on both bots. TriBridge reads the rows for its Discord server and caches them for
+fifteen seconds, so a change here reaches the bridge within that. Both sides **fail closed**: an unreadable
+database makes nobody an admin, because the bridge's `/send` runs any command as a Minecraft account.
 
 ## A one-time read of `MinecraftLink`
 
