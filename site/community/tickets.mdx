@@ -1,0 +1,59 @@
+---
+title: "Tickets"
+description: "Open a private channel with staff from the ticket panel."
+---
+
+Members open a private channel with staff by pressing a button on the ticket panel. Each ticket has a number
+and a channel called `ticket-0042`. The member fills in a short form first, and a transcript goes to the log
+when the ticket closes.
+
+## Opening a ticket
+
+Press the button for what your ticket is about:
+
+| Type | You are asked |
+|------|---------------|
+| **Support** | What you need help with |
+| **Guild application** | Your Minecraft name, SkyBlock level and why you want to join |
+| **Report a member** | Who you are reporting and what happened |
+
+A guild application checks your Minecraft name with Mojang, and a name that doesn't exist is refused. If you
+have linked your account with `/link`, your name is filled in for you.
+
+You can have **one open ticket of each type**. Pressing the same button again points you to the one you have.
+
+Only you, the ticket staff and the bot can see the channel.
+
+## Inside a ticket
+
+- **Claim** (staff) shows who is handling the ticket. Press it again to unclaim.
+- **Close** asks for an optional reason. You can close your own ticket, and staff can close any ticket.
+- `/ticket add user` and `/ticket remove user` (staff) bring another member in or take them out.
+- `/ticket close [reason]` works like the Close button.
+
+When a ticket closes, you get a DM with the reason, the transcript goes to the staff log, and the channel is
+deleted a few seconds later. Staff can reopen a closed ticket from the log for 24 hours. It gets a new
+channel with the same number.
+
+## Setting it up (staff)
+
+On the **Tickets** page of `/setup`, pick:
+
+- the **panel channel**
+- the **category** where ticket channels are made
+- the **staff role**
+- the **log channel**
+
+Then press **Post the panel**. Posting again replaces the old panel. Members can't open tickets until a
+category is set.
+
+The bot needs these permissions:
+
+- **Manage Channels** and **Manage Roles** server-wide. Manage Roles is Discord's name for editing a
+  channel's permission overwrites, which `/ticket add` and `/ticket remove` do. The bot never gives anybody
+  a role.
+- View Channel, Send Messages, Embed Links, Attach Files and Read Message History in the category.
+- Attach Files in the log channel.
+
+Transcripts need the **Message Content** intent switched on for the bot in the Discord Developer Portal.
+Without it, the transcript lists the messages but not their text.

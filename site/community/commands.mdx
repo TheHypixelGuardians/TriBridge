@@ -43,6 +43,17 @@ See [Account linking](/community/account-linking) for verification rules.
 | Command | Description |
 |---------|-------------|
 | `/adminrole add\|remove\|show` | The Discord roles that count as bot-admin on both bots (bot admins and server admins) |
+| `/setup` | One panel, a page per area: log channel, request channel, admin roles, tickets (bot admins and server admins) |
 
 The admin-role list is **shared with TriBridge** — one list decides who is staff on both bots. See
 [Shared database](/community/shared-database).
+
+## Tickets
+
+| Command | Description |
+|---------|-------------|
+| `/ticket add <user>` | Let a member into the ticket the command is run in (ticket staff) |
+| `/ticket remove <user>` | Take a member back out of the ticket (ticket staff) |
+| `/ticket close [reason]` | Close the ticket: transcript to the log, DM to the member (the member who opened it, or staff) |
+
+Tickets are opened from the panel's buttons, not a command. See [Tickets](/community/tickets).

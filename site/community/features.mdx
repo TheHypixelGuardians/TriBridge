@@ -3,7 +3,7 @@ title: "Features"
 description: "What the THG Community bot does today and what is planned."
 ---
 
-Early alpha (`0.0.1-alpha.1`). The items below reflect what ships today unless marked as scaffolded.
+Early alpha (`0.0.1-alpha.1`). The items below are what ships today.
 
 ## Shipped
 
@@ -13,11 +13,11 @@ Early alpha (`0.0.1-alpha.1`). The items below reflect what ships today unless m
 | **Help** | `/help` lists slash commands by category with a Components V2 select menu |
 | **User info & ping** | `/info` and `/ping` |
 | **Automatic user registration** | Every non-bot command ensures a `User` row exists first — see [User management](/community/user-management) |
-| **Localization** | Dutch (`nl`, default), English, and Spanish via `t()` / `tWithUser()` |
 | **Account linking** | `/link`, `/unlink`, `/whois`, `/links` — the community bot's own links, separate from [TriBridge](/tribridge)'s |
 | **Feature requests** | `/request`, `/requestchannel`, `/requeststatus` |
 | **Bot-admin roles** | `/adminrole` — the staff roles, shared with TriBridge |
-| **Per-server setup storage** | Ticket, automod, link-role, request-channel, and log-channel settings in the `Setup` table |
+| **Tickets** | Panel buttons open a private channel with staff, with a short form, claim, close with transcript and reopen — see [Tickets](/community/tickets) |
+| **Server setup** | `/setup` — log channel, request channel, admin roles and tickets, stored in the `Setup` table |
 | **Error reporting** | Unhandled errors can post to a Discord channel when `ERROR_LOG_CHANNEL_ID` is set |
 | **Hot reload** | `yarn dev` reloads commands and events without a full process restart |
 
@@ -30,12 +30,14 @@ Early alpha (`0.0.1-alpha.1`). The items below reflect what ships today unless m
 | `MinecraftLink` | Minecraft name and UUID, related to `User.id` |
 | `AdminRole` | Discord roles that count as bot-admin on both bots |
 | `FeatureRequest` | `/request` submissions with a sequence `id` |
+| `Blacklist` | Members barred from both bots, written by TriBridge's `/blacklist` |
+| `Ticket` | One row per ticket: number, type, opener, claim, form answers, close details |
 
 See [Shared database](/community/shared-database) before changing `Blacklist`, the one table TriBridge writes.
 
-## Scaffolded (not yet commands)
+## Planned
 
-Moderation, tickets, and automod have schema and locale hooks but no shipped slash commands yet.
+Moderation and automod are next. The `Setup` table already has the automod columns.
 
 ## Not in this bot
 
