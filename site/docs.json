@@ -38,6 +38,10 @@
             "href": "https://github.com/TheHypixelGuardians/thg-community"
           },
           {
+            "label": "Privacy policy",
+            "href": "/privacy"
+          },
+          {
             "label": "TriBridge changelog",
             "href": "https://github.com/TheHypixelGuardians/TriBridge/blob/master/CHANGELOG.md"
           }
@@ -49,7 +53,7 @@
     "groups": [
       {
         "group": "Documentation",
-        "pages": ["index"]
+        "pages": ["index", "privacy"]
       }
     ],
     "products": [

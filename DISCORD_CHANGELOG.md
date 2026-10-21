@@ -15,6 +15,8 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 - The bridge has its own `/link` again, separate from the community bot's. If you were linked, your link was copied over, so you don't need to do anything.
 - Feature requests (`/request`) are on the community bot.
+- `/help` links our new privacy policy. Open a Support ticket to report a problem or ask for your data to be removed.
+- `/link` now tells you what linking means: your messages here go to guild chat, and a global profile change can show them under another linked member's name.
 
 ### Moderation
 

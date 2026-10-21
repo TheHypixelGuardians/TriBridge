@@ -190,6 +190,8 @@ Then restart the bot. New or changed slash commands take up to an hour to propag
 - **[Docs site](https://thehypixelguardians.mintlify.site)** — canonical public documentation (TriBridge +
   THG Community products; source in [`site/`](site/), preview with `cd site && npx mint dev`). See
   [site/README.md](site/README.md).
+- [Privacy policy](https://thehypixelguardians.mintlify.site/privacy) — what both THG bots store and how to
+  have it removed (source in [`site/privacy.mdx`](site/privacy.mdx))
 - [Features](docs/FEATURES.md) — the canonical in-repo description of everything the bot does
 - [Change log](CHANGELOG.md), and the [Discord change log](DISCORD_CHANGELOG.md) for the announcement channel
 - [Writing the changelog & releasing](docs/RELEASING.md)

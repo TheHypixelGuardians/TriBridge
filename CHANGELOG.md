@@ -12,6 +12,25 @@
     + Only the people the bot resolved are pinged: `@everyone`, `@here`, roles and raw `<@id>` text typed
       in-game ping nobody, and one line pings at most five people.
 
+### Improvements
+
+#### Information
+
++ `/help` now has a **Privacy policy** button, and its footer says that problems and data requests go through a
+  Support ticket.
+
+#### Documentation
+
++ Added a privacy policy for both THG bots on the docs site (`/privacy`): what is stored, the relay to guild
+  chat, linking as consent to reposts, retention, and how to ask for deletion.
++ Installation now asks for a bridge channel topic that says messages are sent to guild chat.
+
+#### Account Linking
+
++ The `/link` reply now says what linking agrees to: bridge-channel messages are relayed to guild chat, and a
+  global profile change can show messages under the member's name and head, or theirs under another linked
+  member's.
+
 ### Removed Features
 
 #### Information
