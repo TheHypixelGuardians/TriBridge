@@ -119,7 +119,7 @@
       },
       {
         "product": "THG Community",
-        "description": "Discord community bot — profiles, linking, requests",
+        "description": "Discord community bot — profiles, linking, requests, tickets",
         "icon": "users",
         "groups": [
           {
@@ -131,6 +131,7 @@
             "pages": [
               "community/commands",
               "community/account-linking",
+              "community/tickets",
               "community/user-management",
               "community/features"
             ]
