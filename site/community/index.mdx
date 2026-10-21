@@ -4,8 +4,8 @@ description: "The Discord community bot for The Hypixel Guardians — profiles, 
 ---
 
 **THG Community** is the Discord bot for the **THG** Hypixel SkyBlock guild community. It owns the Discord
-side of community life: member profiles, account linking, feature requests, tickets, server setup and
-SkyBlock lookups, with moderation and automod to come.
+side of community life: member profiles, account linking, feature requests, tickets, moderation, server setup
+and SkyBlock lookups, with automod to come.
 
 It is **not** a Minecraft bridge. There is no in-game account and no guild-chat relay — that is
 [TriBridge](/tribridge). SkyBlock features here talk to HTTP APIs only.
@@ -15,8 +15,8 @@ roles**. Everything else is separate: each has its own account links. See
 [Shared database](/community/shared-database).
 
 <Note>
-  Status: early alpha (`0.0.1-alpha.1`). Utility commands, account linking, feature requests and tickets work
-  today; moderation and automod are planned.
+  Status: early alpha (`0.0.1-alpha.1`). Utility commands, account linking, feature requests, tickets and
+  moderation work today; automod is planned.
 </Note>
 
 ## Start here
@@ -26,6 +26,7 @@ roles**. Everything else is separate: each has its own account links. See
 | **Using commands in Discord** | [Commands](/community/commands) |
 | **Linking your Minecraft account** | [Account linking](/community/account-linking) |
 | **Opening a ticket with staff** | [Tickets](/community/tickets) |
+| **Moderating the server** | [Moderation](/community/moderation) |
 | **Hosting or configuring the bot** | [Installation](/community/installation) |
 
 ## What this bot does
@@ -34,8 +35,8 @@ See [Features](/community/features) for the full list. Highlights:
 
 - **Member profiles** — `/profile` views or updates the database row created for every member who runs a
   command.
-- **Account linking** — `/link` binds Minecraft to Discord; [TriBridge](/tribridge) uses the same link for
-  guild-chat attribution.
+- **Account linking** — `/link` binds Minecraft to Discord, verified on a Minecraft server. [TriBridge](/tribridge)
+  keeps its own, separate links.
 - **Feature requests** — `/request` opens a form; admins move submissions through a status with
   `/requeststatus`.
 - **Bot-admin roles** — `/adminrole` names the staff roles, for this bot and TriBridge alike.

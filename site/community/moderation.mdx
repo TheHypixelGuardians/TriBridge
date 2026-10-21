@@ -1,0 +1,62 @@
+---
+title: "Moderation"
+description: "Warn, time out, kick and ban through the bot, with numbered cases and a mod log."
+---
+
+Moderators warn, time out, kick and ban members through the bot. Each action becomes a numbered **case**, is
+posted to the mod log and is sent to the member by DM.
+
+## Commands
+
+| Command | Needs | What it does |
+|---------|-------|--------------|
+| `/warn <user> <reason>` | Moderate Members | Records a warning and DMs it to the member |
+| `/timeout <user> <duration> [reason]` | Moderate Members | Discord's timeout: `30m`, `12h`, `7d`, at most 28 days |
+| `/untimeout <user> [reason]` | Moderate Members | Takes a timeout off early |
+| `/kick <user> [reason]` | Kick Members | Kicks the member, after the DM |
+| `/ban <user> [reason] [delete_messages]` | Ban Members | Bans a member, or a user who isn't in the server (paste their id). Can delete their last hour, day or week of messages |
+| `/unban <user> [reason]` | Ban Members | Lifts a ban |
+| `/purge <count> [user]` | Manage Messages | Deletes up to 100 recent messages in the channel, optionally only one user's |
+| `/cases <user>` | Moderate Members | The member's latest 25 cases |
+| `/case view <id>` | Moderate Members | One case |
+| `/case reason <id> <reason>` | Moderate Members | Changes the reason: your own cases, or any case as an admin |
+| `/case delete <id>` | Administrator or bot admin | Removes a case from the history. The mod log keeps a line |
+
+Members without the permission don't see the command. The permission is checked again when the command runs,
+because a server administrator can change who sees a command in Discord's settings.
+
+`/purge` skips pinned messages and messages older than 14 days, which Discord doesn't allow bots to delete in
+bulk.
+
+## Who can be acted on
+
+The bot refuses when:
+
+- the target is you, the bot or the server owner
+- the target's top role is equal to or above yours, unless you are the owner. Without this check anybody with
+  Kick Members could use the bot to kick someone above them, which Discord itself would refuse.
+- the target is a **bot admin** and you are not a server administrator, so a moderator can't remove the
+  people who run both bots
+- the bot's own role is not above the target's, or it lacks the permission
+
+## What the member is told
+
+The member gets a DM with what happened, in which server, the reason and the duration. It is sent **before**
+a kick or ban, since it can't reach them after, and after a warn or timeout. If their DMs are closed, the
+action still happens and the case records that the DM failed.
+
+## Cases and the mod log
+
+A case is written only **after** Discord accepted the action, so the history never shows a ban that didn't
+happen. Every case is posted to the mod log channel, which falls back to the general log channel. Purges,
+reason changes and deleted cases are logged there too.
+
+Actions taken by hand in Discord (right-click, Ban) don't go through the bot, so they are not cases.
+
+## Setting it up
+
+Run `/setup`, pick the **Moderation** page and choose the mod log channel.
+
+The bot's role needs **Moderate Members**, **Kick Members** and **Ban Members** for the matching commands, and
+**Manage Messages** plus **Read Message History** in a channel for `/purge`. Its role must sit above the roles
+of the members it acts on. No extra intent is needed.
