@@ -24,6 +24,7 @@
 + Added a privacy policy for both THG bots on the docs site (`/privacy`): what is stored, the relay to guild
   chat, linking as consent to reposts, retention, and how to ask for deletion.
 + Installation now asks for a bridge channel topic that says messages are sent to guild chat.
++ The privacy policy now says the database is stored on our own privately run server.
 
 #### Account Linking
 
