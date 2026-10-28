@@ -375,6 +375,9 @@ chat.
   everything the bot is responsible for.
 - **`/help`** — every command, one page per category, with ◀ / ▶ buttons. The categories are the folder names
   under `src/commands/`, so adding a folder adds a page. Commands needing a Discord permission are marked ⛔.
+  It only lists what the member can run: commands marked `adminOnly` show only to bot-admin roles, and
+  `permissionsRequired` must be met (Administrator passes). Every page ends with "Missing a command? You only
+  see the ones your permissions in this server allow."
   The buttons stop working after five minutes. Every page links the
   [privacy policy](https://thehypixelguardians.mintlify.site/privacy) and says that problems and data requests
   go through a Support ticket: Discord requires an app to tell users where to report problems and ask for

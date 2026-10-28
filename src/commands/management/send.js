@@ -12,6 +12,8 @@ const {
 module.exports = {
   name: "send",
   description: "Send a command or message to the Minecraft server.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
   options: [
     {
       name: "message",

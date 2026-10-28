@@ -18,6 +18,10 @@
 
 + `/help` now has a **Privacy policy** button, and its footer says that problems and data requests go through a
   Support ticket.
++ `/help` only lists the commands you can run.
+    + Bot-admin commands (all of Management, `/links` and `/whois`) only show for members with a bot-admin role.
+    + Commands that need a Discord permission only show for members who have it.
+    + Every page says so: "Missing a command? You only see the ones your permissions in this server allow."
 
 #### Documentation
 

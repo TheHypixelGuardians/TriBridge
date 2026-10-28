@@ -21,6 +21,8 @@ module.exports = {
   name: "blacklist",
   description:
     "Block a member from both bots' commands and from the chat bridge.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
   options: [
     {
       name: "add",

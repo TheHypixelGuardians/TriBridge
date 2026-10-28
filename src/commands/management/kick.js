@@ -14,6 +14,8 @@ const {
 module.exports = {
   name: "kick",
   description: "Kick a member from a Hypixel guild.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
   options: [
     {
       name: "username",

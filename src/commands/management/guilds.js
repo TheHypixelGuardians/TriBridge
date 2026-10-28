@@ -97,6 +97,8 @@ function beginSignIn(guildKey, interaction) {
 module.exports = {
   name: "guilds",
   description: "Manage the Hypixel guilds this bot bridges.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
   options: [
     {
       name: "list",
