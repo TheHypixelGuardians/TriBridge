@@ -34,6 +34,8 @@ async function waitForSpawn(record) {
 module.exports = {
   name: "login",
   description: "Connect the bot to Hypixel.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
   options: [
     {
       ...GUILD_OPTION,

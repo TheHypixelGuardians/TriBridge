@@ -13,6 +13,8 @@ const {
 module.exports = {
   name: "demote",
   description: "Demote a member in a Hypixel guild.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
   options: [
     {
       name: "username",

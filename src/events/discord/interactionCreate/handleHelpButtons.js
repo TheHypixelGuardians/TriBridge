@@ -1,5 +1,6 @@
 const {
-  buildHelpPages,
+  helpPagesFor,
+  viewerOf,
   buildEmbed,
   buildButtons,
 } = require("../../../commands/information/help");
@@ -48,7 +49,10 @@ module.exports = async (client, interaction) => {
     });
   }
 
-  const pages = buildHelpPages();
+  const pages = helpPagesFor(await viewerOf(interaction));
+  if (pages.length === 0) {
+    return interaction.update({ components: [] });
+  }
   const newPage = Math.max(
     0,
     Math.min(

@@ -2,7 +2,7 @@
 
 Every command TriBridge answers to. Slash commands are registered **globally** but only accepted in the one
 Discord server the bot serves — see [Admin roles](Admin-Roles) for why. `/help` browses the same list in
-Discord, one page per category.
+Discord, one page per category, showing only the commands the member can run.
 
 ⛔ marks a command that needs the Discord **Administrator** permission. 🔒 marks one gated on a
 [bot-admin role](Admin-Roles).

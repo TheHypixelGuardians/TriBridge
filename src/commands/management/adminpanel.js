@@ -4,6 +4,8 @@ const { mainView } = require("../../utils/adminPanel");
 module.exports = {
   name: "adminpanel",
   description: "Open the admin panel to run and configure admin functions.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
 
   callback: async (client, interaction) => {
     if (!(await isAdmin(interaction.member))) {

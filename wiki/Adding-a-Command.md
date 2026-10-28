@@ -61,6 +61,8 @@ wording.
 | Bot-admin                 | `isAdmin(interaction.member)` inside the callback |
 | Anyone                    | Neither                                           |
 
+A bot-admin command also sets `adminOnly: true` on its module, so `/help` only lists it for bot-admins.
+
 Do not invent a third path, and do not add a dispatch route that skips the single-server guard in
 `handleCommands.js`. See [Admin roles](Admin-Roles).
 

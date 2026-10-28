@@ -6,6 +6,8 @@ module.exports = {
   name: "whois",
   description:
     "Look up a bridge account link by Discord user or Minecraft username.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
   options: [
     {
       name: "user",

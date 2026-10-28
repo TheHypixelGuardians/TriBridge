@@ -18,6 +18,8 @@ const {
 module.exports = {
   name: "mute",
   description: "Mute a member in a Hypixel guild's chat.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
   options: [
     {
       name: "username",

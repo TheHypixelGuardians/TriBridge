@@ -5,6 +5,8 @@ const { getAllLinks } = require("../../utils/linkedAccounts");
 module.exports = {
   name: "links",
   description: "List every Minecraft account linked on the bridge.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
 
   callback: async (client, interaction) => {
     if (!(await isAdmin(interaction.member))) {

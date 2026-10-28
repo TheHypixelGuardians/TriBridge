@@ -17,6 +17,8 @@ const {
 module.exports = {
   name: "promote",
   description: "Give a member a rank, in-game and on Discord.",
+  // Bot-admin roles only (checked in the callback); /help lists it only for them.
+  adminOnly: true,
   options: [
     {
       name: "user",
