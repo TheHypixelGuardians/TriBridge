@@ -100,6 +100,28 @@ prisma/schema.prisma        # User, Setup, MinecraftLink, AdminRole, FeatureRequ
 There are **two entry points** (`main.ts` and `dev.ts`) and they are not equivalent — production installs
 global error handlers and closes Prisma on shutdown; development does neither.
 
+## `/setup` and channel permissions
+
+When staff pick a channel or category in `/setup`, or a channel in `/requestchannel set`, the bot checks what
+it can do **in that exact channel**, including permission overwrites — not only what its role has server-wide.
+Discord sends those permissions with the picker, so the missing-permission warning matches what would fail on
+the first post.
+
+Checks run on all seven `/setup` picks: general **log**, **request**, and **Ping Diamond** channels; **ticket
+panel**, **ticket category**, and **ticket log**; and the **mod log** channel. Posting channels need **View
+Channel**, **Send Messages**, and **Embed Links**. The ticket category also needs **Attach Files** and **Read
+Message History**, plus **Manage Channels** and **Manage Roles** server-wide (the same pair tickets need when a
+channel is created). Log channels for tickets and moderation also need **Attach Files** for transcripts and case
+embeds.
+
+If setup passes but opening a ticket later fails with missing permissions, the category's overwrites may have
+changed since it was saved — reopen **Tickets** on `/setup` and pick the category again to refresh the warning.
+Opening a ticket still uses the saved category id from cache, which is why setup is stricter at pick time.
+
+`/purge` uses the same live channel permissions Discord sends with the command, instead of a cached permission
+calculation. See [Moderation](/community/moderation) and [Tickets](/community/tickets) for what each area needs
+day to day.
+
 ## Related
 
 - [Shared database](/community/shared-database) — PostgreSQL contract with [TriBridge](/tribridge)

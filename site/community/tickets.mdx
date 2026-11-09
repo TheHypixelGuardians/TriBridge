@@ -47,6 +47,10 @@ On the **Tickets** page of `/setup`, pick:
 Then press **Post the panel**. Posting again replaces the old panel. Members can't open tickets until a
 category is set.
 
+When you pick the panel, category, or log channel in `/setup`, the bot checks its permissions in that channel
+using what Discord sends with the picker (overwrites included). The warning lists anything still missing before
+the setting is saved.
+
 The bot needs these permissions:
 
 - **Manage Channels** and **Manage Roles** server-wide. Manage Roles is Discord's name for editing a
@@ -54,6 +58,10 @@ The bot needs these permissions:
   a role.
 - View Channel, Send Messages, Embed Links, Attach Files and Read Message History in the category.
 - Attach Files in the log channel.
+
+If `/setup` looked fine but a member cannot open a ticket, check that the bot still has the list above in the
+ticket category — a later overwrite change is only rechecked when staff pick that category again in `/setup`.
+Opening a ticket re-validates against the saved category from cache, not the picker.
 
 Transcripts need the **Message Content** intent switched on for the bot in the Discord Developer Portal.
 Without it, the transcript lists the messages but not their text.
