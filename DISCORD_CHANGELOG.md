@@ -7,6 +7,8 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ## Unreleased
 
+## Version 1.3.0
+
 ### Bridge
 
 - Typing `@name` in guild chat now pings that person here. Use their Minecraft name if they're linked, or their Discord name.

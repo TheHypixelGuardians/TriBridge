@@ -77,9 +77,9 @@ Before finishing any task that changes the bot, do all of the following:
 
 Releases: bump `version` in `package.json`, then in **both** [CHANGELOG.md](CHANGELOG.md) and
 [DISCORD_CHANGELOG.md](DISCORD_CHANGELOG.md) rename `## Unreleased` to `## Version X.Y.Z` and add a fresh
-empty `## Unreleased` above it. The bot is on a pre-release beta line — versions are `0.1.0-beta.N`, lowercase
-and no leading `v`, bumping the trailing number; ordinary semver (patch for fixes, minor for features, major
-for a config format existing `*Config.json` files can't be read as) resumes at `1.0.0`. Bumping `package.json`
+empty `## Unreleased` above it. Versions are ordinary semver with no leading `v` — patch for fixes, minor for
+features, major for a config format existing `*Config.json` files can't be read as — continuing from `1.3.0`
+(the `0.1.0-beta.N` builds were the run-up to it). Bumping `package.json`
 is the step that gets forgotten — it sat at `1.0.0` through three releases. Never tag or push tags unless
 asked.
 

@@ -44,17 +44,16 @@ characters** so it pastes as one message.
 
 ## Versioning
 
-The bot is on a pre-release beta line: versions look like `0.1.0-beta.1`, and each beta release bumps the
-trailing number. Lowercase `beta`, a dot before the number, no leading `v` — anything else is not valid
-semver, and npm copies it verbatim into `package-lock.json` rather than correcting it.
+Versions are ordinary semver, written `X.Y.Z` with no leading `v` — anything else is not valid semver, and npm
+copies it verbatim into `package-lock.json` rather than correcting it. Patch for fixes, minor for features,
+major for a config format existing `*Config.json` files can't be read as.
 
-Ordinary semver resumes at the first stable release, `1.0.0`: patch for fixes, minor for features, major for a
-config format existing `*Config.json` files can't be read as. The `Version 1.0.0` to `Version 1.2.1` sections
-in the changelog predate the beta line and are left alone.
+The short-lived `0.1.0-beta.N` pre-release line between `1.2.1` and `1.3.0` was the run-up to `1.3.0`; its
+changes are listed under `Version 1.3.0`, and numbering continues from there.
 
 ## Cutting a release
 
-1. Bump `version` in `package.json` — the beta number, or the semver component above. This is the step that
+1. Bump `version` in `package.json` — the semver component above. This is the step that
    gets skipped; nothing else catches it.
 2. Rename `## Unreleased` to `## Version X.Y.Z` in **both** changelogs, and add a fresh empty `## Unreleased`
    above it in each.
