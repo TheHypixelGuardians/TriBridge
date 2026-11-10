@@ -22,11 +22,13 @@ posted to the mod log and is sent to the member by DM.
 | `/case reason <id> <reason>` | Moderate Members | Changes the reason: your own cases, or any case as an admin |
 | `/case delete <id>` | Administrator or bot admin | Removes a case from the history. The mod log keeps a line |
 
-Members without the permission don't see the command. The permission is checked again when the command runs,
-because a server administrator can change who sees a command in Discord's settings.
+Members without the permission don't see the command in `/help` either, for the same reason. The permission is
+checked again when the command runs, because a server administrator can change who sees a command in Discord's
+settings (those Integration overrides are not reflected in `/help`).
 
 `/purge` skips pinned messages and messages older than 14 days, which Discord doesn't allow bots to delete in
-bulk.
+bulk. It decides whether the bot can delete there from the channel permissions Discord sends with the command
+(overwrites included), not from a cached permission list.
 
 ## Who can be acted on
 
@@ -55,7 +57,9 @@ Actions taken by hand in Discord (right-click, Ban) don't go through the bot, so
 
 ## Setting it up
 
-Run `/setup`, pick the **Moderation** page and choose the mod log channel.
+Run `/setup`, pick the **Moderation** page and choose the mod log channel. Picking the mod log runs the same
+live channel check as other `/setup` channels: **View Channel**, **Send Messages**, **Embed Links**, and
+**Attach Files**, with overwrites included.
 
 The bot's role needs **Moderate Members**, **Kick Members** and **Ban Members** for the matching commands, and
 **Manage Messages** plus **Read Message History** in a channel for `/purge`. Its role must sit above the roles

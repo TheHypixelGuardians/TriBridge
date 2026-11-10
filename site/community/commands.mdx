@@ -4,7 +4,13 @@ description: "Every slash command the THG Community bot supports."
 ---
 
 Slash commands register **per guild**, so changes appear immediately after a restart — there is no global
-propagation delay. `/help` lists commands by category with a select menu.
+propagation delay. In Discord, `/help` lists commands by category with a select menu, but only the ones **you**
+are allowed to run. Empty categories are left out. This page is the full list.
+
+`/help` never lists `/pingdiamond`. Commands that need a bot-admin role only show for bot-admins; everything
+else follows each command's default member permission (server **Administrator** passes). Every page ends with:
+*Missing a command? You only see the ones your permissions in this server allow.* Per-command visibility tweaks
+under **Server Settings → Integrations** are not reflected in `/help` — it uses the command defaults.
 
 New commands go under `src/commands/categories/<category>/` as `@Discord()` + `@Category(...)` classes. A
 command without `@Category` still works but is invisible in `/help`.
@@ -13,7 +19,7 @@ command without `@Category` still works but is invisible in `/help`.
 
 | Command | Description |
 |---------|-------------|
-| `/help` | Browse slash commands by category |
+| `/help` | Browse slash commands you can run, by category |
 | `/ping` | Bot latency |
 | `/info [user]` | Discord user information |
 | `/profile action:view\|update` | View or refresh your community profile row |
@@ -35,7 +41,7 @@ See [Account linking](/community/account-linking) for verification rules.
 | Command | Description |
 |---------|-------------|
 | `/request` | Submit a feature request through a short form |
-| `/requestchannel set\|show` | Where feature requests are posted (admin only) |
+| `/requestchannel set\|show` | Where feature requests are posted (admin only). `set` checks the bot can post in the picked channel, the same way `/setup` does |
 | `/requeststatus <id> <status>` | Mark a request accepted, denied, planned, or duplicate (admin only) |
 
 ## Management
