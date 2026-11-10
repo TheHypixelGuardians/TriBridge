@@ -78,15 +78,12 @@ During development entries go under the same `## Unreleased` heading the main ch
 
 ## Versioning
 
-The bot is on a **pre-release beta line**. Versions look like `0.1.0-beta.1`, and each beta release bumps the
-trailing number.
-
-Write it exactly that way — lowercase `beta`, a dot before the number, no leading `v`. Anything else is not
-valid semver, and npm does not normalise it: it copies whatever it finds in `package.json` straight into
+Versions are ordinary **semver**, written as plain `X.Y.Z` with no leading `v`. Anything else is not valid
+semver, and npm does not normalise it: it copies whatever it finds in `package.json` straight into
 `package-lock.json`, so one malformed version ends up in two files and every tool that parses it disagrees
 about what the release is.
 
-When the beta line ends, the first stable release is `1.0.0` and ordinary semver takes over:
+Pick the component to bump by what the release contains:
 
 | Bump      | For                                                               |
 |-----------|-------------------------------------------------------------------|
@@ -94,15 +91,16 @@ When the beta line ends, the first stable release is `1.0.0` and ordinary semver
 | **minor** | Features                                                          |
 | **major** | A config format an existing `*Config.json` file cannot be read as |
 
-> The `## Version 1.0.0` through `## Version 1.2.1` sections in the changelog predate the beta line. They are
-> the history of the bot before it, and they stay as they are — nothing renumbers them.
+> Between `1.2.1` and `1.3.0` the bot briefly ran a `0.1.0-beta.N` pre-release line. Those builds were the
+> run-up to `1.3.0` and have no changelog section of their own — their changes are listed under
+> `## Version 1.3.0`. Numbering simply continues from `1.3.0`.
 
 ## Releasing
 
-1. **Bump `version` in [package.json](../package.json)** — the beta number, or the semver component above.
+1. **Bump `version` in [package.json](../package.json)** — the semver component above.
    This is the step that gets skipped: `package.json` sat at `1.0.0` through three releases because the
    release commit only touched the two changelogs. Nothing else in this list catches it.
-2. **Rename `## Unreleased` to `## Version X.Y.Z`** — `## Version 0.1.0-beta.1` on the beta line — in **both**
+2. **Rename `## Unreleased` to `## Version X.Y.Z`** — e.g. `## Version 1.3.0` — in **both**
    [CHANGELOG.md](../CHANGELOG.md) and [DISCORD_CHANGELOG.md](../DISCORD_CHANGELOG.md), and add a fresh empty
    `## Unreleased` above it in each.
 3. **Check the version-bearing docs** — [README.md](../README.md) and

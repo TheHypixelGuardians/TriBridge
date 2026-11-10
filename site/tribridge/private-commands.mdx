@@ -1,0 +1,89 @@
+---
+title: "Private Commands"
+description: "Friend a bridge bot in-game and /msg it commands like !online."
+---
+You can use the bridge from inside Hypixel, without opening Discord. Add a bridge bot as a friend, then send it
+commands by private message:
+
+```
+/friend add <bot name>
+/msg <bot name> !online
+```
+
+The bot answers by private message too.
+
+> Private commands are switched on **per guild** by an admin. If the bot never accepts your friend request,
+> ask staff whether it has been turned on.
+
+## Becoming friends
+
+The bot accepts your friend request straight away **if you are a member of any guild the bridge serves**. It
+does not have to be the bot of your own guild: any bridge bot with private commands on will do.
+
+If the bot can't check the guild rosters right then (for example, a bot is reconnecting), it leaves your request
+pending rather than accepting it. Hypixel lets the request expire after a few minutes, and you can just send it
+again.
+
+When you **leave or are kicked from** a bridged guild, the bots remove you as a friend. That keeps their friend
+lists from filling up, since Hypixel caps how many friends one account can have. If you moved to another
+bridged guild, send a new request.
+
+## Commands
+
+Every command starts with `!`. Type `!help` for the list, or `!help <command>` for one command.
+
+| Command                 | Does                                                                       |
+|-------------------------|----------------------------------------------------------------------------|
+| `!help [command]`       | List the commands, or explain one                                          |
+| `!online [tag] [page]`  | Who is online in every guild. With a tag, the full list for that guild     |
+| `!members`              | How many members each guild has, and how many are online                   |
+| `!guilds`               | The guilds the bridge serves, and whether each bot is connected            |
+| `!me`                   | Your guild, and whether your account is linked to Discord                  |
+| `!ping`                 | Check that the bot is listening, and its ping to Hypixel                   |
+| `!about`                | The bridge version and how long it has been running                        |
+
+Short forms work too: `!o` for `!online`, `!count` for `!members`, `!version` for `!about`.
+
+`!online` on its own gives one line per guild, like `[SB] 12: Notch, jeb_, ... +4`. For everyone, ask for one
+guild by its tag: `!online sb`. Long lists come in pages, so use `!online sb 2` for the next one.
+
+## Limits
+
+- **One command every few seconds.** Commands sent faster than that are ignored. Some commands, such as
+  `!online`, have a longer cooldown, and the bot tells you how long to wait.
+- **Replies are short.** A reply is at most five messages, because every message the bot sends counts toward
+  Hypixel's spam limit, and the bot shares that limit with guild chat.
+- **Members only.** If you leave the bridged guilds, the bot stops answering and removes you as a friend.
+- **Blacklisted members are refused.** If your Minecraft account is [linked](/tribridge/account-linking) to a
+  Discord account on the [blacklist](/tribridge/blacklist), the bot says so and does nothing else.
+- There is no in-game way to look up other people's account links. That stays a bot-admin command
+  (`/whois`) on Discord.
+
+## For admins
+
+Switch it on per guild:
+
+```
+/guilds edit guild:sb privatecommands:True
+```
+
+It's off by default, including for guilds registered before this feature existed. `/guilds list` marks guilds
+that have it on with 💬. Turn it on for as many guilds as you like. Each bot accepts members of **every**
+bridged guild, so one is enough for everybody.
+
+- **Membership is checked every time.** It's checked when the friend request arrives and again on every
+  command, against the live `/guild list` of every connected guild (cached for five minutes). If the check
+  can't be completed, the request or command is refused. An accepted friend stays until removed, so failing
+  open here would be permanent.
+- **Every accepted and ignored request is logged** to the guild's log channel. An ignored request is logged at
+  most once an hour per player.
+- **The friend list is capped by Hypixel.** Leavers are removed automatically, but a large guild can still fill
+  a bot's list. Spread members across several bots by turning the flag on for more than one guild.
+- Replies go through the same rate-limited chat queue as relayed guild chat, so a burst of commands can slow
+  the bridge for a moment. Replies still waiting after 30 seconds are dropped.
+
+## Next
+
+- [Commands](/tribridge/commands)
+- [Hypixel guilds](/tribridge/hypixel-guilds)
+- [Account linking](/tribridge/account-linking)

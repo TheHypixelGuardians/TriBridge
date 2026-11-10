@@ -24,6 +24,7 @@ repair a broken registry — which is why Discord comes up even when no Minecraf
 | `enabled`            | `false` disconnects the guild without removing it                                                               |
 | `crossBridge`        | `true` shares chat with the other cross-bridged guilds — see [Guild-to-guild bridging](/tribridge/guild-to-guild-bridging) |
 | `crossBridgeOfficer` | `true` shares [officer chat](/tribridge/officer-chat) in-game with the other guilds that have it on                        |
+| `privateCommands`    | `true` makes the bot accept members' friend requests and answer [private commands](/tribridge/private-commands)            |
 | `hypixelGuildId`     | Learned when `HYPIXEL_API_KEY` is set — Hypixel's guild `_id` for this bot's account                                       |
 
 > **`key` and `account` cannot be changed.** `account` is the key prismarine-auth hashes for its token cache,
@@ -66,6 +67,7 @@ guild, because it runs arbitrary commands as a Minecraft account.
 /guilds edit guild:sb logchannel:#sb-log auditchannel:#sb-audit
 /guilds edit guild:sb officerchannel:#officer-chat
 /guilds edit guild:sb enabled:False
+/guilds edit guild:sb privatecommands:True
 /guilds edit guild:sb clear:Log and audit channels
 ```
 
@@ -110,8 +112,9 @@ Repeats the device-code flow for a guild whose token has expired or been revoked
 ```
 
 Every registered guild with its connection status, its tag and colour, its channels, a 🔁 on the guilds taking
-part in [guild-to-guild bridging](/tribridge/guild-to-guild-bridging) and a 🛡️ on those sharing
-[officer chat](/tribridge/officer-chat). Account addresses are masked.
+part in [guild-to-guild bridging](/tribridge/guild-to-guild-bridging), a 🛡️ on those sharing
+[officer chat](/tribridge/officer-chat) and a 💬 on those answering
+[private commands](/tribridge/private-commands). Account addresses are masked.
 
 ## With only one guild
 
