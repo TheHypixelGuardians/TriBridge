@@ -15,6 +15,12 @@ THG Community bot's `/adminrole`.
 Not slash commands. Typed in the bridge channel (or officer channel): **[guild tags](/tribridge/guild-tags)**.
 `!sb hey` sends to one guild only. Double the `!` to send one literally: `!!sb hi` arrives as `!sb hi`.
 
+## In-game private commands
+
+Not slash commands either. In Hypixel, friend a bridge bot and `/msg` it: `!help`, `!online [tag] [page]`,
+`!members`, `!guilds`, `!me`, `!ping`, `!about`. Members of a bridged guild only, and only for guilds that have
+private commands switched on. See [Private commands](/tribridge/private-commands).
+
 SkyBlock networth lookups live on the **THG community bot** as `/networth` — TriBridge no longer answers
 `!nw` / `/networth`.
 
@@ -81,7 +87,7 @@ what was meant.
 |-----------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|
 | `/guilds list`                                                                                                                                | Every registered guild and its connection status    |
 | `/guilds add <key> <name> <tag> <account> [color]`                                                                                            | Register a guild and sign its Minecraft account in  |
-| `/guilds edit <guild> [name] [tag] [color] [logchannel] [auditchannel] [officerchannel] [enabled] [crossbridge] [crossbridgeofficer] [clear]` | Change a guild                                      |
+| `/guilds edit <guild> [name] [tag] [color] [logchannel] [auditchannel] [officerchannel] [enabled] [crossbridge] [crossbridgeofficer] [privatecommands] [clear]` | Change a guild                                      |
 | `/guilds default <guild>`                                                                                                                     | Choose the guild commands act on when none is given |
 | `/guilds remove <guild> [confirm]`                                                                                                            | Unregister a guild and disconnect its bot           |
 | `/guilds auth <guild>`                                                                                                                        | Sign a guild's Minecraft account in again           |
@@ -92,7 +98,8 @@ remove the default guild.
 `officerchannel` opens a **two-way** [officer chat](/tribridge/officer-chat) channel: everyone who can post in it is
 speaking in officer chat in-game. Several guilds may point at the same channel and share it, with `!tag`
 picking which one a reply reaches. `crossbridgeofficer` separately shares officer chat between the guilds
-in-game; it is independent of `crossbridge`.
+in-game; it is independent of `crossbridge`. `privatecommands` makes the guild's bot accept friend requests
+from members and answer [private commands](/tribridge/private-commands) sent with `/msg`.
 
 ## Requests
 

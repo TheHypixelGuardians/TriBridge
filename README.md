@@ -27,6 +27,8 @@ all.
 - **Account linking** — members link with the bridge's own `/link` (separate from the community bot's), and
   their Discord messages are reposted with their Minecraft head and name, with the guild-chat copy attributed
   to their Minecraft name.
+- **Private commands** — members friend a bridge bot in-game and `/msg` it `!online`, `!help` and more;
+  accepted only from members of a bridged guild, opt-in per guild.
 - **Hypixel guild registry** — `/guilds` registers, edits and signs guilds in entirely from Discord; the
   Microsoft device code arrives in a private reply, never the console.
 - **Auto-reconnect** — dropped accounts come back on their own, one guild per ten-second tick so a Hypixel
@@ -150,7 +152,9 @@ Full walkthrough: [Installation](https://thehypixelguardians.mintlify.site/tribr
 | `/ping`                                     | Information | Discord latency and each guild's Minecraft connection status              |
 | `/help`                                     | Information | Browse all commands by category                                           |
 
-Guild tags (`!tag message`) aim a bridge message at one guild. Full reference:
+Guild tags (`!tag message`) aim a bridge message at one guild. In-game, members can `/msg` a bridge bot
+[private commands](https://thehypixelguardians.mintlify.site/tribridge/private-commands) such as `!online` once
+an admin turns them on with `/guilds edit privatecommands:True`. Full reference:
 [Commands](https://thehypixelguardians.mintlify.site/tribridge/commands).
 
 ## Usage

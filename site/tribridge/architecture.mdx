@@ -184,6 +184,32 @@ Hypixel's **English** chat output, and inherently brittle. It lives in one place
 the same lines. Keep the documented format comment next to any regex you add or change, and keep the officer
 pattern separate — see [Officer chat](#officer-chat) for why.
 
+## Private commands
+
+A member friends a bridge bot and `/msg`s it `!online`. Three handlers in `events/minecraft/message/`, each
+inert unless the guild has `privateCommands` on in the registry:
+
+- **`acceptFriendRequests.js`** sends `/friend accept` when `guildRoster.findMembership()` finds the sender in
+  any bridged guild. Inconclusive means no: an accepted friend persists, so this fails **closed**, the
+  opposite of `/link`.
+- **`privateCommands.js`** hands a parsed DM to `handleDirectMessage()` in `utils/privateCommands.js`, which
+  re-checks membership (a clean miss also unfriends), the blacklist through the link, a per-player gap and
+  per-command cooldowns, then runs `src/privateCommands/<category>/<name>.js`. The folder is the `!help`
+  category. A command declares a `permission`. Only `member` exists, and the loader refuses any other level
+  instead of running it for everyone. It also refuses a name or alias claimed twice.
+- **`trackRosterChanges.js`** invalidates the roster cache on join/leave/kick, and on leave/kick sends
+  `/friend remove` from every bot with the flag on. No roster check is needed first, because a player is in at
+  most one Hypixel guild.
+
+The parsers live in `utils/privateChat.js`. They are anchored and use `[^\]]+` for the rank, so a lobby line
+like
+`[VIP] Mallory: [a] Notch left the guild!` cannot pass for a departure. A DM must be a single-line message.
+Replies go through `privateReply.sendPrivateReply()`, which sanitises every line, splits it into
+`/msg <name> …` packets under 100 characters, caps a reply at five packets and sends them through `sendChat`
+with a 30-second `maxAgeMs`. `isOwnAccountName()` stops two bridge bots that are friends from answering each
+other's replies forever, and `queryGuild`'s `isPlayerChat()` leaves DMs (both directions) out of collected
+command output.
+
 ## Relay loops
 
 This is the part to understand before touching a relay.
@@ -319,6 +345,7 @@ code can complete the sign-in with their own Microsoft account.
 Running the bot connects to live Discord and Hypixel — don't start it to "verify" a change. A good deal is
 testable offline against fakes: `utils/chatRouting.js`, `utils/guilds.js`, `utils/crossBridge.js`,
 `utils/queryGuild.js` (drive it with a bare `EventEmitter` whose `chat()` emits stub messages), `retireBot`,
+`utils/guildRoster.js`, `utils/privateReply.js`, `utils/privateCommands.js`,
 `utils/chatQueue.js` and `utils/areCommandsDifferent.js` are all pure or injectable.
 
 ## Next

@@ -77,9 +77,9 @@ Before finishing any task that changes the bot, do all of the following:
 
 Releases: bump `version` in `package.json`, then in **both** [CHANGELOG.md](CHANGELOG.md) and
 [DISCORD_CHANGELOG.md](DISCORD_CHANGELOG.md) rename `## Unreleased` to `## Version X.Y.Z` and add a fresh
-empty `## Unreleased` above it. The bot is on a pre-release beta line — versions are `0.1.0-beta.N`, lowercase
-and no leading `v`, bumping the trailing number; ordinary semver (patch for fixes, minor for features, major
-for a config format existing `*Config.json` files can't be read as) resumes at `1.0.0`. Bumping `package.json`
+empty `## Unreleased` above it. Versions are ordinary semver with no leading `v` — patch for fixes, minor for
+features, major for a config format existing `*Config.json` files can't be read as — continuing from `1.3.0`
+(the `0.1.0-beta.N` builds were the run-up to it). Bumping `package.json`
 is the step that gets forgotten — it sat at `1.0.0` through three releases. Never tag or push tags unless
 asked.
 
@@ -305,6 +305,16 @@ Global command propagation can take up to an hour on Discord's side. The diff co
   check, since a second gate on an already-restricted channel mostly produces silent drops.
   Document the rank requirement wherever this is described: the account needs to be able to read
   *and* send officer chat, and Hypixel reports neither failure.
+- **Private commands** (`/msg <bot> !online`) are inert unless a guild has `privateCommands` on. Parsers live in
+  `utils/privateChat.js`, anchored with `^`/`$` and with `[^\]]+` for the rank: a lazy `.+?` lets
+  `[VIP] Mallory: [a] Notch left the guild!` pass as a departure. A DM must be a single-line message.
+  Membership (`guildRoster.findMembership()`) **fails closed** for accepting friends and running commands,
+  and is never a reason to unfriend when inconclusive. `privateCommands.js` must drop
+  `isOwnAccountName()` senders, because every reply is itself a DM and two friended bots would answer each
+  other forever. Replies only through `privateReply.sendPrivateReply()` (sanitised, under 100 characters, five
+  packets, `sendChat` with `maxAgeMs`). Command modules live in `src/privateCommands/<category>/`. The loader
+  refuses an unknown `permission` level, so a staff command can never run for everyone by mistake. No in-game
+  command may expose what is bot-admin-only on Discord (hence no `!whois`).
 - **Routing Discord→Minecraft:** `routeMessage()` from `utils/chatRouting.js` decides which
   guilds a bridge message reaches (`!tag` for one, otherwise all). It is pure — test it there
   rather than through the handler. Pass `{ candidates }` when the channel serves only some guilds,
