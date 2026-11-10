@@ -225,6 +225,67 @@ switching on where officer channels are actually busy rather than everywhere by 
 Note this is separate from sharing a Discord channel. Two guilds can share one officer channel without
 `crossbridgeofficer`: their officers then read each other in Discord, but nothing crosses in-game.
 
+## Private commands
+
+Members can use the bridge from inside Hypixel. They add a bridge bot as a friend, then `/msg` it commands:
+
+```
+/friend add <bot name>
+/msg <bot name> !online
+```
+
+Switched on per guild, and **off by default**, including for guilds registered before it existed:
+
+```
+/guilds edit guild:sb privatecommands:True
+```
+
+`/guilds list` marks those guilds with 💬.
+
+- **Friend requests are accepted from members of any bridged guild**, not only the bot's own. Membership is read
+  off the live `/guild list` of every connected guild, cached for five minutes. A roster is read again when a
+  player joins, leaves or is kicked, and when a name is missing from a roster more than a minute old.
+- **It fails closed.** If a roster can't be read, the request stays pending (Hypixel expires it, and the member
+  can send another) and commands are refused with "try again". This is the opposite of `/link`, which fails
+  open, and deliberately so: an accepted friend stays until somebody removes it, so failing open here would be
+  permanent.
+- **Membership is checked on every command too**, not only when the friend request is accepted. A clean "not a
+  member" also removes the friend, which catches anybody who left while the bot missed the departure line.
+- **Leavers are unfriended.** When a player leaves or is kicked, every bot with private commands on removes
+  them, because any bot may have accepted them. A player is in at most one Hypixel guild, so no further check is
+  needed. Somebody moving between two bridged guilds just sends a new request. This exists because Hypixel caps
+  an account's friend list, and a full list would quietly stop new members getting in.
+- **Blacklisted members are refused** when their Minecraft account is linked to a blacklisted Discord account.
+- **Rate limits.** Commands from one player closer together than three seconds are ignored, and each command
+  has its own cooldown (`!online` is ten seconds). A message that isn't a command gets a pointer to `!help` at
+  most once every ten minutes, so an auto-responder can't loop with the bot. Another bridge bot's messages are
+  never answered: two bots that are friends would otherwise reply to each other's replies until both were
+  muted.
+- **Replies are capped at five messages.** Each reply line is sanitised and split into `/msg` packets under
+  Minecraft's 100 characters, then sent through the same per-account queue as relayed chat. Every packet
+  spends the rate budget the bridge needs, so long answers page (`!online sb 2`) rather than flood. A reply
+  still queued after 30 seconds is dropped.
+
+The commands, all for members:
+
+| Command                | Does                                                                   |
+|------------------------|------------------------------------------------------------------------|
+| `!help [command]`      | Lists the commands, or explains one                                    |
+| `!online [tag] [page]` | One line per guild (`[SB] 12: Notch, jeb_, ... +4`), or one guild in full |
+| `!members`             | Member and online counts per guild                                     |
+| `!guilds`              | The bridged guilds and whether each bot is connected                   |
+| `!me`                  | Your guild and your bridge link status                                 |
+| `!ping`                | Whether the bot is listening, and its ping to Hypixel                  |
+| `!about`               | Version and uptime                                                     |
+
+There is no in-game `!whois`: looking up somebody else's link is bot-admin-only on Discord (`/whois`), and an
+in-game copy would hand it to every member. Commands live in `src/privateCommands/<category>/<name>.js`, and
+the folder is the `!help` category. A command declares the permission level it needs, and only `member` exists
+today, so staff commands can be added later without a second dispatch path.
+
+The friend-request, DM and departure lines are matched against Hypixel's English output, like all chat
+parsing here. If Hypixel rewords them, the feature goes quiet rather than misbehaving.
+
 ## Account linking
 
 Members link a Minecraft account with **`/link <username>`**. The bridge keeps its **own** link list, separate

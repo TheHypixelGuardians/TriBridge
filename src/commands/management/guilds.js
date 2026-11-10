@@ -240,6 +240,13 @@ module.exports = {
           required: false,
         },
         {
+          name: "privatecommands",
+          description:
+            "Accept friend requests from members and answer !commands sent with /msg.",
+          type: ApplicationCommandOptionType.Boolean,
+          required: false,
+        },
+        {
           name: "clear",
           description:
             "Clear a per-guild channel so it falls back or switches off.",
@@ -330,9 +337,10 @@ async function handleList(interaction) {
     const marker = guild.key === defaultKey ? " ⭐" : "";
     const cross = guild.crossBridge === true ? " 🔁" : "";
     const officerCross = guild.crossBridgeOfficer === true ? " 🛡️" : "";
+    const privateCommands = guild.privateCommands === true ? " 💬" : "";
     const ign = guild.mcName ? ` as \`${guild.mcName}\`` : "";
     return (
-      `**${guild.name}** \`${guild.key}\` [${guild.tag}]${marker}${cross}${officerCross}\n` +
+      `**${guild.name}** \`${guild.key}\` [${guild.tag}]${marker}${cross}${officerCross}${privateCommands}\n` +
       `> ${mcBots.describeStatusLabel(guild.key)}${ign} · ${maskAccount(guild.account)} · ${guild.color}\n` +
       `> Log: ${guild.logChannelId ? `<#${guild.logChannelId}>` : "global"} · ` +
       `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : "global"} · ` +
@@ -349,6 +357,10 @@ async function handleList(interaction) {
     guilds.getOfficerCrossBridged().length > 0
       ? " · 🛡️ shares officer chat too"
       : "";
+  const privateFooter =
+    guilds.getPrivateCommandGuilds().length > 0
+      ? " · 💬 answers private commands"
+      : "";
 
   const embed = new EmbedBuilder()
     .setTitle("🌐 Hypixel guilds")
@@ -360,7 +372,8 @@ async function handleList(interaction) {
           ? "⭐ default · untagged messages go to every guild"
           : "⭐ default · untagged messages go to the default guild") +
         crossFooter +
-        officerCrossFooter,
+        officerCrossFooter +
+        privateFooter,
     });
 
   return interaction.reply({ embeds: [embed], ephemeral: true });
@@ -460,6 +473,9 @@ async function handleEdit(interaction) {
   if (crossBridgeOfficer !== null)
     patch.crossBridgeOfficer = crossBridgeOfficer;
 
+  const privateCommands = interaction.options.getBoolean("privatecommands");
+  if (privateCommands !== null) patch.privateCommands = privateCommands;
+
   const clear = interaction.options.getString("clear");
   if (clear === "log" || clear === "both") patch.logChannelId = null;
   if (clear === "audit" || clear === "both") patch.auditChannelId = null;
@@ -527,6 +543,15 @@ async function handleEdit(interaction) {
     );
   }
 
+  if (patch.privateCommands === true) {
+    notes.push(
+      "💬 This guild's bot now accepts friend requests from members of any bridged guild, " +
+        "and answers `!help`, `!online` and the rest sent to it with `/msg`.",
+      "It removes friends who leave or are kicked, but Hypixel caps an account's friend list — " +
+        "a large guild can fill it.",
+    );
+  }
+
   // The one moment an admin is guaranteed to read this. The security of the
   // officer bridge is entirely this channel's Discord permissions.
   if (patch.officerChannelId) {
@@ -557,6 +582,7 @@ async function handleEdit(interaction) {
       `> ${guild.enabled === false ? "Disabled" : "Enabled"} · ${guild.color} · ` +
       `Cross-bridge: ${guild.crossBridge === true ? "on" : "off"}` +
       `${guild.crossBridgeOfficer === true ? " (+ officer)" : ""} · ` +
+      `Private commands: ${guild.privateCommands === true ? "on" : "off"} · ` +
       `Log: ${guild.logChannelId ? `<#${guild.logChannelId}>` : "global"} · ` +
       `Audit: ${guild.auditChannelId ? `<#${guild.auditChannelId}>` : "global"} · ` +
       `Officer: ${guild.officerChannelId ? `<#${guild.officerChannelId}>` : "off"}` +

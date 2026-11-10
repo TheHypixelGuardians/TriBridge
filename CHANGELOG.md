@@ -12,6 +12,22 @@
     + Only the people the bot resolved are pinged: `@everyone`, `@here`, roles and raw `<@id>` text typed
       in-game ping nobody, and one line pings at most five people.
 
+#### Private Commands
+
++ Members can now use the bridge from inside Hypixel. Friend a bridge bot, then `/msg` it commands.
+    + Commands: `!help`, `!online [tag] [page]`, `!members`, `!guilds`, `!me`, `!ping` and `!about`.
+    + `!online` gives one line per guild, or one guild's full list in pages (`!online sb 2`).
+    + Friend requests are accepted straight away from members of any bridged guild. Requests are left pending
+      when membership can't be checked, and every accepted or ignored request is logged.
+    + Players who leave or are kicked are unfriended by every bot, and membership is checked again on every
+      command.
+    + Blacklisted members are refused. Commands have cooldowns, and a reply is at most five messages.
+
+#### Management
+
++ Added `privatecommands` to `/guilds edit`, which switches private commands on per guild. Off by default.
+  `/guilds list` marks those guilds with 💬.
+
 ### Improvements
 
 #### Information
@@ -60,6 +76,15 @@
 
 #### Core
 
++ Private commands: `utils/privateChat.js` (anchored DM, friend-request and roster-change parsers),
+  `utils/guildRoster.js` (`/guild list` membership cached for five minutes, shared refreshes, invalidated on
+  roster changes), `utils/privateReply.js` (sanitised `/msg` packets, at most five, through `sendChat`) and
+  `utils/privateCommands.js` (loader and dispatcher for `src/privateCommands/<category>/<name>.js`; refuses
+  duplicate names or aliases and unknown permission levels). The Minecraft handlers are
+  `acceptFriendRequests.js`, `privateCommands.js` and `trackRosterChanges.js`. Registry gains a
+  `privateCommands` flag.
++ The `/guild online` parser moved from `/online` into `utils/guildOnline.js` (`fetchOnline()`), shared with
+  `!online`. It now also reads `Total Members`.
 + Added `utils/mentions.js`, used by both Minecraft→Discord relays. A mention inside an embed renders but never
   notifies, so the resolved ids also go in the message content, with `allowedMentions` limited to exactly those
   users. Discord names are found with the REST member search, which needs no GuildMembers intent; lookups are

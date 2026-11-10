@@ -167,6 +167,21 @@ function getOfficerCrossBridged() {
 }
 
 /**
+ * Guilds whose bot accepts friend requests from members and answers private
+ * commands sent with `/msg`.
+ *
+ * Opt-in and absent from an existing config, so upgrading never starts a bot
+ * accepting friend requests nobody asked it to.
+ *
+ * @returns {object[]}
+ */
+function getPrivateCommandGuilds() {
+  return loadConfig()
+    .guilds.filter((g) => g.enabled !== false && g.privateCommands === true)
+    .map(copy);
+}
+
+/**
  * @param {string} key
  * @returns {object|null}
  */
@@ -359,6 +374,7 @@ async function add(input) {
       enabled: true,
       crossBridge: false,
       crossBridgeOfficer: false,
+      privateCommands: false,
       mcName: null,
       mcUuid: null,
       hypixelGuildId: null,
@@ -382,6 +398,7 @@ const PATCHABLE = new Set([
   "enabled",
   "crossBridge",
   "crossBridgeOfficer",
+  "privateCommands",
   "mcName",
   "mcUuid",
   "hypixelGuildId",
@@ -391,6 +408,7 @@ const BOOLEAN_FIELDS = new Set([
   "enabled",
   "crossBridge",
   "crossBridgeOfficer",
+  "privateCommands",
 ]);
 
 /**
@@ -535,6 +553,7 @@ module.exports = {
   getEnabled,
   getCrossBridged,
   getOfficerCrossBridged,
+  getPrivateCommandGuilds,
   get,
   getDefault,
   getByTag,

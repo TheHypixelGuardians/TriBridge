@@ -72,6 +72,7 @@
               "tribridge/using-the-bridge",
               "tribridge/guild-tags",
               "tribridge/account-linking",
+              "tribridge/private-commands",
               "tribridge/feature-requests",
               "tribridge/commands"
             ]

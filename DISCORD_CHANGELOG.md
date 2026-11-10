@@ -11,6 +11,10 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 - Typing `@name` in guild chat now pings that person here. Use their Minecraft name if they're linked, or their Discord name.
 
+### In-game commands
+
+- You can now use the bridge from Hypixel: `/friend add` a bridge bot, then `/msg` it `!online` to see who's online in every guild. Type `!help` for the other commands. The bot accepts members of any bridged guild, once staff turn it on.
+
 ### Linking
 
 - The bridge has its own `/link` again, separate from the community bot's. If you were linked, your link was copied over, so you don't need to do anything.
@@ -27,6 +31,7 @@ bullets, `> ` quotes. Tables, `+` bullets and links with titles do not render.
 
 ### Fixes
 
+- A private message to a bridge bot can no longer slip into a staff command's reply in Discord.
 - Typing something that looks like officer chat (`Officer > Boss: …`) no longer shows up in the officer channel as if Boss said it. The same goes for fake guild chat sent in a private message.
 - A stray `§` in a message no longer kicks the bridge bot off Hypixel.
 
