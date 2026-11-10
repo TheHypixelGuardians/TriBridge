@@ -36,6 +36,14 @@
   global profile change can show messages under the member's name and head, or theirs under another linked
   member's.
 
+### Fixes
+
+#### Core
+
++ A private message sent to a bridge bot while it was answering a command no longer ends up in that command's
+  Discord reply (`/send`, `/invite` and the like), and `/online` can no longer count a word of one as an online
+  player.
+
 ### Removed Features
 
 #### Information

@@ -4,6 +4,7 @@ const {
   parseGuildPresence,
   parseOfficerChat,
 } = require("./guildChat");
+const { parseDirectMessage, parseOutgoingMessage } = require("./privateChat");
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -30,7 +31,9 @@ const DEFAULTS = {
  * Discord replies — some of them public. Without this, officer chat spoken
  * during the window was echoed into whichever channel an admin ran `/send` or
  * `/invite` in, and a member saying "invited" in guild chat could make a
- * failed invite read as a success.
+ * failed invite read as a success. Private messages count too, in both
+ * directions: a DM to the bot is somebody's private words, and the colour codes
+ * on one could make `/online` count a word of it as an online player.
  *
  * @param {object} jsonMsg
  * @returns {boolean}
@@ -40,7 +43,9 @@ function isPlayerChat(jsonMsg) {
   return Boolean(
     parseGuildChat(plain) ||
     parseOfficerChat(plain) ||
-    parseGuildPresence(plain),
+    parseGuildPresence(plain) ||
+    parseDirectMessage(plain) ||
+    parseOutgoingMessage(plain),
   );
 }
 

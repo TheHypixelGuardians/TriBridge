@@ -4,6 +4,7 @@ const mcBots = require("./mcBots");
 const queryGuild = require("./queryGuild");
 const { getLink } = require("./linkedAccounts");
 const { isValidMinecraftName } = require("./minecraftName");
+const { RANK_HEADER, SUMMARY_LINE } = require("./guildRoster");
 
 /**
  * The ranks `/promote` hands out with its `rank` option, highest first.
@@ -86,10 +87,7 @@ function findInRoster(rawMessages, targetName) {
     const clean = raw.replace(/§./g, "");
     const trimmed = clean.trim();
 
-    if (
-      /^--\s+(.+?)\s+--$/.test(trimmed) ||
-      /^(Total|Online|Offline) Members:/.test(trimmed)
-    ) {
+    if (RANK_HEADER.test(trimmed) || SUMMARY_LINE.test(trimmed)) {
       sawRosterStructure = true;
     }
 
